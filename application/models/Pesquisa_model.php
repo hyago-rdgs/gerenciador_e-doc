@@ -43,6 +43,7 @@ class Pesquisa_model extends CI_Model
 
     public function listar_avancada(
         $tipo_documento_codigo,
+        $protocolo = '',
         $titulo = '',
         $numero_identificacao = '',
         $data_inicio = '',
@@ -56,6 +57,7 @@ class Pesquisa_model extends CI_Model
 
         $this->aplicar_filtros(
             $tipo_documento_codigo,
+            $protocolo,
             $titulo,
             $numero_identificacao,
             $data_inicio,
@@ -75,6 +77,7 @@ class Pesquisa_model extends CI_Model
 
     public function contar_avancada(
         $tipo_documento_codigo,
+        $protocolo = '',
         $titulo = '',
         $numero_identificacao = '',
         $data_inicio = '',
@@ -87,6 +90,7 @@ class Pesquisa_model extends CI_Model
 
         $this->aplicar_filtros(
             $tipo_documento_codigo,
+            $protocolo,
             $titulo,
             $numero_identificacao,
             $data_inicio,
@@ -112,6 +116,7 @@ class Pesquisa_model extends CI_Model
     {
         $this->db->select([
             'd.codigo',
+            'd.protocolo',
             'd.titulo',
             'd.descricao',
             'd.numero_identificacao',
@@ -141,6 +146,7 @@ class Pesquisa_model extends CI_Model
 
     private function aplicar_filtros(
         $tipo_documento_codigo,
+        $protocolo,
         $titulo,
         $numero_identificacao,
         $data_inicio,
@@ -152,6 +158,13 @@ class Pesquisa_model extends CI_Model
             'd.tipo_documento_codigo',
             $tipo_documento_codigo
         );
+
+        if (!empty($protocolo)) {
+            $this->db->where(
+                'd.protocolo',
+                strtoupper(trim($protocolo))
+            );
+        }
 
         if (!empty($titulo)) {
             $this->db->like('d.titulo', $titulo);
