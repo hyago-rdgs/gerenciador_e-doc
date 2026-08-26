@@ -24,6 +24,10 @@ class Pesquisa extends CI_Controller
             ? $this->input->get('tipo_documento_codigo', TRUE)
             : '';
 
+        $filtro_protocolo = $this->input->get('protocolo', TRUE) !== NULL
+            ? strtoupper(trim($this->input->get('protocolo', TRUE)))
+            : '';
+
         $filtro_titulo = $this->input->get('titulo', TRUE) !== NULL
             ? $this->input->get('titulo', TRUE)
             : '';
@@ -84,6 +88,7 @@ class Pesquisa extends CI_Controller
         if ($pesquisar && $tipo_documento_valido) {
             $total_documentos = $this->pesquisa_model->contar_avancada(
                 $filtro_tipo_documento,
+                $filtro_protocolo,
                 $filtro_titulo,
                 $filtro_numero_identificacao,
                 $filtro_data_inicio,
@@ -94,6 +99,7 @@ class Pesquisa extends CI_Controller
 
             $documentos = $this->pesquisa_model->listar_avancada(
                 $filtro_tipo_documento,
+                $filtro_protocolo,
                 $filtro_titulo,
                 $filtro_numero_identificacao,
                 $filtro_data_inicio,
@@ -111,6 +117,7 @@ class Pesquisa extends CI_Controller
             'documentos' => $documentos,
             'pesquisar' => $pesquisar,
             'filtro_tipo_documento' => $filtro_tipo_documento,
+            'filtro_protocolo' => $filtro_protocolo,
             'filtro_titulo' => $filtro_titulo,
             'filtro_numero_identificacao' => $filtro_numero_identificacao,
             'filtro_data_inicio' => $filtro_data_inicio,
