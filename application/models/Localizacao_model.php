@@ -4,6 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Localizacao_model extends CI_Model
 {
     private $tabela = 'localizacoes';
+
     public function __construct()
     {
         parent::__construct();
@@ -113,31 +114,6 @@ class Localizacao_model extends CI_Model
         return $query->num_rows();
     }
 
-    public function listar_documentos($localizacao_codigo)
-    {
-        $this->db->select([
-            'd.codigo',
-            'd.titulo',
-            'd.descricao',
-            'd.ativo',
-            'd.cadastro',
-            'td.nome AS tipo_documento'
-        ]);
-        $this->db->from('documentos d');
-        $this->db->join(
-            'tipos_documento td',
-            'td.codigo = d.tipo_documento_codigo AND td.exclusao IS NULL',
-            'left',
-            FALSE
-        );
-        $this->db->where('d.localizacao_codigo', $localizacao_codigo);
-        $this->db->where('d.exclusao IS NULL', NULL, FALSE);
-        $this->db->order_by('d.titulo', 'ASC');
-
-        $query = $this->db->get();
-        return $query->result_array();
-    }
-
     public function listar_opcoes($codigo = NULL, $classificacao = NULL)
     {
         $this->db->select([
@@ -148,7 +124,12 @@ class Localizacao_model extends CI_Model
             'tl.nome AS tipo_localizacao'
         ]);
         $this->db->from('localizacoes l');
-        $this->db->join('tipos_localizacao tl', 'tl.codigo = l.tipo_localizacao_codigo AND tl.exclusao IS NULL', 'left', FALSE);
+        $this->db->join(
+            'tipos_localizacao tl',
+            'tl.codigo = l.tipo_localizacao_codigo AND tl.exclusao IS NULL',
+            'left',
+            FALSE
+        );
         $this->db->where('l.ativo', 1);
         $this->db->where('l.exclusao IS NULL', NULL, FALSE);
 
@@ -192,27 +173,19 @@ class Localizacao_model extends CI_Model
     {
         $reg['atualizacao'] = date('Y-m-d H:i:s');
 
-        $this->db->trans_begin();
-
         $this->db->where('codigo', $codigo);
         $this->db->where('exclusao IS NULL', NULL, FALSE);
-        $this->db->update($this->tabela, $reg);
 
-        if ($this->db->trans_status() === FALSE) {
-            $this->db->trans_rollback();
+        if (!$this->db->update($this->tabela, $reg)) {
             return FALSE;
         }
 
         if ($classificacao_anterior !== $reg['classificacao']) {
-            $atualizou_descendentes = $this->atualizar_classificacao_descendentes($classificacao_anterior, $reg['classificacao']);
-
-            if (!$atualizou_descendentes) {
-                $this->db->trans_rollback();
-                return FALSE;
-            }
+            return $this->atualizar_classificacao_descendentes(
+                $classificacao_anterior,
+                $reg['classificacao']
+            );
         }
-
-        $this->db->trans_commit();
 
         return TRUE;
     }
@@ -269,14 +242,6 @@ class Localizacao_model extends CI_Model
         $this->db->where('exclusao IS NULL', NULL, FALSE);
 
         return $this->db->count_all_results($this->tabela) > 0;
-    }
-
-    public function possui_documentos($codigo)
-    {
-        $this->db->where('localizacao_codigo', $codigo);
-        $this->db->where('exclusao IS NULL', NULL, FALSE);
-
-        return $this->db->count_all_results('documentos') > 0;
     }
 
     public function obter_proximo_sequencial($localizacao_codigo_pai = NULL)
@@ -337,7 +302,6 @@ class Localizacao_model extends CI_Model
 
         foreach ($segmentos as $segmento) {
             $classificacao_atual[] = $segmento;
-
             $classificacoes[] = implode('.', $classificacao_atual);
         }
 
@@ -369,14 +333,56 @@ class Localizacao_model extends CI_Model
             'tl.nome AS tipo_localizacao',
             'lp.nome AS localizacao_pai_nome',
             'lp.classificacao AS localizacao_pai_classificacao',
+            'ltd.tipo_documento_codigo',
+            'td.nome AS tipo_documento',
             'COUNT(DISTINCT sl.codigo) AS total_sublocalizacoes',
             'COUNT(DISTINCT d.codigo) AS total_documentos'
         ]);
+
         $this->db->from($this->tabela . ' l');
-        $this->db->join('tipos_localizacao tl', 'tl.codigo = l.tipo_localizacao_codigo AND tl.exclusao IS NULL', 'inner', FALSE);
-        $this->db->join('localizacoes lp', 'lp.codigo = l.localizacao_codigo_pai AND lp.exclusao IS NULL', 'left', FALSE);
-        $this->db->join('documentos d', 'd.localizacao_codigo = l.codigo AND d.exclusao IS NULL', 'left', FALSE);
-        $this->db->join('localizacoes sl', 'sl.localizacao_codigo_pai = l.codigo AND sl.exclusao IS NULL', 'left', FALSE);
+
+        $this->db->join(
+            'tipos_localizacao tl',
+            'tl.codigo = l.tipo_localizacao_codigo AND tl.exclusao IS NULL',
+            'inner',
+            FALSE
+        );
+
+        $this->db->join(
+            'localizacoes lp',
+            'lp.codigo = l.localizacao_codigo_pai AND lp.exclusao IS NULL',
+            'left',
+            FALSE
+        );
+
+        $this->db->join(
+            'localizacao_tipo_documentos ltd',
+            'ltd.localizacao_codigo = l.codigo AND ltd.exclusao IS NULL',
+            'left',
+            FALSE
+        );
+
+        $this->db->join(
+            'tipos_documento td',
+            'td.codigo = ltd.tipo_documento_codigo AND td.exclusao IS NULL',
+            'left',
+            FALSE
+        );
+
+        $this->db->join(
+            'documentos d',
+            'd.localizacao_codigo = l.codigo AND d.exclusao IS NULL',
+            'left',
+            FALSE
+        );
+
+        $this->db->join(
+            'localizacoes sl',
+            'sl.localizacao_codigo_pai = l.codigo AND sl.exclusao IS NULL',
+            'left',
+            FALSE
+        );
+
         $this->db->group_by([
             'l.codigo',
             'l.nome',
@@ -386,7 +392,11 @@ class Localizacao_model extends CI_Model
             'l.sequencial',
             'l.tipo_localizacao_codigo',
             'l.localizacao_codigo_pai',
-            'tl.nome'
+            'tl.nome',
+            'lp.nome',
+            'lp.classificacao',
+            'ltd.tipo_documento_codigo',
+            'td.nome'
         ]);
     }
 }
