@@ -16,7 +16,11 @@ class Localizacao_model extends CI_Model
         $this->preparar_consulta_listagem();
 
         if (!empty($termo)) {
+            $this->db->group_start();
             $this->db->like('l.nome', $termo);
+            $this->db->or_like('l.descricao', $termo);
+            $this->db->or_like('l.protocolo', $termo);
+            $this->db->group_end();
         }
 
         if (!empty($status)) {
@@ -44,7 +48,11 @@ class Localizacao_model extends CI_Model
         $this->preparar_consulta_listagem();
 
         if (!empty($termo)) {
+            $this->db->group_start();
             $this->db->like('l.nome', $termo);
+            $this->db->or_like('l.descricao', $termo);
+            $this->db->or_like('l.protocolo', $termo);
+            $this->db->group_end();
         }
 
         if (!empty($status)) {
@@ -67,7 +75,11 @@ class Localizacao_model extends CI_Model
         $this->preparar_consulta_listagem();
 
         if (!empty($termo)) {
+            $this->db->group_start();
             $this->db->like('l.nome', $termo);
+            $this->db->or_like('l.descricao', $termo);
+            $this->db->or_like('l.protocolo', $termo);
+            $this->db->group_end();
         }
 
         if (!empty($status)) {
@@ -95,7 +107,11 @@ class Localizacao_model extends CI_Model
         $this->preparar_consulta_listagem();
 
         if (!empty($termo)) {
+            $this->db->group_start();
             $this->db->like('l.nome', $termo);
+            $this->db->or_like('l.descricao', $termo);
+            $this->db->or_like('l.protocolo', $termo);
+            $this->db->group_end();
         }
 
         if (!empty($status)) {
@@ -118,6 +134,7 @@ class Localizacao_model extends CI_Model
     {
         $this->db->select([
             'l.codigo',
+            'l.protocolo',
             'l.nome',
             'l.classificacao',
             'l.localizacao_codigo_pai',
@@ -158,6 +175,17 @@ class Localizacao_model extends CI_Model
         return $query->row_array();
     }
 
+    public function buscar_por_protocolo($protocolo)
+    {
+        $this->preparar_consulta_listagem();
+
+        $this->db->where('l.protocolo', strtoupper(trim($protocolo)));
+        $this->db->where('l.exclusao IS NULL', NULL, FALSE);
+        $this->db->limit(1);
+
+        return $this->db->get()->row_array();
+    }
+
     public function cadastrar($reg)
     {
         $reg['cadastro'] = date('Y-m-d H:i:s');
@@ -166,7 +194,29 @@ class Localizacao_model extends CI_Model
             return FALSE;
         }
 
-        return $this->db->insert_id();
+        $codigo = $this->db->insert_id();
+
+        $protocolo = gerar_protocolo(
+            'LOC',
+            $codigo,
+            $reg['cadastro']
+        );
+
+        if (!$protocolo) {
+            return FALSE;
+        }
+
+        $this->db->where('codigo', $codigo);
+        $this->db->where('protocolo IS NULL', NULL, FALSE);
+
+        if (!$this->db->update(
+            $this->tabela,
+            ['protocolo' => $protocolo]
+        )) {
+            return FALSE;
+        }
+
+        return $codigo;
     }
 
     public function atualizar($codigo, $reg, $classificacao_anterior)
@@ -307,6 +357,7 @@ class Localizacao_model extends CI_Model
 
         $this->db->select([
             'l.codigo',
+            'l.protocolo',
             'l.nome',
             'l.classificacao'
         ]);
@@ -323,6 +374,7 @@ class Localizacao_model extends CI_Model
     {
         $this->db->select([
             'l.codigo',
+            'l.protocolo',
             'l.nome',
             'l.classificacao',
             'l.descricao',
@@ -385,6 +437,7 @@ class Localizacao_model extends CI_Model
 
         $this->db->group_by([
             'l.codigo',
+            'l.protocolo',
             'l.nome',
             'l.classificacao',
             'l.descricao',
