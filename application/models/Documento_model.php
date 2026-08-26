@@ -72,6 +72,48 @@ class Documento_model extends CI_Model
         return $this->db->get()->num_rows();
     }
 
+    public function listar_por_localizacao(
+        $localizacao_codigo,
+        $limite = NULL,
+        $offset = NULL
+    ) {
+        $this->preparar_consulta_listagem();
+
+        $this->db->where('d.localizacao_codigo', $localizacao_codigo);
+        $this->db->where('d.exclusao IS NULL', NULL, FALSE);
+        $this->db->order_by('d.titulo', 'ASC');
+
+        if ($limite !== NULL) {
+            $this->db->limit($limite, $offset);
+        }
+
+        return $this->db->get()->result_array();
+    }
+
+    public function contar_por_localizacao($localizacao_codigo)
+    {
+        $this->db->where('localizacao_codigo', $localizacao_codigo);
+        $this->db->where('exclusao IS NULL', NULL, FALSE);
+
+        return $this->db->count_all_results($this->tabela);
+    }
+
+    public function possui_documentos($localizacao_codigo)
+    {
+        return $this->contar_por_localizacao($localizacao_codigo) > 0;
+    }
+
+    public function possui_tipo_diferente_na_localizacao(
+        $localizacao_codigo,
+        $tipo_documento_codigo
+    ) {
+        $this->db->where('localizacao_codigo', $localizacao_codigo);
+        $this->db->where('tipo_documento_codigo !=', $tipo_documento_codigo);
+        $this->db->where('exclusao IS NULL', NULL, FALSE);
+
+        return $this->db->count_all_results($this->tabela) > 0;
+    }
+
     public function buscar_por_codigo($codigo)
     {
         $this->preparar_consulta_listagem();
@@ -136,8 +178,17 @@ class Documento_model extends CI_Model
             'l.classificacao AS localizacao_classificacao'
         ]);
         $this->db->from($this->tabela . ' d');
-        $this->db->join('tipos_documento td', 'td.codigo = d.tipo_documento_codigo AND td.exclusao IS NULL', 'inner', FALSE);
-        $this->db->join('localizacoes l', 'l.codigo = d.localizacao_codigo AND l.exclusao IS NULL', 'inner', FALSE);
+        $this->db->join(
+            'tipos_documento td',
+            'td.codigo = d.tipo_documento_codigo AND td.exclusao IS NULL',
+            'inner',
+            FALSE
+        );
+        $this->db->join(
+            'localizacoes l',
+            'l.codigo = d.localizacao_codigo AND l.exclusao IS NULL',
+            'inner',
+            FALSE
+        );
     }
-
 }
