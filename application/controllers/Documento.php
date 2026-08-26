@@ -13,6 +13,7 @@ class Documento extends CI_Controller
         $this->load->model('documento_movimentacao_model');
         $this->load->model('tipo_documento_model');
         $this->load->model('localizacao_model');
+        $this->load->model('localizacao_tipo_documento_model');
     }
 
     public function index()
@@ -68,21 +69,112 @@ class Documento extends CI_Controller
         $this->load->view('documento/documento_lista', $dados);
     }
 
-    public function cadastrar()
+    public function cadastrar($localizacao_codigo = NULL)
     {
+        $localizacao_selecionada = NULL;
+        $tipo_documento_selecionado = NULL;
+
+        if ($localizacao_codigo !== NULL) {
+            if (
+                !ctype_digit((string) $localizacao_codigo) ||
+                (int) $localizacao_codigo <= 0
+            ) {
+                show_404();
+            }
+
+            $localizacao_codigo = (int) $localizacao_codigo;
+            $localizacao_selecionada = $this->localizacao_model->buscar_por_codigo(
+                $localizacao_codigo
+            );
+
+            if (
+                !$localizacao_selecionada ||
+                (int) $localizacao_selecionada['ativo'] !== 1
+            ) {
+                show_404();
+            }
+
+            $tipo_documento_selecionado = $this->localizacao_tipo_documento_model->buscar_por_localizacao(
+                $localizacao_codigo
+            );
+
+            if (
+                !$tipo_documento_selecionado ||
+                (int) $tipo_documento_selecionado['tipo_documento_ativo'] !== 1
+            ) {
+                show_404();
+            }
+        }
+
         if ($this->input->method() === 'post') {
-            $resultado = $this->validar($this->input->post());
+            $dados_post = $this->input->post();
+
+            if ($localizacao_selecionada) {
+                $dados_post['localizacao_codigo'] = $localizacao_selecionada['codigo'];
+                $dados_post['tipo_documento_codigo'] = $tipo_documento_selecionado['tipo_documento_codigo'];
+            }
+
+            $resultado = $this->validar($dados_post);
 
             if (!$resultado['sucesso']) {
-                resposta_json(FALSE, 'Verifique os campos informados.', ['erros' => $resultado['erros']], 422);
+                resposta_json(
+                    FALSE,
+                    'Verifique os campos informados.',
+                    ['erros' => $resultado['erros']],
+                    422
+                );
+            }
+
+            $confirmar = $this->input->post('confirmar') === '1';
+
+            if (!$confirmar) {
+                $tipo_documento = $this->tipo_documento_model->buscar_por_codigo(
+                    $resultado['dados']['tipo_documento_codigo']
+                );
+
+                $localizacao = $this->localizacao_model->buscar_por_codigo(
+                    $resultado['dados']['localizacao_codigo']
+                );
+
+                $campos_metadados = $this->documento_metadado_model->listar_campos_tipo(
+                    $resultado['dados']['tipo_documento_codigo']
+                );
+
+                $html = $this->load->view(
+                    'documento/documento_revisao',
+                    [
+                        'documento' => $resultado['dados'],
+                        'metadados' => $resultado['metadados'],
+                        'tipo_documento' => $tipo_documento,
+                        'localizacao' => $localizacao,
+                        'campos_metadados' => $campos_metadados
+                    ],
+                    TRUE
+                );
+
+                resposta_json(
+                    TRUE,
+                    'Revise os dados antes de confirmar o cadastro.',
+                    [
+                        'confirmacao' => TRUE,
+                        'html' => $html
+                    ]
+                );
             }
 
             $this->db->trans_begin();
 
-            $codigo = $this->documento_model->cadastrar($resultado['dados']);
+            $codigo = $this->documento_model->cadastrar(
+                $resultado['dados']
+            );
+
             $metadados_salvos = $codigo
-                ? $this->documento_metadado_model->salvar($codigo, $resultado['metadados'])
+                ? $this->documento_metadado_model->salvar(
+                    $codigo,
+                    $resultado['metadados']
+                )
                 : FALSE;
+
             $movimentacao_salva = $codigo
                 ? $this->documento_movimentacao_model->cadastrar([
                     'documento_codigo' => $codigo,
@@ -92,18 +184,37 @@ class Documento extends CI_Controller
                 ])
                 : FALSE;
 
-            if (!$codigo || !$metadados_salvos || !$movimentacao_salva || $this->db->trans_status() === FALSE) {
+            if (
+                !$codigo ||
+                !$metadados_salvos ||
+                !$movimentacao_salva ||
+                $this->db->trans_status() === FALSE
+            ) {
                 $this->db->trans_rollback();
-                resposta_json(FALSE, 'Não foi possível cadastrar o documento.', [], 500);
+
+                resposta_json(
+                    FALSE,
+                    'Não foi possível cadastrar o documento.',
+                    [],
+                    500
+                );
             }
 
             $this->db->trans_commit();
-            resposta_json(TRUE, 'Documento cadastrado com sucesso.', ['codigo' => $codigo], 201);
+
+            resposta_json(
+                TRUE,
+                'Documento cadastrado com sucesso.',
+                ['codigo' => $codigo],
+                201
+            );
         }
 
         $dados = [
             'tipos_documento' => $this->tipo_documento_model->listar_opcoes(),
-            'localizacoes' => $this->localizacao_model->listar_opcoes()
+            'localizacoes' => $this->localizacao_model->listar_opcoes(),
+            'localizacao_selecionada' => $localizacao_selecionada,
+            'tipo_documento_selecionado' => $tipo_documento_selecionado
         ];
 
         $this->load->view('documento/documento_form', $dados);
@@ -118,16 +229,32 @@ class Documento extends CI_Controller
             $resultado = $this->validar($this->input->post());
 
             if (!$resultado['sucesso']) {
-                resposta_json(FALSE, 'Verifique os campos informados.', ['erros' => $resultado['erros']], 422);
+                resposta_json(
+                    FALSE,
+                    'Verifique os campos informados.',
+                    ['erros' => $resultado['erros']],
+                    422
+                );
             }
 
             $this->db->trans_begin();
 
-            $documento_atualizado = $this->documento_model->atualizar($codigo, $resultado['dados']);
-            $metadados_salvos = $this->documento_metadado_model->salvar($codigo, $resultado['metadados']);
+            $documento_atualizado = $this->documento_model->atualizar(
+                $codigo,
+                $resultado['dados']
+            );
+
+            $metadados_salvos = $this->documento_metadado_model->salvar(
+                $codigo,
+                $resultado['metadados']
+            );
+
             $movimentacao_salva = TRUE;
 
-            if ((int) $documento['localizacao_codigo'] !== (int) $resultado['dados']['localizacao_codigo']) {
+            if (
+                (int) $documento['localizacao_codigo'] !==
+                (int) $resultado['dados']['localizacao_codigo']
+            ) {
                 $movimentacao_salva = $this->documento_movimentacao_model->cadastrar([
                     'documento_codigo' => $codigo,
                     'localizacao_origem_codigo' => $documento['localizacao_codigo'],
@@ -136,19 +263,37 @@ class Documento extends CI_Controller
                 ]);
             }
 
-            if (!$documento_atualizado || !$metadados_salvos || !$movimentacao_salva || $this->db->trans_status() === FALSE) {
+            if (
+                !$documento_atualizado ||
+                !$metadados_salvos ||
+                !$movimentacao_salva ||
+                $this->db->trans_status() === FALSE
+            ) {
                 $this->db->trans_rollback();
-                resposta_json(FALSE, 'Não foi possível atualizar o documento.', [], 500);
+
+                resposta_json(
+                    FALSE,
+                    'Não foi possível atualizar o documento.',
+                    [],
+                    500
+                );
             }
 
             $this->db->trans_commit();
-            resposta_json(TRUE, 'Documento atualizado com sucesso.', ['codigo' => $codigo]);
+
+            resposta_json(
+                TRUE,
+                'Documento atualizado com sucesso.',
+                ['codigo' => $codigo]
+            );
         }
 
         $dados = [
             'documento' => $documento,
             'tipos_documento' => $this->tipo_documento_model->listar_opcoes(),
-            'localizacoes' => $this->localizacao_model->listar_opcoes()
+            'localizacoes' => $this->localizacao_model->listar_opcoes(),
+            'localizacao_selecionada' => NULL,
+            'tipo_documento_selecionado' => NULL
         ];
 
         $this->load->view('documento/documento_form', $dados);
@@ -208,10 +353,18 @@ class Documento extends CI_Controller
 
         $dados = [
             'documento' => $documento,
-            'caminho_localizacao' => $this->localizacao_model->buscar_caminho($documento['localizacao_codigo']),
-            'metadados' => $this->documento_metadado_model->listar_por_documento($documento['codigo']),
-            'arquivos' => $this->documento_arquivo_model->listar_por_documento($documento['codigo']),
-            'movimentacoes' => $this->documento_movimentacao_model->listar_por_documento($documento['codigo'])
+            'caminho_localizacao' => $this->localizacao_model->buscar_caminho(
+                $documento['localizacao_codigo']
+            ),
+            'metadados' => $this->documento_metadado_model->listar_por_documento(
+                $documento['codigo']
+            ),
+            'arquivos' => $this->documento_arquivo_model->listar_por_documento(
+                $documento['codigo']
+            ),
+            'movimentacoes' => $this->documento_movimentacao_model->listar_por_documento(
+                $documento['codigo']
+            )
         ];
 
         $this->load->view('documento/documento_detalhes', $dados);
@@ -436,7 +589,9 @@ class Documento extends CI_Controller
         }
 
         $arquivo = $this->upload->data();
-        $principal = $this->documento_arquivo_model->possui_arquivos($documento['codigo']) ? 0 : 1;
+        $principal = $this->documento_arquivo_model->possui_arquivos(
+            $documento['codigo']
+        ) ? 0 : 1;
 
         $arquivo_codigo = $this->documento_arquivo_model->cadastrar([
             'documento_codigo' => $documento['codigo'],
@@ -452,10 +607,20 @@ class Documento extends CI_Controller
 
         if (!$arquivo_codigo) {
             unlink($arquivo['full_path']);
-            resposta_json(FALSE, 'Não foi possível cadastrar o arquivo.', [], 500);
+            resposta_json(
+                FALSE,
+                'Não foi possível cadastrar o arquivo.',
+                [],
+                500
+            );
         }
 
-        resposta_json(TRUE, 'Arquivo enviado com sucesso.', ['codigo' => $arquivo_codigo], 201);
+        resposta_json(
+            TRUE,
+            'Arquivo enviado com sucesso.',
+            ['codigo' => $arquivo_codigo],
+            201
+        );
     }
 
     public function definir_arquivo_principal($codigo = NULL, $arquivo_codigo = NULL)
@@ -465,13 +630,30 @@ class Documento extends CI_Controller
         }
 
         $documento = $this->buscar_documento($codigo, TRUE);
-        $arquivo = $this->buscar_arquivo($documento['codigo'], $arquivo_codigo);
+        $arquivo = $this->buscar_arquivo(
+            $documento['codigo'],
+            $arquivo_codigo
+        );
 
-        if (!$this->documento_arquivo_model->definir_principal($documento['codigo'], $arquivo['codigo'])) {
-            resposta_json(FALSE, 'Não foi possível definir o arquivo principal.', [], 500);
+        if (
+            !$this->documento_arquivo_model->definir_principal(
+                $documento['codigo'],
+                $arquivo['codigo']
+            )
+        ) {
+            resposta_json(
+                FALSE,
+                'Não foi possível definir o arquivo principal.',
+                [],
+                500
+            );
         }
 
-        resposta_json(TRUE, 'Arquivo principal atualizado com sucesso.', ['codigo' => (int) $arquivo['codigo']]);
+        resposta_json(
+            TRUE,
+            'Arquivo principal atualizado com sucesso.',
+            ['codigo' => (int) $arquivo['codigo']]
+        );
     }
 
     public function excluir_arquivo(
@@ -534,17 +716,31 @@ class Documento extends CI_Controller
     {
         if (empty($codigo) || !ctype_digit((string) $codigo)) {
             if ($resposta_json) {
-                resposta_json(FALSE, 'Não foi possível identificar o documento.', ['erros' => ['O código do documento é inválido.']], 422);
+                resposta_json(
+                    FALSE,
+                    'Não foi possível identificar o documento.',
+                    ['erros' => ['O código do documento é inválido.']],
+                    422
+                );
             }
+
             show_404();
         }
 
-        $documento = $this->documento_model->buscar_por_codigo((int) $codigo);
+        $documento = $this->documento_model->buscar_por_codigo(
+            (int) $codigo
+        );
 
         if (!$documento) {
             if ($resposta_json) {
-                resposta_json(FALSE, 'Documento não encontrado ou já excluído.', [], 404);
+                resposta_json(
+                    FALSE,
+                    'Documento não encontrado ou já excluído.',
+                    [],
+                    404
+                );
             }
+
             show_404();
         }
 
@@ -554,13 +750,28 @@ class Documento extends CI_Controller
     private function buscar_arquivo($documento_codigo, $arquivo_codigo)
     {
         if (empty($arquivo_codigo) || !ctype_digit((string) $arquivo_codigo)) {
-            resposta_json(FALSE, 'Não foi possível identificar o arquivo.', [], 422);
+            resposta_json(
+                FALSE,
+                'Não foi possível identificar o arquivo.',
+                [],
+                422
+            );
         }
 
-        $arquivo = $this->documento_arquivo_model->buscar_por_codigo((int) $arquivo_codigo);
+        $arquivo = $this->documento_arquivo_model->buscar_por_codigo(
+            (int) $arquivo_codigo
+        );
 
-        if (!$arquivo || (int) $arquivo['documento_codigo'] !== (int) $documento_codigo) {
-            resposta_json(FALSE, 'Arquivo não encontrado ou já excluído.', [], 404);
+        if (
+            !$arquivo ||
+            (int) $arquivo['documento_codigo'] !== (int) $documento_codigo
+        ) {
+            resposta_json(
+                FALSE,
+                'Arquivo não encontrado ou já excluído.',
+                [],
+                404
+            );
         }
 
         return $arquivo;
@@ -622,6 +833,21 @@ class Documento extends CI_Controller
             (int) $localizacao['ativo'] !== 1
         ) {
             $erros[] = 'A localização informada não existe ou está inativa.';
+        }
+
+        if ($tipo_documento && $localizacao) {
+            $vinculo_localizacao = $this->localizacao_tipo_documento_model->buscar_por_localizacao(
+                (int) $reg['localizacao_codigo']
+            );
+
+            if (!$vinculo_localizacao) {
+                $erros[] = 'A localização selecionada não possui um tipo de documento definido.';
+            } elseif (
+                (int) $vinculo_localizacao['tipo_documento_codigo'] !==
+                (int) $reg['tipo_documento_codigo']
+            ) {
+                $erros[] = 'O tipo do documento não é compatível com a localização selecionada.';
+            }
         }
 
         if (!in_array($reg['ativo'], ['1', '0'], TRUE)) {
@@ -862,5 +1088,4 @@ class Documento extends CI_Controller
             $data->format($formato) === $valor
         );
     }
-
 }
