@@ -53,8 +53,8 @@ $autoload['packages'] = array();
 |
 |	$autoload['libraries'] = array('database', 'email', 'session');
 |
-| You can also supply an alternative library name to be assigned
-| in the controller:
+| You can also supply an alternative library name to be assigned in
+| the controller:
 |
 |	$autoload['libraries'] = array('user_agent' => 'ua');
 */
@@ -77,7 +77,6 @@ $autoload['libraries'] = array('database', 'session', 'controle_acesso');
 | the controller:
 |
 |	$autoload['drivers'] = array('cache' => 'cch');
-|
 */
 $autoload['drivers'] = array();
 
@@ -89,7 +88,7 @@ $autoload['drivers'] = array();
 |
 |	$autoload['helper'] = array('url', 'file');
 */
-$autoload['helper'] = array('string', 'url', 'date');
+$autoload['helper'] = array('string', 'url', 'date', 'protocolo');
 
 /*
 | -------------------------------------------------------------------
@@ -111,9 +110,9 @@ $autoload['config'] = array();
 | -------------------------------------------------------------------
 | Prototype:
 |
-|	$autoload['language'] = array('lang1', 'lang2');
+|	$autoload['language'] = array('lang1', 'spanish');
 |
-| NOTE: Do not include the "_lang" part of your file.  For example
+| NOTE: Do not include the "_lang" part of your file.  For example,
 | "codeigniter_lang.php" would be referenced as array('codeigniter');
 |
 */
