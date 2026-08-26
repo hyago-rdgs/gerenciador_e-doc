@@ -19,6 +19,7 @@ class Documento_model extends CI_Model
             $this->db->group_start();
             $this->db->like('d.titulo', $termo);
             $this->db->or_like('d.numero_identificacao', $termo);
+            $this->db->or_like('d.protocolo', $termo);
             $this->db->group_end();
         }
 
@@ -53,6 +54,7 @@ class Documento_model extends CI_Model
             $this->db->group_start();
             $this->db->like('d.titulo', $termo);
             $this->db->or_like('d.numero_identificacao', $termo);
+            $this->db->or_like('d.protocolo', $termo);
             $this->db->group_end();
         }
 
@@ -123,6 +125,15 @@ class Documento_model extends CI_Model
         return $this->db->get()->row_array();
     }
 
+    public function buscar_por_protocolo($protocolo)
+    {
+        $this->preparar_consulta_listagem();
+        $this->db->where('d.protocolo', strtoupper(trim($protocolo)));
+        $this->db->where('d.exclusao IS NULL', NULL, FALSE);
+        $this->db->limit(1);
+        return $this->db->get()->row_array();
+    }
+
     public function cadastrar($reg)
     {
         $reg['cadastro'] = date('Y-m-d H:i:s');
@@ -131,7 +142,29 @@ class Documento_model extends CI_Model
             return FALSE;
         }
 
-        return $this->db->insert_id();
+        $codigo = $this->db->insert_id();
+
+        $protocolo = gerar_protocolo(
+            'DOC',
+            $codigo,
+            $reg['cadastro']
+        );
+
+        if (!$protocolo) {
+            return FALSE;
+        }
+
+        $this->db->where('codigo', $codigo);
+        $this->db->where('protocolo IS NULL', NULL, FALSE);
+
+        if (!$this->db->update(
+            $this->tabela,
+            ['protocolo' => $protocolo]
+        )) {
+            return FALSE;
+        }
+
+        return $codigo;
     }
 
     public function atualizar($codigo, $reg)
@@ -164,6 +197,7 @@ class Documento_model extends CI_Model
     {
         $this->db->select([
             'd.codigo',
+            'd.protocolo',
             'd.tipo_documento_codigo',
             'd.localizacao_codigo',
             'd.titulo',
