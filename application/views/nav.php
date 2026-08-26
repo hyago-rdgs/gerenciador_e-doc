@@ -50,6 +50,14 @@
               Localizações
             </a>
           </li>
+
+          <li class="nav-item">
+            <a class="nav-link <?= $modulo_atual == 'usuario' ? 'active fw-semibold' : ''; ?>"
+              <?= $modulo_atual == 'usuario' ? 'aria-current="page"' : ''; ?>
+              href="<?= base_url('usuario'); ?>">
+              Usuários
+            </a>
+          </li>
         </ul>
         <ul class="navbar-nav">
           <li class="nav-item dropdown">
@@ -57,13 +65,6 @@
               data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-regular fa-circle-user"
                 aria-hidden="true"></i><span><?= html_escape($this->controle_acesso->get('nome')); ?></span></button>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <a class="dropdown-item <?= $modulo_atual == 'usuario' ? 'active' : ''; ?>" href="<?= base_url('usuario'); ?>">
-                  <i class="fa-solid fa-users me-2" aria-hidden="true"></i>
-                  Usuários
-                </a>
-              </li>
-              <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item log-out" href="<?= base_url('autenticacao/logout'); ?>">Sair</a></li>
             </ul>
           </li>
