@@ -8,6 +8,7 @@ class Tipo_documento extends CI_Controller
         $this->controle_acesso->valida_acesso();
         $this->load->model('tipo_documento_model');
         $this->load->model('tipo_documento_metadado_model');
+        $this->load->model('localizacao_tipo_documento_model');
         $this->load->model('metadado_model');
     }
 
@@ -38,7 +39,6 @@ class Tipo_documento extends CI_Controller
         $dados = [
             'filtro_termo' => $filtro_termo,
             'filtro_status' => $filtro_status,
-
             'tipos_documento' => $this->tipo_documento_model->listar_tudo(
                 $filtro_termo,
                 $filtro_status,
@@ -46,7 +46,6 @@ class Tipo_documento extends CI_Controller
                 $offset
             ),
             'total_tipos_documento' => $total_tipos_documento,
-
             'limite' => $limite,
             'offset' => $offset + 1,
             'pagina_atual' => $pagina_atual,
@@ -145,16 +144,21 @@ class Tipo_documento extends CI_Controller
 
         $tipo_documento = $this->buscar_tipo_documento($codigo, TRUE);
         $codigo = (int) $tipo_documento['codigo'];
+        $erros = [];
 
         if ($this->tipo_documento_model->possui_documentos($codigo)) {
+            $erros[] = 'O tipo de documento possui documentos vinculados.';
+        }
+
+        if ($this->localizacao_tipo_documento_model->possui_localizacoes($codigo)) {
+            $erros[] = 'O tipo de documento possui localizações vinculadas.';
+        }
+
+        if (!empty($erros)) {
             resposta_json(
                 FALSE,
                 'Não foi possível excluir o tipo de documento.',
-                [
-                    'erros' => [
-                        'O tipo de documento possui documentos vinculados.'
-                    ]
-                ],
+                ['erros' => $erros],
                 409
             );
         }
@@ -534,9 +538,7 @@ class Tipo_documento extends CI_Controller
             $erros[] = 'A ordem deve ser um número entre 1 e 65535.';
         }
 
-        foreach (
-            ['obrigatorio', 'visivel', 'pesquisavel'] as $campo
-        ) {
+        foreach (['obrigatorio', 'visivel', 'pesquisavel'] as $campo) {
             if (!in_array($reg[$campo], ['1', '0'], TRUE)) {
                 $erros[] = 'O campo ' . ucfirst($campo) . ' é inválido.';
             }
