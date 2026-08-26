@@ -54,31 +54,58 @@
                                 value="<?= htmlspecialchars($documento['numero_identificacao'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                         </div>
 
-                        <div class="col-12 col-md-6">
-                            <label class="form-label" for="tipo_documento_codigo">Tipo de documento</label>
-                            <select class="form-select" id="tipo_documento_codigo" name="tipo_documento_codigo" required>
-                                <option value="">Selecione</option>
-                                <?php foreach ($tipos_documento as $tipo_documento): ?>
-                                    <option value="<?= $tipo_documento['codigo']; ?>"
-                                        <?= ($documento['tipo_documento_codigo'] ?? '') == $tipo_documento['codigo'] ? 'selected' : ''; ?>>
-                                        <?= htmlspecialchars($tipo_documento['nome'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+                        <?php if (!$modo_edicao && !empty($localizacao_selecionada)): ?>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Tipo de documento</label>
+                                <div class="form-control bg-body-tertiary">
+                                    <?= htmlspecialchars($tipo_documento_selecionado['tipo_documento'], ENT_QUOTES, 'UTF-8'); ?>
+                                </div>
+                                <input id="tipo_documento_codigo" name="tipo_documento_codigo" type="hidden"
+                                    value="<?= $tipo_documento_selecionado['tipo_documento_codigo']; ?>">
+                            </div>
 
-                        <div class="col-12 col-md-6">
-                            <label class="form-label" for="localizacao_codigo">Localização</label>
-                            <select class="form-select" id="localizacao_codigo" name="localizacao_codigo" required>
-                                <option value="">Selecione</option>
-                                <?php foreach ($localizacoes as $localizacao): ?>
-                                    <option value="<?= $localizacao['codigo']; ?>"
-                                        <?= ($documento['localizacao_codigo'] ?? '') == $localizacao['codigo'] ? 'selected' : ''; ?>>
-                                        <?= htmlspecialchars($localizacao['classificacao'] . ' — ' . $localizacao['nome'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Localização</label>
+                                <div class="form-control bg-body-tertiary">
+                                    <?= htmlspecialchars(
+                                        $localizacao_selecionada['classificacao'] . ' — ' . $localizacao_selecionada['nome'],
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ); ?>
+                                </div>
+                                <input id="localizacao_codigo" name="localizacao_codigo" type="hidden"
+                                    value="<?= $localizacao_selecionada['codigo']; ?>">
+                            </div>
+                        <?php else: ?>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="tipo_documento_codigo">Tipo de documento</label>
+                                <select class="form-select" id="tipo_documento_codigo" name="tipo_documento_codigo" required>
+                                    <option value="">Selecione</option>
+                                    <?php foreach ($tipos_documento as $tipo_documento): ?>
+                                        <option value="<?= $tipo_documento['codigo']; ?>"
+                                            <?= ($documento['tipo_documento_codigo'] ?? '') == $tipo_documento['codigo'] ? 'selected' : ''; ?>>
+                                            <?= htmlspecialchars($tipo_documento['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="localizacao_codigo">Localização</label>
+                                <select class="form-select" id="localizacao_codigo" name="localizacao_codigo" required>
+                                    <option value="">Selecione</option>
+                                    <?php foreach ($localizacoes as $localizacao): ?>
+                                        <option value="<?= $localizacao['codigo']; ?>"
+                                            <?= ($documento['localizacao_codigo'] ?? '') == $localizacao['codigo'] ? 'selected' : ''; ?>>
+                                            <?= htmlspecialchars($localizacao['classificacao'] . ' — ' . $localizacao['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <div class="form-text">
+                                    A localização precisa estar configurada para o tipo de documento selecionado.
+                                </div>
+                            </div>
+                        <?php endif; ?>
 
                         <div class="col-12 col-md-6 col-lg-4">
                             <label class="form-label" for="data_documento">Data do documento</label>
@@ -116,13 +143,41 @@
                     <div class="d-flex flex-column-reverse flex-sm-row justify-content-sm-end gap-2">
                         <button class="btn btn-light border" id="voltar" type="button">Voltar</button>
                         <button class="btn btn-primary" id="salvar" type="submit">
-                            <?= $modo_edicao ? 'Salvar alterações' : 'Cadastrar documento'; ?>
+                            <?= $modo_edicao ? 'Salvar alterações' : 'Revisar cadastro'; ?>
                         </button>
                     </div>
                 </div>
             </section>
         </form>
     </main>
+
+    <?php if (!$modo_edicao): ?>
+        <div class="modal fade" id="modalConfirmarDocumento" tabindex="-1"
+            aria-labelledby="modalConfirmarDocumentoLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header">
+                        <div>
+                            <h2 class="modal-title fs-5" id="modalConfirmarDocumentoLabel">Confirmar cadastro</h2>
+                            <p class="small text-body-secondary mb-0">Revise as informações antes de cadastrar.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+
+                    <div class="modal-body" id="conteudo-revisao"></div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">
+                            Voltar e corrigir
+                        </button>
+                        <button type="button" class="btn btn-primary" id="confirmar-cadastro">
+                            Confirmar cadastro
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="toast-feedback" class="toast border-0 shadow">
@@ -139,17 +194,17 @@
     <script>
         const base_url = '<?= base_url(); ?>';
         const documento_codigo = <?= $modo_edicao ? (int) $documento['codigo'] : 'null'; ?>;
+        const modo_edicao = <?= $modo_edicao ? 'true' : 'false'; ?>;
+        let formulario_pendente = null;
 
         $(document).ready(function () {
             function carregar_metadados() {
-                const tipo_documento_codigo =
-                    $('#tipo_documento_codigo').val();
+                const tipo_documento_codigo = $('#tipo_documento_codigo').val();
 
                 if (!tipo_documento_codigo) {
                     $('#campos-metadados').html(
                         '<div class="col-12 text-body-secondary">Selecione um tipo de documento.</div>'
                     );
-
                     return;
                 }
 
@@ -157,10 +212,7 @@
                     '<div class="col-12"><span class="spinner-border spinner-border-sm me-2"></span>Carregando campos...</div>'
                 );
 
-                let url =
-                    base_url +
-                    'documento/campos_metadados/' +
-                    tipo_documento_codigo;
+                let url = base_url + 'documento/campos_metadados/' + tipo_documento_codigo;
 
                 if (documento_codigo) {
                     url += '/' + documento_codigo;
@@ -173,71 +225,58 @@
                 }).done(function (response) {
                     if (!response.sucesso) {
                         mostrar_erros(
-                            response.dados?.erros ||
-                            response.mensagem?.conteudo,
+                            response.dados?.erros || response.mensagem?.conteudo,
                             'alerta-formulario'
                         );
-
                         return;
                     }
 
-                    $('#campos-metadados').html(
-                        response.dados.html
-                    );
+                    $('#campos-metadados').html(response.dados.html);
                 }).fail(function (xhr) {
-                    mostrar_erro_ajax(
-                        xhr,
-                        'alerta-formulario'
-                    );
+                    mostrar_erro_ajax(xhr, 'alerta-formulario');
                 });
             }
 
-            carregar_metadados();
+            function enviar_formulario(confirmar = false) {
+                const texto_botao = modo_edicao ? 'Salvar alterações' : 'Revisar cadastro';
+                let dados = formulario_pendente || $('#formulario').serialize();
 
-            $('#tipo_documento_codigo').on(
-                'change',
-                carregar_metadados
-            );
-
-            $('#voltar').on('click', function () {
-                if (window.history.length > 1) {
-                    window.history.back();
-                    return;
+                if (confirmar) {
+                    dados += '&confirmar=1';
                 }
-
-                window.location =
-                    base_url + 'documento';
-            });
-
-            $('#formulario').on('submit', function (e) {
-                e.preventDefault();
-
-                const texto_botao =
-                    '<?= $modo_edicao ? 'Salvar alterações' : 'Cadastrar documento'; ?>';
 
                 $('#salvar')
                     .prop('disabled', true)
-                    .html(
-                        '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>'
-                    );
+                    .html('<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>');
 
-                $('#alerta-formulario')
-                    .empty()
-                    .addClass('d-none');
+                $('#alerta-formulario').empty().addClass('d-none');
+
+                if (confirmar) {
+                    $('#confirmar-cadastro')
+                        .prop('disabled', true)
+                        .html('<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>');
+                }
 
                 $.ajax({
                     url: base_url + '<?= uri_string(); ?>',
                     method: 'POST',
-                    data: $(this).serialize(),
+                    data: dados,
                     dataType: 'json'
                 }).done(function (response) {
                     if (!response.sucesso) {
                         mostrar_erros(
-                            response.dados?.erros ||
-                            response.mensagem?.conteudo,
+                            response.dados?.erros || response.mensagem?.conteudo,
                             'alerta-formulario'
                         );
+                        return;
+                    }
 
+                    if (!modo_edicao && response.dados?.confirmacao) {
+                        $('#conteudo-revisao').html(response.dados.html);
+
+                        bootstrap.Modal
+                            .getOrCreateInstance(document.getElementById('modalConfirmarDocumento'))
+                            .show();
                         return;
                     }
 
@@ -247,19 +286,41 @@
                     );
 
                     window.location =
-                        base_url +
-                        'documento/detalhes/' +
-                        response.dados.codigo;
+                        base_url + 'documento/detalhes/' + response.dados.codigo;
                 }).fail(function (xhr) {
-                    mostrar_erro_ajax(
-                        xhr,
-                        'alerta-formulario'
-                    );
+                    mostrar_erro_ajax(xhr, 'alerta-formulario');
                 }).always(function () {
-                    $('#salvar')
-                        .prop('disabled', false)
-                        .html(texto_botao);
+                    $('#salvar').prop('disabled', false).html(texto_botao);
+
+                    if (!modo_edicao) {
+                        $('#confirmar-cadastro')
+                            .prop('disabled', false)
+                            .html('Confirmar cadastro');
+                    }
                 });
+            }
+
+            carregar_metadados();
+
+            $('#tipo_documento_codigo').on('change', carregar_metadados);
+
+            $('#voltar').on('click', function () {
+                if (window.history.length > 1) {
+                    window.history.back();
+                    return;
+                }
+
+                window.location = base_url + 'documento';
+            });
+
+            $('#formulario').on('submit', function (e) {
+                e.preventDefault();
+                formulario_pendente = $(this).serialize();
+                enviar_formulario(false);
+            });
+
+            $('#confirmar-cadastro').on('click', function () {
+                enviar_formulario(true);
             });
         });
     </script>
