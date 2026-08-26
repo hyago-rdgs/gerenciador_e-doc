@@ -134,14 +134,21 @@
                 </header>
 
                 <dl class="row border-top pt-3 mb-0">
-                    <div class="col-sm-6 col-lg-3 mb-3 mb-lg-0">
+                    <div class="col-sm-6 col-lg mb-3 mb-lg-0">
+                        <dt class="small text-body-secondary fw-normal mb-1">Protocolo</dt>
+                        <dd class="fw-semibold font-monospace mb-0">
+                            <?= htmlspecialchars($localizacao['protocolo'], ENT_QUOTES, 'UTF-8'); ?>
+                        </dd>
+                    </div>
+
+                    <div class="col-sm-6 col-lg mb-3 mb-lg-0">
                         <dt class="small text-body-secondary fw-normal mb-1">Classificação</dt>
                         <dd class="fw-semibold mb-0">
                             <?= htmlspecialchars($localizacao['classificacao'], ENT_QUOTES, 'UTF-8'); ?>
                         </dd>
                     </div>
 
-                    <div class="col-sm-6 col-lg-3 mb-3 mb-lg-0">
+                    <div class="col-sm-6 col-lg mb-3 mb-lg-0">
                         <dt class="small text-body-secondary fw-normal mb-1">Localização superior</dt>
                         <dd class="mb-0">
                             <?php if (!empty($localizacao['localizacao_pai_nome'])): ?>
@@ -155,12 +162,12 @@
                         </dd>
                     </div>
 
-                    <div class="col-sm-6 col-lg-3 mb-3 mb-sm-0">
+                    <div class="col-sm-6 col-lg mb-3 mb-lg-0">
                         <dt class="small text-body-secondary fw-normal mb-1">Sublocalizações</dt>
                         <dd class="fw-semibold mb-0"><?= $total_localizacoes; ?></dd>
                     </div>
 
-                    <div class="col-sm-6 col-lg-3">
+                    <div class="col-sm-6 col-lg">
                         <dt class="small text-body-secondary fw-normal mb-1">Documentos neste nível</dt>
                         <dd class="fw-semibold mb-0"><?= $total_documentos; ?></dd>
                     </div>
@@ -180,7 +187,7 @@
                                     <i class="fa-solid fa-magnifying-glass text-secondary"></i>
                                 </span>
                                 <input class="form-control" id="termo_localizacao" name="termo_localizacao"
-                                    placeholder="Nome ou descrição" type="search"
+                                    placeholder="Nome, descrição ou protocolo" type="search"
                                     value="<?= htmlspecialchars($filtro_termo_localizacao ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                             </div>
                         </div>
@@ -224,7 +231,7 @@
                                 <th class="px-3 py-3" scope="col">Nome</th>
                                 <th class="py-3" scope="col">Tipo</th>
                                 <th class="py-3" scope="col">Tipo documental</th>
-                                <th class="py-3" scope="col">Classificação</th>
+                                <th class="py-3" scope="col">Identificação</th>
                                 <th class="py-3 text-center" scope="col">Sublocalizações</th>
                                 <th class="py-3 text-center" scope="col">Documentos</th>
                                 <th class="py-3 text-center" scope="col">Status</th>
@@ -262,9 +269,12 @@
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <span class="font-monospace small">
+                                        <span class="font-monospace small d-block">
                                             <?= htmlspecialchars($localizacao_filho['classificacao'], ENT_QUOTES, 'UTF-8'); ?>
                                         </span>
+                                        <small class="text-body-secondary font-monospace">
+                                            <?= htmlspecialchars($localizacao_filho['protocolo'], ENT_QUOTES, 'UTF-8'); ?>
+                                        </small>
                                     </td>
                                     <td class="text-center"><?= $localizacao_filho['total_sublocalizacoes']; ?></td>
                                     <td class="text-center"><?= $localizacao_filho['total_documentos']; ?></td>
@@ -276,18 +286,15 @@
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-end pe-3 pe-lg-4">
-                                        <button class="btn btn-sm btn-primary acessar"
-                                            data-codigo="<?= $localizacao_filho['codigo']; ?>" role="button">
+                                        <button class="btn btn-sm btn-primary acessar" data-codigo="<?= $localizacao_filho['codigo']; ?>" role="button">
                                             <i class="fa-solid fa-arrow-right me-2" aria-hidden="true"></i>
                                             Acessar
                                         </button>
-
                                         <a class="btn btn-sm btn-light border"
                                             href="<?= base_url('localizacao/atualizar/' . $localizacao_filho['codigo']); ?>"
                                             aria-label="Editar localização">
                                             <i class="fa-solid fa-pen"></i>
                                         </a>
-
                                         <button type="button" class="btn btn-sm btn-light border text-danger excluir-localizacao"
                                             data-codigo="<?= $localizacao_filho['codigo']; ?>"
                                             data-nome="<?= htmlspecialchars($localizacao_filho['nome'], ENT_QUOTES, 'UTF-8'); ?>"
@@ -314,7 +321,6 @@
                         <?php
                         parse_str($_SERVER['QUERY_STRING'], $params_localizacao);
                         unset($params_localizacao['pagina_localizacao']);
-
                         $gerar_url_localizacao = function ($num_pagina) use ($params_localizacao) {
                             $params_localizacao['pagina_localizacao'] = $num_pagina;
                             return '?' . http_build_query($params_localizacao);
@@ -393,6 +399,9 @@
                                         <a class="text-decoration-none fw-semibold"
                                             href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
                                             <?= htmlspecialchars($documento['titulo'], ENT_QUOTES, 'UTF-8'); ?>
+                                            <small class="d-block text-body-secondary fw-normal font-monospace">
+                                                <?= htmlspecialchars($documento['protocolo'], ENT_QUOTES, 'UTF-8'); ?>
+                                            </small>
                                             <small class="d-block text-body-secondary fw-normal">
                                                 <?= htmlspecialchars($documento['numero_identificacao'] ?? 'Sem identificação', ENT_QUOTES, 'UTF-8'); ?>
                                             </small>
@@ -407,8 +416,7 @@
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-end pe-3 pe-lg-4">
-                                        <a class="btn btn-sm btn-primary"
-                                            href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
+                                        <a class="btn btn-sm btn-primary" href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
                                             <i class="fa-solid fa-arrow-right me-2" aria-hidden="true"></i>
                                             Acessar
                                         </a>
@@ -430,7 +438,6 @@
                         <?php
                         parse_str($_SERVER['QUERY_STRING'], $params_documento);
                         unset($params_documento['pagina_documento']);
-
                         $gerar_url_documento = function ($num_pagina) use ($params_documento) {
                             $params_documento['pagina_documento'] = $num_pagina;
                             return '?' . http_build_query($params_documento);
@@ -482,9 +489,7 @@
                             Cadastrar documento
                         </a>
                     <?php else: ?>
-                        <p class="text-secondary mb-4">
-                            Defina primeiro o tipo de documento permitido nesta localização.
-                        </p>
+                        <p class="text-secondary mb-4">Defina primeiro o tipo de documento permitido nesta localização.</p>
                         <a class="btn btn-warning" href="<?= base_url('localizacao/atualizar/' . $localizacao['codigo']); ?>">
                             <i class="fa-solid fa-link me-2" aria-hidden="true"></i>
                             Definir tipo de documento
@@ -495,8 +500,7 @@
         <?php endif; ?>
     </main>
 
-    <div class="modal fade" id="modalExcluirLocalizacao" tabindex="-1" aria-labelledby="modalExcluirLocalizacaoLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="modalExcluirLocalizacao" tabindex="-1" aria-labelledby="modalExcluirLocalizacaoLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content border-0 shadow">
                 <form id="formulario_exclusao_localizacao" method="post">
@@ -504,7 +508,6 @@
                         <div class="mb-3">
                             <i class="fa-solid fa-trash-can text-danger fa-2x" aria-hidden="true"></i>
                         </div>
-
                         <h2 class="modal-title fs-5 mb-2" id="modalExcluirLocalizacaoLabel">Excluir localização?</h2>
                         <p class="text-body-secondary mb-2">Você está prestes a excluir:</p>
                         <p class="fw-semibold mb-1" id="nome-localizacao-exclusao"></p>
