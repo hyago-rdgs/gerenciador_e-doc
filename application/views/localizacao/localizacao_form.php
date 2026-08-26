@@ -91,7 +91,7 @@ $localizacao_pai_selecionada =
                                     placeholder="Descreva a finalidade ou identificação desta localização."><?= htmlspecialchars($localizacao['descricao'] ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
                             </div>
 
-                            <div class="col-12 col-md-8">
+                            <div class="col-12 col-lg-6">
                                 <label class="form-label" for="localizacao_codigo_pai">Localização superior</label>
                                 <select class="form-select" id="localizacao_codigo_pai" name="localizacao_codigo_pai">
                                     <option value="">Nenhuma — localização raiz</option>
@@ -103,12 +103,27 @@ $localizacao_pai_selecionada =
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <div class="form-text">Deixe vazio para cadastrar uma localização raiz.</div>
+                            </div>
+
+                            <div class="col-12 col-md-8 col-lg-4">
+                                <label class="form-label" for="tipo_documento_codigo">Tipo de documento</label>
+                                <select class="form-select" id="tipo_documento_codigo" name="tipo_documento_codigo">
+                                    <option value="">Nenhum — sem armazenamento documental</option>
+
+                                    <?php foreach ($tipos_documento as $tipo_documento): ?>
+                                        <option value="<?= $tipo_documento['codigo']; ?>"
+                                            <?= isset($tipo_documento_codigo) && $tipo_documento_codigo == $tipo_documento['codigo'] ? 'selected' : ''; ?>>
+                                            <?= htmlspecialchars($tipo_documento['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
                                 <div class="form-text">
-                                    Deixe vazio para cadastrar uma localização raiz.
+                                    Quando definido, somente documentos deste tipo poderão ser armazenados nesta localização.
                                 </div>
                             </div>
 
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-4 col-lg-2">
                                 <label class="form-label" for="ativo">Status</label>
                                 <select class="form-select" id="ativo" name="ativo" required>
                                     <option value="1" <?= !isset($localizacao['ativo']) || $localizacao['ativo'] == 1 ? 'selected' : ''; ?>>
@@ -187,18 +202,7 @@ $localizacao_pai_selecionada =
                         $('#formulario').find('input, select, textarea').first().trigger('focus');
                     <?php endif; ?>
                 }).fail(function (xhr) {
-                    const response = xhr.responseJSON;
-
-                    if (response?.dados?.erros) {
-                        mostrar_erros(response.dados.erros, 'alerta-formulario');
-                        return;
-                    }
-
-                    mostrar_erros(
-                        response?.mensagem?.conteudo ||
-                        'Não foi possível comunicar com o servidor. Tente novamente.',
-                        'alerta-formulario'
-                    );
+                    mostrar_erro_ajax(xhr, 'alerta-formulario');
                 }).always(function () {
                     $('#salvar').prop('disabled', false).html(texto_botao);
                 });
