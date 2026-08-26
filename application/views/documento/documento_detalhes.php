@@ -41,6 +41,13 @@
                     <div class="card-body p-4">
                         <h2 class="h5 fw-semibold mb-4">Dados do documento</h2>
                         <dl class="row mb-0">
+                            <dt class="col-sm-4 text-body-secondary">Protocolo</dt>
+                            <dd class="col-sm-8">
+                                <span class="font-monospace fw-semibold">
+                                    <?= htmlspecialchars($documento['protocolo'], ENT_QUOTES, 'UTF-8'); ?>
+                                </span>
+                            </dd>
+
                             <dt class="col-sm-4 text-body-secondary">Identificação</dt>
                             <dd class="col-sm-8">
                                 <?= htmlspecialchars($documento['numero_identificacao'] ?? 'Não informada', ENT_QUOTES, 'UTF-8'); ?>
@@ -53,8 +60,7 @@
 
                             <dt class="col-sm-4 text-body-secondary">Status</dt>
                             <dd class="col-sm-8">
-                                <span
-                                    class="badge <?= $documento['ativo'] ? 'text-bg-success' : 'text-bg-secondary'; ?>">
+                                <span class="badge <?= $documento['ativo'] ? 'text-bg-success' : 'text-bg-secondary'; ?>">
                                     <?= $documento['ativo'] ? 'Ativo' : 'Inativo'; ?>
                                 </span>
                             </dd>
@@ -117,12 +123,12 @@
                         <form action="<?= base_url('documento/cadastrar_arquivo/' . $documento['codigo']); ?>"
                             id="formulario-arquivo" method="post" enctype="multipart/form-data">
                             <div class="input-group mb-3">
-                            <input accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png"
-                                class="form-control" id="arquivo" name="arquivo" required
-                                type="file" aria-describedby="enviar-arquivo">
-                            <button class="btn btn-primary" id="enviar-arquivo" type="submit">
-                                <i class="fa-solid fa-upload me-2"></i>Enviar
-                            </button>
+                                <input accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png"
+                                    class="form-control" id="arquivo" name="arquivo" required
+                                    type="file" aria-describedby="enviar-arquivo">
+                                <button class="btn btn-primary" id="enviar-arquivo" type="submit">
+                                    <i class="fa-solid fa-upload me-2"></i>Enviar
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -156,8 +162,7 @@
                                                         <span class="badge text-bg-primary ms-2">Principal</span>
                                                     <?php endif; ?>
                                                 </td>
-                                                <td><?= strtoupper(htmlspecialchars($arquivo['extensao'], ENT_QUOTES, 'UTF-8')); ?>
-                                                </td>
+                                                <td><?= strtoupper(htmlspecialchars($arquivo['extensao'], ENT_QUOTES, 'UTF-8')); ?></td>
                                                 <td><?= number_format($arquivo['tamanho'] / 1024, 1, ',', '.'); ?> KB</td>
                                                 <td><?= (int) $arquivo['versao']; ?></td>
                                                 <td class="pe-3 text-end">
@@ -210,10 +215,8 @@
                                                 <?= date('d/m/Y H:i', strtotime($movimentacao['data_movimentacao'])); ?>
                                             </td>
                                             <td><?= ucfirst(strtolower($movimentacao['tipo_movimentacao'])); ?></td>
-                                            <td><?= htmlspecialchars($movimentacao['localizacao_origem'] ?? 'Não se aplica', ENT_QUOTES, 'UTF-8'); ?>
-                                            </td>
-                                            <td><?= htmlspecialchars($movimentacao['localizacao_destino'] ?? 'Não informada', ENT_QUOTES, 'UTF-8'); ?>
-                                            </td>
+                                            <td><?= htmlspecialchars($movimentacao['localizacao_origem'] ?? 'Não se aplica', ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td><?= htmlspecialchars($movimentacao['localizacao_destino'] ?? 'Não informada', ENT_QUOTES, 'UTF-8'); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -244,8 +247,7 @@
         const documento_codigo = <?= (int) $documento['codigo']; ?>;
 
         $(document).ready(function () {
-            const feedback =
-                sessionStorage.getItem('feedback');
+            const feedback = sessionStorage.getItem('feedback');
 
             if (feedback) {
                 sessionStorage.removeItem('feedback');
@@ -256,18 +258,13 @@
                 e.preventDefault();
 
                 const dados = new FormData(this);
-                const texto_botao =
-                    '<i class="fa-solid fa-upload me-2"></i>Enviar';
+                const texto_botao = '<i class="fa-solid fa-upload me-2"></i>Enviar';
 
                 $('#enviar-arquivo')
                     .prop('disabled', true)
-                    .html(
-                        '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>'
-                    );
+                    .html('<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>');
 
-                $('#alerta-arquivo')
-                    .empty()
-                    .addClass('d-none');
+                $('#alerta-arquivo').empty().addClass('d-none');
 
                 $.ajax({
                     url: $(this).attr('action'),
@@ -279,147 +276,86 @@
                 }).done(function (response) {
                     if (!response.sucesso) {
                         mostrar_erros(
-                            response.dados?.erros ||
-                            response.mensagem?.conteudo,
+                            response.dados?.erros || response.mensagem?.conteudo,
                             'alerta-arquivo'
                         );
-
                         return;
                     }
 
-                    sessionStorage.setItem(
-                        'feedback',
-                        response.mensagem?.conteudo
-                    );
-
+                    sessionStorage.setItem('feedback', response.mensagem?.conteudo);
                     window.location.reload();
                 }).fail(function (xhr) {
-                    mostrar_erro_ajax(
-                        xhr,
-                        'alerta-arquivo'
-                    );
+                    mostrar_erro_ajax(xhr, 'alerta-arquivo');
                 }).always(function () {
-                    $('#enviar-arquivo')
-                        .prop('disabled', false)
-                        .html(texto_botao);
+                    $('#enviar-arquivo').prop('disabled', false).html(texto_botao);
                 });
             });
 
             $('.arquivo-principal').on('click', function () {
                 const botao = $(this);
-                const arquivo_codigo =
-                    botao.data('codigo');
+                const arquivo_codigo = botao.data('codigo');
 
                 botao
                     .prop('disabled', true)
-                    .html(
-                        '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>'
-                    );
+                    .html('<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>');
 
-                $('#alerta-arquivo')
-                    .empty()
-                    .addClass('d-none');
+                $('#alerta-arquivo').empty().addClass('d-none');
 
                 $.ajax({
-                    url:
-                        base_url +
-                        'documento/definir_arquivo_principal/' +
-                        documento_codigo +
-                        '/' +
-                        arquivo_codigo,
+                    url: base_url + 'documento/definir_arquivo_principal/' + documento_codigo + '/' + arquivo_codigo,
                     method: 'POST',
                     dataType: 'json'
                 }).done(function (response) {
                     if (!response.sucesso) {
                         mostrar_erros(
-                            response.dados?.erros ||
-                            response.mensagem?.conteudo,
+                            response.dados?.erros || response.mensagem?.conteudo,
                             'alerta-arquivo'
                         );
-
                         return;
                     }
 
-                    sessionStorage.setItem(
-                        'feedback',
-                        response.mensagem?.conteudo
-                    );
-
+                    sessionStorage.setItem('feedback', response.mensagem?.conteudo);
                     window.location.reload();
                 }).fail(function (xhr) {
-                    mostrar_erro_ajax(
-                        xhr,
-                        'alerta-arquivo'
-                    );
+                    mostrar_erro_ajax(xhr, 'alerta-arquivo');
                 }).always(function () {
-                    botao
-                        .prop('disabled', false)
-                        .html(
-                            '<i class="fa-solid fa-star"></i>'
-                        );
+                    botao.prop('disabled', false).html('<i class="fa-solid fa-star"></i>');
                 });
             });
 
             $('.excluir-arquivo').on('click', function () {
                 const botao = $(this);
-                const arquivo_codigo =
-                    botao.data('codigo');
+                const arquivo_codigo = botao.data('codigo');
 
-                if (
-                    !window.confirm(
-                        'Deseja excluir este arquivo?'
-                    )
-                ) {
+                if (!window.confirm('Deseja excluir este arquivo?')) {
                     return;
                 }
 
                 botao
                     .prop('disabled', true)
-                    .html(
-                        '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>'
-                    );
+                    .html('<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>');
 
-                $('#alerta-arquivo')
-                    .empty()
-                    .addClass('d-none');
+                $('#alerta-arquivo').empty().addClass('d-none');
 
                 $.ajax({
-                    url:
-                        base_url +
-                        'documento/excluir_arquivo/' +
-                        documento_codigo +
-                        '/' +
-                        arquivo_codigo,
+                    url: base_url + 'documento/excluir_arquivo/' + documento_codigo + '/' + arquivo_codigo,
                     method: 'POST',
                     dataType: 'json'
                 }).done(function (response) {
                     if (!response.sucesso) {
                         mostrar_erros(
-                            response.dados?.erros ||
-                            response.mensagem?.conteudo,
+                            response.dados?.erros || response.mensagem?.conteudo,
                             'alerta-arquivo'
                         );
-
                         return;
                     }
 
-                    sessionStorage.setItem(
-                        'feedback',
-                        response.mensagem?.conteudo
-                    );
-
+                    sessionStorage.setItem('feedback', response.mensagem?.conteudo);
                     window.location.reload();
                 }).fail(function (xhr) {
-                    mostrar_erro_ajax(
-                        xhr,
-                        'alerta-arquivo'
-                    );
+                    mostrar_erro_ajax(xhr, 'alerta-arquivo');
                 }).always(function () {
-                    botao
-                        .prop('disabled', false)
-                        .html(
-                            '<i class="fa-solid fa-trash-can"></i>'
-                        );
+                    botao.prop('disabled', false).html('<i class="fa-solid fa-trash-can"></i>');
                 });
             });
         });
