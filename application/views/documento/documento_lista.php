@@ -39,7 +39,7 @@
                         <div class="col-12 col-lg-4">
                             <label class="form-label" for="termo">Buscar documento</label>
                             <input class="form-control" id="termo" name="termo"
-                                placeholder="Título ou número de identificação" type="search"
+                                placeholder="Título, identificação ou protocolo" type="search"
                                 value="<?= htmlspecialchars($filtro_termo, ENT_QUOTES, 'UTF-8'); ?>">
                         </div>
 
@@ -116,6 +116,9 @@
                                         <a class="text-decoration-none fw-semibold"
                                             href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
                                             <?= htmlspecialchars($documento['titulo'], ENT_QUOTES, 'UTF-8'); ?>
+                                            <small class="d-block text-body-secondary fw-normal font-monospace">
+                                                <?= htmlspecialchars($documento['protocolo'], ENT_QUOTES, 'UTF-8'); ?>
+                                            </small>
                                             <small class="d-block text-body-secondary fw-normal">
                                                 <?= htmlspecialchars($documento['numero_identificacao'] ?? 'Sem identificação', ENT_QUOTES, 'UTF-8'); ?>
                                             </small>
