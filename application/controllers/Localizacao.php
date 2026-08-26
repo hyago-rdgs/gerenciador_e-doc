@@ -8,6 +8,9 @@ class Localizacao extends CI_Controller
         $this->controle_acesso->valida_acesso();
         $this->load->model('localizacao_model');
         $this->load->model('tipo_localizacao_model');
+        $this->load->model('tipo_documento_model');
+        $this->load->model('localizacao_tipo_documento_model');
+        $this->load->model('documento_model');
     }
 
     public function index()
@@ -34,10 +37,13 @@ class Localizacao extends CI_Controller
         $dados = [
             'filtro_termo' => $filtro_termo,
             'filtro_status' => $filtro_status,
-
-            'localizacoes' => $this->localizacao_model->listar_raizes($filtro_termo, $filtro_status, $limite, $offset),
+            'localizacoes' => $this->localizacao_model->listar_raizes(
+                $filtro_termo,
+                $filtro_status,
+                $limite,
+                $offset
+            ),
             'total_localizacoes' => $total_localizacoes,
-
             'limite' => $limite,
             'offset' => $offset + 1,
             'pagina_atual' => $pagina_atual,
@@ -115,9 +121,24 @@ class Localizacao extends CI_Controller
             $dados['sequencial'] = $sequencial;
             $dados['classificacao'] = $classificacao;
 
+            $this->db->trans_begin();
+
             $codigo = $this->localizacao_model->cadastrar($dados);
 
-            if (!$codigo) {
+            $vinculo_salvo = $codigo
+                ? $this->localizacao_tipo_documento_model->salvar_tipo_unico(
+                    $codigo,
+                    $resultado['tipo_documento_codigo']
+                )
+                : FALSE;
+
+            if (
+                !$codigo ||
+                !$vinculo_salvo ||
+                $this->db->trans_status() === FALSE
+            ) {
+                $this->db->trans_rollback();
+
                 resposta_json(
                     FALSE,
                     'Não foi possível cadastrar a localização.',
@@ -125,6 +146,8 @@ class Localizacao extends CI_Controller
                     500
                 );
             }
+
+            $this->db->trans_commit();
 
             resposta_json(
                 TRUE,
@@ -136,6 +159,7 @@ class Localizacao extends CI_Controller
 
         $dados = [
             'tipos_localizacao' => $this->tipo_localizacao_model->listar(),
+            'tipos_documento' => $this->tipo_documento_model->listar_opcoes(),
             'localizacoes_opcoes' => $this->localizacao_model->listar_opcoes(),
             'localizacao_codigo_pai' => $localizacao_codigo_pai
         ];
@@ -150,7 +174,6 @@ class Localizacao extends CI_Controller
         }
 
         $codigo = (int) $codigo;
-
         $localizacao = $this->localizacao_model->buscar_por_codigo($codigo);
 
         if (!$localizacao) {
@@ -232,13 +255,28 @@ class Localizacao extends CI_Controller
                 $dados['classificacao'] = $localizacao['classificacao'];
             }
 
-            $atualizado = $this->localizacao_model->atualizar(
+            $this->db->trans_begin();
+
+            $localizacao_atualizada = $this->localizacao_model->atualizar(
                 $codigo,
                 $dados,
                 $localizacao['classificacao']
             );
 
-            if (!$atualizado) {
+            $vinculo_atualizado = $localizacao_atualizada
+                ? $this->localizacao_tipo_documento_model->salvar_tipo_unico(
+                    $codigo,
+                    $resultado['tipo_documento_codigo']
+                )
+                : FALSE;
+
+            if (
+                !$localizacao_atualizada ||
+                !$vinculo_atualizado ||
+                $this->db->trans_status() === FALSE
+            ) {
+                $this->db->trans_rollback();
+
                 resposta_json(
                     FALSE,
                     'Não foi possível atualizar a localização.',
@@ -246,6 +284,8 @@ class Localizacao extends CI_Controller
                     500
                 );
             }
+
+            $this->db->trans_commit();
 
             resposta_json(
                 TRUE,
@@ -257,9 +297,17 @@ class Localizacao extends CI_Controller
             );
         }
 
+        $tipo_documento = $this->localizacao_tipo_documento_model->buscar_por_localizacao(
+            $codigo
+        );
+
         $dados = [
             'localizacao' => $localizacao,
+            'tipo_documento_codigo' => $tipo_documento
+                ? $tipo_documento['tipo_documento_codigo']
+                : NULL,
             'tipos_localizacao' => $this->tipo_localizacao_model->listar(),
+            'tipos_documento' => $this->tipo_documento_model->listar_opcoes(),
             'localizacoes_opcoes' => $this->localizacao_model->listar_opcoes(
                 $codigo,
                 $localizacao['classificacao']
@@ -305,7 +353,7 @@ class Localizacao extends CI_Controller
             $erros[] = 'A localização possui sublocalizações vinculadas.';
         }
 
-        if ($this->localizacao_model->possui_documentos($codigo)) {
+        if ($this->documento_model->possui_documentos($codigo)) {
             $erros[] = 'A localização possui documentos vinculados.';
         }
 
@@ -319,7 +367,23 @@ class Localizacao extends CI_Controller
             return;
         }
 
-        if (!$this->localizacao_model->excluir($codigo)) {
+        $this->db->trans_begin();
+
+        $vinculos_excluidos = $this->localizacao_tipo_documento_model->desvincular_por_localizacao(
+            $codigo
+        );
+
+        $localizacao_excluida = $vinculos_excluidos
+            ? $this->localizacao_model->excluir($codigo)
+            : FALSE;
+
+        if (
+            !$vinculos_excluidos ||
+            !$localizacao_excluida ||
+            $this->db->trans_status() === FALSE
+        ) {
+            $this->db->trans_rollback();
+
             resposta_json(
                 FALSE,
                 'Não foi possível excluir a localização.',
@@ -328,6 +392,8 @@ class Localizacao extends CI_Controller
             );
             return;
         }
+
+        $this->db->trans_commit();
 
         resposta_json(
             TRUE,
@@ -348,8 +414,6 @@ class Localizacao extends CI_Controller
             show_404();
         }
 
-
-        // PAGINACAO LOCALIZACAO
         $filtro_termo_localizacao = $this->input->get('termo_localizacao', TRUE) !== NULL ? $this->input->get('termo_localizacao', TRUE) : '';
         $filtro_status_localizacao = $this->input->get('status_localizacao', TRUE) !== NULL ? $this->input->get('status_localizacao', TRUE) : '';
 
@@ -358,26 +422,52 @@ class Localizacao extends CI_Controller
             $pagina_atual_localizacao = 1;
         }
 
+        $pagina_atual_documento = (int) $this->input->get('pagina_documento', TRUE);
+        if ($pagina_atual_documento < 1) {
+            $pagina_atual_documento = 1;
+        }
+
         $limite = 20;
         $offset_localizacao = ($pagina_atual_localizacao - 1) * $limite;
+        $offset_documento = ($pagina_atual_documento - 1) * $limite;
 
-        $total_localizacoes = $this->localizacao_model->contar_filhos($codigo, $filtro_termo_localizacao, $filtro_status_localizacao);
+        $total_localizacoes = $this->localizacao_model->contar_filhos(
+            $codigo,
+            $filtro_termo_localizacao,
+            $filtro_status_localizacao
+        );
+
+        $total_documentos = $this->documento_model->contar_por_localizacao($codigo);
 
         $dados = [
             'localizacao' => $localizacao,
-            
+            'tipo_documento' => $this->localizacao_tipo_documento_model->buscar_por_localizacao(
+                $codigo
+            ),
+            'caminho' => $this->localizacao_model->buscar_caminho($codigo),
             'filtro_termo_localizacao' => $filtro_termo_localizacao,
             'filtro_status_localizacao' => $filtro_status_localizacao,
-
-            'caminho' => $this->localizacao_model->buscar_caminho($codigo),
-
-            'localizacoes_filho' => $this->localizacao_model->listar_filhos($codigo, $filtro_termo_localizacao, $filtro_status_localizacao, $limite, $offset_localizacao),
+            'localizacoes_filho' => $this->localizacao_model->listar_filhos(
+                $codigo,
+                $filtro_termo_localizacao,
+                $filtro_status_localizacao,
+                $limite,
+                $offset_localizacao
+            ),
             'total_localizacoes' => $total_localizacoes,
-
+            'documentos' => $this->documento_model->listar_por_localizacao(
+                $codigo,
+                $limite,
+                $offset_documento
+            ),
+            'total_documentos' => $total_documentos,
             'limite' => $limite,
             'offset_localizacao' => $offset_localizacao + 1,
             'pagina_atual_localizacao' => $pagina_atual_localizacao,
-            'total_paginas_localizacao' => ceil($total_localizacoes / $limite)
+            'total_paginas_localizacao' => ceil($total_localizacoes / $limite),
+            'offset_documento' => $offset_documento + 1,
+            'pagina_atual_documento' => $pagina_atual_documento,
+            'total_paginas_documento' => ceil($total_documentos / $limite)
         ];
 
         $this->load->view('localizacao/localizacao_detalhes', $dados);
@@ -386,14 +476,21 @@ class Localizacao extends CI_Controller
     private function validar($dados, $codigo = NULL)
     {
         $localizacao_codigo_pai = trim($dados['localizacao_codigo_pai'] ?? '');
+        $tipo_documento_codigo = trim($dados['tipo_documento_codigo'] ?? '');
 
         $reg = [
             'nome' => trim($dados['nome'] ?? ''),
             'descricao' => trim($dados['descricao'] ?? ''),
             'ativo' => trim($dados['ativo'] ?? ''),
             'tipo_localizacao_codigo' => trim($dados['tipo_localizacao_codigo'] ?? ''),
-            'localizacao_codigo_pai' => $localizacao_codigo_pai !== '' ? $localizacao_codigo_pai : NULL
+            'localizacao_codigo_pai' => $localizacao_codigo_pai !== ''
+                ? $localizacao_codigo_pai
+                : NULL
         ];
+
+        $tipo_documento_codigo = $tipo_documento_codigo !== ''
+            ? $tipo_documento_codigo
+            : NULL;
 
         $erros = [];
 
@@ -407,6 +504,20 @@ class Localizacao extends CI_Controller
             $erros[] = 'O tipo de localização informado é inválido.';
         } elseif (!$this->tipo_localizacao_model->buscar_por_codigo((int) $reg['tipo_localizacao_codigo'])) {
             $erros[] = 'O tipo de localização informado não existe.';
+        }
+
+        if ($tipo_documento_codigo !== NULL) {
+            if (!ctype_digit($tipo_documento_codigo) || (int) $tipo_documento_codigo <= 0) {
+                $erros[] = 'O tipo de documento informado é inválido.';
+            } else {
+                $tipo_documento = $this->tipo_documento_model->buscar_por_codigo(
+                    (int) $tipo_documento_codigo
+                );
+
+                if (!$tipo_documento || (int) $tipo_documento['ativo'] !== 1) {
+                    $erros[] = 'O tipo de documento informado não existe ou está inativo.';
+                }
+            }
         }
 
         if ($reg['ativo'] === '') {
@@ -425,6 +536,36 @@ class Localizacao extends CI_Controller
             }
         }
 
+        if ($codigo !== NULL && empty($erros)) {
+            $tipo_atual = $this->localizacao_tipo_documento_model->buscar_por_localizacao(
+                $codigo
+            );
+
+            $tipo_atual_codigo = $tipo_atual
+                ? (int) $tipo_atual['tipo_documento_codigo']
+                : NULL;
+
+            $novo_tipo_codigo = $tipo_documento_codigo !== NULL
+                ? (int) $tipo_documento_codigo
+                : NULL;
+
+            if ($tipo_atual_codigo !== $novo_tipo_codigo && $this->documento_model->possui_documentos($codigo)) {
+                if (
+                    $tipo_atual_codigo === NULL &&
+                    $novo_tipo_codigo !== NULL &&
+                    !$this->documento_model->possui_tipo_diferente_na_localizacao(
+                        $codigo,
+                        $novo_tipo_codigo
+                    )
+                ) {
+                    // Permite configurar localizações antigas quando todos
+                    // os documentos existentes pertencem ao mesmo tipo.
+                } else {
+                    $erros[] = 'Não é possível alterar o tipo de documento da localização enquanto houver documentos vinculados.';
+                }
+            }
+        }
+
         if (!empty($erros)) {
             return [
                 'sucesso' => FALSE,
@@ -439,9 +580,14 @@ class Localizacao extends CI_Controller
             $reg['localizacao_codigo_pai'] = (int) $reg['localizacao_codigo_pai'];
         }
 
+        if ($tipo_documento_codigo !== NULL) {
+            $tipo_documento_codigo = (int) $tipo_documento_codigo;
+        }
+
         return [
             'sucesso' => TRUE,
-            'dados' => $reg
+            'dados' => $reg,
+            'tipo_documento_codigo' => $tipo_documento_codigo
         ];
     }
 
