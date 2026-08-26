@@ -61,6 +61,13 @@
                         </div>
 
                         <div class="col-12 col-md-6">
+                            <label class="form-label" for="protocolo">Protocolo</label>
+                            <input class="form-control font-monospace" id="protocolo" name="protocolo"
+                                placeholder="DOC-20260826-00000142" type="search"
+                                value="<?= htmlspecialchars($filtro_protocolo, ENT_QUOTES, 'UTF-8'); ?>">
+                        </div>
+
+                        <div class="col-12 col-md-6">
                             <label class="form-label" for="titulo">Título</label>
                             <input class="form-control" id="titulo" name="titulo"
                                 placeholder="Parte do título" type="search"
@@ -148,6 +155,9 @@
                                             <span class="fw-semibold">
                                                 <?= htmlspecialchars($documento['titulo'], ENT_QUOTES, 'UTF-8'); ?>
                                             </span>
+                                            <small class="d-block text-body-secondary font-monospace">
+                                                <?= htmlspecialchars($documento['protocolo'], ENT_QUOTES, 'UTF-8'); ?>
+                                            </small>
                                             <small class="d-block text-body-secondary">
                                                 <?= htmlspecialchars($documento['numero_identificacao'] ?? 'Sem identificação', ENT_QUOTES, 'UTF-8'); ?>
                                             </small>
@@ -209,65 +219,46 @@
             $('#tipo_documento_codigo').on(
                 'change',
                 function () {
-                    const tipo_documento_codigo =
-                        $(this).val();
+                    const tipo_documento_codigo = $(this).val();
 
                     if (!tipo_documento_codigo) {
                         $('#campos-metadados').html(
                             '<div class="col-12"><div class="alert alert-light border mb-0">Selecione um tipo de documento.</div></div>'
                         );
-
                         return;
                     }
 
-                    $('#alerta-pesquisa')
-                        .empty()
-                        .addClass('d-none');
+                    $('#alerta-pesquisa').empty().addClass('d-none');
 
                     $('#campos-metadados').html(
                         '<div class="col-12"><span class="spinner-border spinner-border-sm me-2"></span>Carregando campos...</div>'
                     );
 
                     $.ajax({
-                        url:
-                            base_url +
-                            'pesquisa/campos_metadados/' +
-                            tipo_documento_codigo,
+                        url: base_url + 'pesquisa/campos_metadados/' + tipo_documento_codigo,
                         method: 'GET',
                         dataType: 'json'
                     }).done(function (response) {
                         if (!response.sucesso) {
                             mostrar_erros(
-                                response.dados?.erros ||
-                                response.mensagem?.conteudo,
+                                response.dados?.erros || response.mensagem?.conteudo,
                                 'alerta-pesquisa'
                             );
-
                             return;
                         }
 
-                        $('#campos-metadados').html(
-                            response.dados.html
-                        );
+                        $('#campos-metadados').html(response.dados.html);
                     }).fail(function (xhr) {
-                        mostrar_erro_ajax(
-                            xhr,
-                            'alerta-pesquisa'
-                        );
+                        mostrar_erro_ajax(xhr, 'alerta-pesquisa');
                     });
                 }
             );
 
-            $('#formulario-pesquisa').on(
-                'submit',
-                function () {
-                    $('#pesquisar')
-                        .prop('disabled', true)
-                        .html(
-                            '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>'
-                        );
-                }
-            );
+            $('#formulario-pesquisa').on('submit', function () {
+                $('#pesquisar')
+                    .prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>');
+            });
         });
     </script>
 </body>
