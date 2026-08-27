@@ -160,7 +160,7 @@ class Pesquisa_model extends CI_Model
         );
 
         if (!empty($protocolo)) {
-            $this->db->where(
+            $this->db->like(
                 'd.protocolo',
                 strtoupper(trim($protocolo))
             );

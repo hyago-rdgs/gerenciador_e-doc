@@ -207,12 +207,17 @@ class Localizacao_model extends CI_Model
         }
 
         $this->db->where('codigo', $codigo);
-        $this->db->where('protocolo IS NULL', NULL, FALSE);
 
-        if (!$this->db->update(
-            $this->tabela,
-            ['protocolo' => $protocolo]
-        )) {
+        if (
+            !$this->db->update(
+                $this->tabela,
+                ['protocolo' => $protocolo]
+            )
+        ) {
+            return FALSE;
+        }
+
+        if ($this->db->affected_rows() <= 0) {
             return FALSE;
         }
 
