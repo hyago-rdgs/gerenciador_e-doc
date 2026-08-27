@@ -115,6 +115,13 @@
                             Editar
                         </a>
 
+                        <a class="btn btn-outline-dark"
+                            href="<?= base_url('etiqueta/localizacao/' . rawurlencode($localizacao['protocolo'])); ?>"
+                            target="_blank" rel="noopener">
+                            <i class="fa-solid fa-qrcode me-2" aria-hidden="true"></i>
+                            Imprimir etiqueta
+                        </a>
+
                         <a class="btn btn-outline-primary"
                             href="<?= base_url('localizacao/cadastrar/' . $localizacao['codigo']); ?>">
                             <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
