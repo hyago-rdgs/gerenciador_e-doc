@@ -1,6 +1,7 @@
 <?php $modo_edicao = !empty($documento) ? TRUE : FALSE; ?>
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,6 +9,7 @@
     <title><?= $modo_edicao ? 'Editar documento' : 'Novo documento'; ?> | e-Doc</title>
     <?php $this->load->view('css'); ?>
 </head>
+
 <body class="bg-body-tertiary">
     <?php $this->load->view('nav'); ?>
 
@@ -37,7 +39,8 @@
             <section class="card border shadow-sm mb-4">
                 <div class="card-body p-4">
                     <h2 class="h5 fw-semibold mb-1">Dados do documento</h2>
-                    <p class="small text-body-secondary mb-3">Informe os dados utilizados para identificar e localizar o documento.</p>
+                    <p class="small text-body-secondary mb-3">Informe os dados utilizados para identificar e localizar o
+                        documento.</p>
                     <div id="alerta-formulario" class="alert alert-danger d-none" role="alert"></div>
 
                     <div class="row g-3">
@@ -68,7 +71,14 @@
                                 <label class="form-label">Localização</label>
                                 <div class="form-control bg-body-tertiary">
                                     <?= htmlspecialchars(
-                                        $localizacao_selecionada['classificacao'] . ' — ' . $localizacao_selecionada['nome'],
+                                        $localizacao_selecionada['classificacao']
+                                        . ' - '
+                                        . $localizacao_selecionada['nome']
+                                        . (
+                                            !empty($localizacao_selecionada['tipo_documento'])
+                                            ? ' (' . $localizacao_selecionada['tipo_documento'] . ')'
+                                            : ''
+                                        ),
                                         ENT_QUOTES,
                                         'UTF-8'
                                     ); ?>
@@ -79,7 +89,8 @@
                         <?php else: ?>
                             <div class="col-12 col-md-6">
                                 <label class="form-label" for="tipo_documento_codigo">Tipo de documento</label>
-                                <select class="form-select" id="tipo_documento_codigo" name="tipo_documento_codigo" required>
+                                <select class="form-select" id="tipo_documento_codigo" name="tipo_documento_codigo"
+                                    required>
                                     <option value="">Selecione</option>
                                     <?php foreach ($tipos_documento as $tipo_documento): ?>
                                         <option value="<?= $tipo_documento['codigo']; ?>"
@@ -95,9 +106,19 @@
                                 <select class="form-select" id="localizacao_codigo" name="localizacao_codigo" required>
                                     <option value="">Selecione</option>
                                     <?php foreach ($localizacoes as $localizacao): ?>
-                                        <option value="<?= $localizacao['codigo']; ?>"
-                                            <?= ($documento['localizacao_codigo'] ?? '') == $localizacao['codigo'] ? 'selected' : ''; ?>>
-                                            <?= htmlspecialchars($localizacao['classificacao'] . ' — ' . $localizacao['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                        <option value="<?= $localizacao['codigo']; ?>" <?= ($documento['localizacao_codigo'] ?? '') == $localizacao['codigo'] ? 'selected' : ''; ?>>
+                                            <?= htmlspecialchars(
+                                                $localizacao['classificacao']
+                                                . ' - '
+                                                . $localizacao['nome']
+                                                . (
+                                                    !empty($localizacao['tipo_documento'])
+                                                    ? ' (' . $localizacao['tipo_documento'] . ')'
+                                                    : ''
+                                                ),
+                                                ENT_QUOTES,
+                                                'UTF-8'
+                                            ); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -123,7 +144,8 @@
 
                         <div class="col-12">
                             <label class="form-label" for="descricao">Descrição</label>
-                            <textarea class="form-control" id="descricao" name="descricao" rows="3"><?= htmlspecialchars($documento['descricao'] ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
+                            <textarea class="form-control" id="descricao" name="descricao"
+                                rows="3"><?= htmlspecialchars($documento['descricao'] ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
                         </div>
                     </div>
                 </div>
@@ -132,7 +154,8 @@
             <section class="card border shadow-sm">
                 <div class="card-body p-4">
                     <h2 class="h5 fw-semibold mb-1">Metadados</h2>
-                    <p class="small text-body-secondary mb-3">Os campos são carregados de acordo com o tipo selecionado.</p>
+                    <p class="small text-body-secondary mb-3">Os campos são carregados de acordo com o tipo selecionado.
+                    </p>
 
                     <div id="campos-metadados" class="row g-3">
                         <div class="col-12 text-body-secondary">Selecione um tipo de documento.</div>
@@ -152,8 +175,8 @@
     </main>
 
     <?php if (!$modo_edicao): ?>
-        <div class="modal fade" id="modalConfirmarDocumento" tabindex="-1"
-            aria-labelledby="modalConfirmarDocumentoLabel" aria-hidden="true">
+        <div class="modal fade" id="modalConfirmarDocumento" tabindex="-1" aria-labelledby="modalConfirmarDocumentoLabel"
+            aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content border-0 shadow">
                     <div class="modal-header">
@@ -325,4 +348,5 @@
         });
     </script>
 </body>
+
 </html>

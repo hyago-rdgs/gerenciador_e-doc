@@ -138,12 +138,28 @@ class Localizacao_model extends CI_Model
             'l.nome',
             'l.classificacao',
             'l.localizacao_codigo_pai',
-            'tl.nome AS tipo_localizacao'
+            'tl.nome AS tipo_localizacao',
+            'td.nome AS tipo_documento'
         ]);
         $this->db->from('localizacoes l');
         $this->db->join(
             'tipos_localizacao tl',
             'tl.codigo = l.tipo_localizacao_codigo AND tl.exclusao IS NULL',
+            'left',
+            FALSE
+        );
+        $this->db->join(
+            'localizacao_tipo_documentos ltd',
+            'ltd.localizacao_codigo = l.codigo'
+            . ' AND ltd.exclusao IS NULL',
+            'left',
+            FALSE
+        );
+
+        $this->db->join(
+            'tipos_documento td',
+            'td.codigo = ltd.tipo_documento_codigo'
+            . ' AND td.exclusao IS NULL',
             'left',
             FALSE
         );
@@ -158,7 +174,7 @@ class Localizacao_model extends CI_Model
             $this->db->not_like('l.classificacao', $classificacao . '.', 'after');
         }
 
-        $this->db->order_by('l.nome', 'ASC');
+        $this->db->order_by('l.classificacao', 'ASC');
 
         $query = $this->db->get();
         return $query->result_array();
