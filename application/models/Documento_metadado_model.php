@@ -53,6 +53,38 @@ class Documento_metadado_model extends CI_Model
         return $this->db->get()->result_array();
     }
 
+    public function listar_por_documentos($documento_codigos)
+    {
+        $documento_codigos = array_values(
+            array_filter(
+                array_map('intval', (array) $documento_codigos)
+            )
+        );
+
+        if (empty($documento_codigos)) {
+            return [];
+        }
+
+        $this->db->select([
+            'dm.documento_codigo',
+            'dm.valor',
+            'm.nome',
+            'm.tipo_campo',
+            'tdm.ordem'
+        ]);
+        $this->db->from($this->tabela . ' dm');
+        $this->db->join('documentos d', 'd.codigo = dm.documento_codigo', 'inner');
+        $this->db->join('metadados m', 'm.codigo = dm.metadado_codigo AND m.exclusao IS NULL', 'inner', FALSE);
+        $this->db->join('tipo_documento_metadados tdm', 'tdm.tipo_documento_codigo = d.tipo_documento_codigo AND tdm.metadado_codigo = dm.metadado_codigo AND tdm.exclusao IS NULL', 'inner', FALSE);
+        $this->db->where_in('dm.documento_codigo', $documento_codigos);
+        $this->db->where('dm.exclusao IS NULL', NULL, FALSE);
+        $this->db->where('tdm.visivel', 1);
+        $this->db->order_by('dm.documento_codigo', 'ASC');
+        $this->db->order_by('tdm.ordem', 'ASC');
+
+        return $this->db->get()->result_array();
+    }
+
     public function buscar_valor($documento_codigo, $metadado_codigo)
     {
         $this->db->where('documento_codigo', $documento_codigo);
@@ -119,6 +151,7 @@ class Documento_metadado_model extends CI_Model
 
         return TRUE;
     }
+
     public function excluir_por_documento($documento_codigo)
     {
         $data_atual = date('Y-m-d H:i:s');
@@ -142,5 +175,4 @@ class Documento_metadado_model extends CI_Model
             ]
         );
     }
-
 }
