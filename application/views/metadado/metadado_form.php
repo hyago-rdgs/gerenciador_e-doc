@@ -83,6 +83,16 @@
                                 <div class="form-text">Os valores correspondem aos tipos de campo utilizados no HTML.</div>
                             </div>
 
+                            <div class="col-12 col-lg-8">
+                                <label class="form-label" for="chave">Chave técnica</label>
+                                <input class="form-control" id="chave" maxlength="100" name="chave"
+                                    placeholder="Ex.: numero_documento" type="text"
+                                    value="<?= htmlspecialchars($metadado['chave'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                                <div class="form-text">
+                                    Opcional. Identificador estável para integrações. Use letras minúsculas, números e sublinhado.
+                                </div>
+                            </div>
+
                             <div class="col-12">
                                 <label class="form-label" for="descricao">Descrição</label>
                                 <textarea class="form-control" id="descricao" name="descricao" rows="3"

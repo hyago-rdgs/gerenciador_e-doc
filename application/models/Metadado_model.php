@@ -79,6 +79,31 @@ class Metadado_model extends CI_Model
         return $query->row_array();
     }
 
+    public function buscar_por_chave($chave)
+    {
+        $chave = trim((string) $chave);
+
+        if ($chave === '') {
+            return FALSE;
+        }
+
+        $this->db->where('chave', $chave);
+        $this->db->where('exclusao IS NULL', NULL, FALSE);
+
+        return $this->db->get($this->tabela, 1)->row_array();
+    }
+
+    public function chave_em_uso($chave, $codigo = NULL)
+    {
+        $this->db->where('chave', $chave);
+
+        if ($codigo !== NULL) {
+            $this->db->where('codigo !=', (int) $codigo);
+        }
+
+        return $this->db->count_all_results($this->tabela) > 0;
+    }
+
     public function cadastrar($reg)
     {
         $reg['cadastro'] = date('Y-m-d H:i:s');

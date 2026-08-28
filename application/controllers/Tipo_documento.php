@@ -110,6 +110,30 @@ class Tipo_documento extends CI_Controller
                 );
             }
 
+            if (
+                (int) $tipo_documento['ativo'] === 1 &&
+                (int) $resultado['dados']['ativo'] === 0
+            ) {
+                $erros = [];
+
+                if ($this->tipo_documento_model->possui_documentos($codigo)) {
+                    $erros[] = 'O tipo de documento possui documentos vinculados.';
+                }
+
+                if ($this->localizacao_tipo_documento_model->possui_localizacoes($codigo)) {
+                    $erros[] = 'O tipo de documento possui localizações vinculadas.';
+                }
+
+                if (!empty($erros)) {
+                    resposta_json(
+                        FALSE,
+                        'Não é possível inativar o tipo de documento.',
+                        ['erros' => $erros],
+                        409
+                    );
+                }
+            }
+
             $atualizado = $this->tipo_documento_model->atualizar(
                 $codigo,
                 $resultado['dados']

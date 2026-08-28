@@ -186,8 +186,9 @@ class Localizacao_model extends CI_Model
 
         $this->db->where('l.codigo', $codigo);
         $this->db->where('l.exclusao IS NULL', NULL, FALSE);
+        $this->db->limit(1);
 
-        $query = $this->db->get($this->tabela, 1);
+        $query = $this->db->get();
         return $query->row_array();
     }
 

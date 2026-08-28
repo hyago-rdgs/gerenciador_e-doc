@@ -529,10 +529,18 @@ class Localizacao extends CI_Controller
         if ($reg['localizacao_codigo_pai'] !== NULL) {
             if (!ctype_digit($reg['localizacao_codigo_pai']) || (int) $reg['localizacao_codigo_pai'] <= 0) {
                 $erros[] = 'A localização superior informada é inválida.';
-            } elseif (!$this->localizacao_model->buscar_por_codigo((int) $reg['localizacao_codigo_pai'])) {
-                $erros[] = 'A localização superior informada não existe.';
-            } elseif ($codigo !== NULL && (int) $reg['localizacao_codigo_pai'] === (int) $codigo) {
-                $erros[] = 'Uma localização não pode ser superior a ela mesma.';
+            } else {
+                $localizacao_pai = $this->localizacao_model->buscar_por_codigo(
+                    (int) $reg['localizacao_codigo_pai']
+                );
+
+                if (!$localizacao_pai) {
+                    $erros[] = 'A localização superior informada não existe.';
+                } elseif ((int) $localizacao_pai['ativo'] !== 1) {
+                    $erros[] = 'A localização superior informada está inativa.';
+                } elseif ($codigo !== NULL && (int) $reg['localizacao_codigo_pai'] === (int) $codigo) {
+                    $erros[] = 'Uma localização não pode ser superior a ela mesma.';
+                }
             }
         }
 

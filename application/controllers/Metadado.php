@@ -201,6 +201,7 @@ class Metadado extends CI_Controller
     private function validar($reg, $codigo = NULL)
     {
         $reg = [
+            'chave' => strtolower(trim($reg['chave'] ?? '')),
             'nome' => trim($reg['nome'] ?? ''),
             'descricao' => trim($reg['descricao'] ?? ''),
             'tipo_campo' => trim($reg['tipo_campo'] ?? ''),
@@ -236,6 +237,16 @@ class Metadado extends CI_Controller
         ];
 
         $erros = [];
+
+        if ($reg['chave'] !== '') {
+            if (strlen($reg['chave']) > 100) {
+                $erros[] = 'A chave deve possuir no máximo 100 caracteres.';
+            } elseif (!preg_match('/^[a-z0-9_]+$/', $reg['chave'])) {
+                $erros[] = 'A chave deve conter apenas letras minúsculas, números e sublinhado.';
+            } elseif ($this->metadado_model->chave_em_uso($reg['chave'], $codigo)) {
+                $erros[] = 'A chave informada já foi utilizada por outro metadado.';
+            }
+        }
 
         if ($reg['nome'] === '') {
             $erros[] = 'O campo Nome é obrigatório.';
@@ -275,6 +286,7 @@ class Metadado extends CI_Controller
             $reg['mascara'] = '';
         }
 
+        $reg['chave'] = $reg['chave'] !== '' ? $reg['chave'] : NULL;
         $reg['ativo'] = (int) $reg['ativo'];
 
         return [
