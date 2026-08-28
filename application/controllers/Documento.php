@@ -25,8 +25,8 @@ class Documento extends CI_Controller
     public function listar()
     {
         $filtro_termo = $this->input->get('termo', TRUE) !== NULL ? $this->input->get('termo', TRUE) : '';
-        $filtro_tipo_documento = $this->input->get('tipo_documento_codigo', TRUE) !== NULL ? $this->input->get('tipo_documento_codigo', TRUE) : '';
-        $filtro_localizacao = $this->input->get('localizacao_codigo', TRUE) !== NULL ? $this->input->get('localizacao_codigo', TRUE) : '';
+        $filtro_tipo_documento = $this->input->get('tipo_documento', TRUE) !== NULL ? $this->input->get('tipo_documento', TRUE) : '';
+        $filtro_localizacao = $this->input->get('localizacao', TRUE) !== NULL ? $this->input->get('localizacao', TRUE) : '';
         $filtro_status = $this->input->get('status', TRUE) !== NULL ? $this->input->get('status', TRUE) : '';
 
         $pagina_atual = (int) $this->input->get('pagina', TRUE);
@@ -37,29 +37,20 @@ class Documento extends CI_Controller
         $limite = 20;
         $offset = ($pagina_atual - 1) * $limite;
 
-        $total_documentos = $this->documento_model->contar_tudo(
-            $filtro_termo,
-            $filtro_tipo_documento,
-            $filtro_localizacao,
-            $filtro_status
-        );
+        $total_documentos = $this->documento_model->contar_tudo($filtro_termo, $filtro_tipo_documento, $filtro_localizacao, $filtro_status);
 
         $dados = [
             'filtro_termo' => $filtro_termo,
             'filtro_tipo_documento' => $filtro_tipo_documento,
             'filtro_localizacao' => $filtro_localizacao,
             'filtro_status' => $filtro_status,
-            'documentos' => $this->documento_model->listar_tudo(
-                $filtro_termo,
-                $filtro_tipo_documento,
-                $filtro_localizacao,
-                $filtro_status,
-                $limite,
-                $offset
-            ),
+
+            'documentos' => $this->documento_model->listar_tudo($filtro_termo, $filtro_tipo_documento, $filtro_localizacao, $filtro_status, $limite, $offset),
+            'total_documentos' => $total_documentos,
+
             'tipos_documento' => $this->tipo_documento_model->listar_opcoes(),
             'localizacoes' => $this->localizacao_model->listar_opcoes(),
-            'total_documentos' => $total_documentos,
+            
             'limite' => $limite,
             'offset' => $offset + 1,
             'pagina_atual' => $pagina_atual,

@@ -22,10 +22,6 @@
                     Consulte os detalhes e gerencie os metadados vinculados ao tipo de documento.
                 </p>
             </section>
-            <a class="btn btn-primary flex-shrink-0" href="<?= base_url('tipo_documento/cadastrar'); ?>">
-                <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
-                Novo tipo de documento
-            </a>
         </header>
 
         <nav aria-label="Caminho do tipo de documento" class="mb-4">
@@ -68,14 +64,6 @@
                                 ? nl2br(htmlspecialchars($tipo_documento['descricao'], ENT_QUOTES, 'UTF-8'))
                                 : 'Nenhuma descrição informada.'; ?>
                         </p>
-                    </section>
-
-                    <section class="d-grid d-sm-flex gap-2" aria-label="Ações do tipo de documento">
-                        <a class="btn btn-outline-secondary"
-                            href="<?= base_url('tipo_documento/atualizar/' . $tipo_documento['codigo']); ?>">
-                            <i class="fa-regular fa-pen-to-square me-2" aria-hidden="true"></i>
-                            Editar
-                        </a>
                     </section>
                 </header>
 

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +8,7 @@
     <title>Pesquisa avançada | e-Doc</title>
     <?php $this->load->view('css'); ?>
 </head>
+
 <body class="bg-body-tertiary">
     <?php $this->load->view('nav'); ?>
 
@@ -48,8 +50,8 @@
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
                             <label class="form-label" for="tipo_documento_codigo">Tipo de documento</label>
-                            <select class="form-select" id="tipo_documento_codigo"
-                                name="tipo_documento_codigo" required>
+                            <select class="form-select" id="tipo_documento_codigo" name="tipo_documento_codigo"
+                                required>
                                 <option value="">Selecione</option>
                                 <?php foreach ($tipos_documento as $tipo_documento): ?>
                                     <option value="<?= $tipo_documento['codigo']; ?>"
@@ -69,15 +71,14 @@
 
                         <div class="col-12 col-md-6">
                             <label class="form-label" for="titulo">Título</label>
-                            <input class="form-control" id="titulo" name="titulo"
-                                placeholder="Parte do título" type="search"
-                                value="<?= htmlspecialchars($filtro_titulo, ENT_QUOTES, 'UTF-8'); ?>">
+                            <input class="form-control" id="titulo" name="titulo" placeholder="Parte do título"
+                                type="search" value="<?= htmlspecialchars($filtro_titulo, ENT_QUOTES, 'UTF-8'); ?>">
                         </div>
 
                         <div class="col-12 col-md-6">
                             <label class="form-label" for="numero_identificacao">Número de identificação</label>
-                            <input class="form-control" id="numero_identificacao"
-                                name="numero_identificacao" placeholder="Número ou parte dele" type="search"
+                            <input class="form-control" id="numero_identificacao" name="numero_identificacao"
+                                placeholder="Número ou parte dele" type="search"
                                 value="<?= htmlspecialchars($filtro_numero_identificacao, ENT_QUOTES, 'UTF-8'); ?>">
                         </div>
 
@@ -98,7 +99,8 @@
                             <select class="form-select" id="status" name="status">
                                 <option value="">Todos</option>
                                 <option value="ativo" <?= $filtro_status === 'ativo' ? 'selected' : ''; ?>>Ativo</option>
-                                <option value="inativo" <?= $filtro_status === 'inativo' ? 'selected' : ''; ?>>Inativo</option>
+                                <option value="inativo" <?= $filtro_status === 'inativo' ? 'selected' : ''; ?>>Inativo
+                                </option>
                             </select>
                         </div>
                     </div>
@@ -163,7 +165,8 @@
                                             </small>
                                         </td>
                                         <td><?= htmlspecialchars($documento['tipo_documento'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td><?= $documento['data_documento'] ? date('d/m/Y', strtotime($documento['data_documento'])) : 'Não informada'; ?></td>
+                                        <td><?= $documento['data_documento'] ? date('d/m/Y', strtotime($documento['data_documento'])) : 'Não informada'; ?>
+                                        </td>
                                         <td>
                                             <?= htmlspecialchars($documento['localizacao_classificacao'] . ' — ' . $documento['localizacao'], ENT_QUOTES, 'UTF-8'); ?>
                                         </td>
@@ -186,7 +189,8 @@
                                 <?= min($offset + $limite - 1, $total_documentos); ?> de
                                 <?= $total_documentos; ?>
                             </p>
-                            <?php parse_str($_SERVER['QUERY_STRING'], $params); unset($params['pagina']); ?>
+                            <?php parse_str($_SERVER['QUERY_STRING'], $params);
+                            unset($params['pagina']); ?>
                             <nav aria-label="Paginação da pesquisa">
                                 <ul class="pagination pagination-sm mb-0">
                                     <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
@@ -216,50 +220,47 @@
         const base_url = '<?= base_url(); ?>';
 
         $(document).ready(function () {
-            $('#tipo_documento_codigo').on(
-                'change',
-                function () {
-                    const tipo_documento_codigo = $(this).val();
+            $('#tipo_documento_codigo').on('change', function () {
+                const tipo_documento_codigo = $(this).val();
 
-                    if (!tipo_documento_codigo) {
-                        $('#campos-metadados').html(
-                            '<div class="col-12"><div class="alert alert-light border mb-0">Selecione um tipo de documento.</div></div>'
+                if (!tipo_documento_codigo) {
+                    $('#campos-metadados').html(
+                        '<div class="col-12"><div class="alert alert-light border mb-0">Selecione um tipo de documento.</div></div>'
+                    );
+                    return;
+                }
+
+                $('#alerta-pesquisa').empty().addClass('d-none');
+
+                $('#campos-metadados').html(
+                    '<div class="col-12"><span class="spinner-border spinner-border-sm me-2"></span>Carregando campos...</div>'
+                );
+
+                $.ajax({
+                    url: base_url + 'pesquisa/campos_metadados/' + tipo_documento_codigo,
+                    method: 'GET',
+                    dataType: 'json'
+                }).done(function (response) {
+                    if (!response.sucesso) {
+                        mostrar_erros(
+                            response.dados?.erros || response.mensagem?.conteudo,
+                            'alerta-pesquisa'
                         );
                         return;
                     }
 
-                    $('#alerta-pesquisa').empty().addClass('d-none');
-
-                    $('#campos-metadados').html(
-                        '<div class="col-12"><span class="spinner-border spinner-border-sm me-2"></span>Carregando campos...</div>'
-                    );
-
-                    $.ajax({
-                        url: base_url + 'pesquisa/campos_metadados/' + tipo_documento_codigo,
-                        method: 'GET',
-                        dataType: 'json'
-                    }).done(function (response) {
-                        if (!response.sucesso) {
-                            mostrar_erros(
-                                response.dados?.erros || response.mensagem?.conteudo,
-                                'alerta-pesquisa'
-                            );
-                            return;
-                        }
-
-                        $('#campos-metadados').html(response.dados.html);
-                    }).fail(function (xhr) {
-                        mostrar_erro_ajax(xhr, 'alerta-pesquisa');
-                    });
-                }
+                    $('#campos-metadados').html(response.dados.html);
+                }).fail(function (xhr) {
+                    mostrar_erro_ajax(xhr, 'alerta-pesquisa');
+                });
+            }
             );
 
             $('#formulario-pesquisa').on('submit', function () {
-                $('#pesquisar')
-                    .prop('disabled', true)
-                    .html('<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>');
+                $('#pesquisar').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>');
             });
         });
     </script>
 </body>
+
 </html>

@@ -6,7 +6,18 @@
         $('.log-out').on('click', function () {
             window.location = '<?= base_url('autenticacao/logout') ?>';
             return;
-        })
+        });
+
+        $('.dropdown-toggle-acoes').each(function () {
+                new bootstrap.Dropdown(this, {
+                    boundary: 'viewport',
+                    popperConfig: function (config) {
+                        config.strategy = 'fixed';
+
+                        return config;
+                    }
+                });
+            });
     });
 
     function mostrar_erros(erros, elemento_id) {

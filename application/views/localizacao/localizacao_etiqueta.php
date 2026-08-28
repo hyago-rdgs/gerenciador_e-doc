@@ -17,6 +17,11 @@
         }
 
         @media print {
+            @page {
+                size: landscape;
+                margin: 10mm;
+            }
+
             .nao-imprimir {
                 display: none !important;
             }
@@ -34,7 +39,8 @@
 
 <body class="bg-body-tertiary">
     <main class="container py-4 py-lg-5">
-        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4 nao-imprimir">
+        <div
+            class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4 nao-imprimir">
             <div>
                 <h1 class="h4 mb-1">Etiqueta da localização</h1>
                 <p class="text-body-secondary mb-0">Revise as informações antes de imprimir.</p>
@@ -62,18 +68,14 @@
             <div class="card-body p-4 p-lg-5">
                 <div class="row g-4 align-items-center">
                     <div class="col-12 col-md-4 text-center">
-                        <img
-                            src="<?= htmlspecialchars($url_qr, ENT_QUOTES, 'UTF-8'); ?>"
-                            alt="QR Code da localização"
-                            class="img-fluid"
-                            width="300"
-                            height="300"
-                        >
+                        <img src="<?= htmlspecialchars($url_qr, ENT_QUOTES, 'UTF-8'); ?>" alt="QR Code da localização"
+                            class="img-fluid" width="300" height="300">
                     </div>
 
                     <div class="col-12 col-md-8">
                         <div class="d-flex align-items-center gap-2 mb-4">
-                            <span class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded p-2"
+                            <span
+                                class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded p-2"
                                 aria-hidden="true">
                                 <i class="fa-solid fa-file-shield"></i>
                             </span>

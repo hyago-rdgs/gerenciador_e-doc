@@ -21,10 +21,7 @@
                 </p>
             </section>
             <div>
-                <a class="btn btn-light border" href="<?= base_url('documento'); ?>">Voltar</a>
-                <a class="btn btn-primary" href="<?= base_url('documento/atualizar/' . $documento['codigo']); ?>">
-                    <i class="fa-solid fa-pen me-2"></i>Editar
-                </a>
+                <a class="btn btn-light border" id="voltar">Voltar</a>  
             </div>
         </header>
 
@@ -357,6 +354,15 @@
                 }).always(function () {
                     botao.prop('disabled', false).html('<i class="fa-solid fa-trash-can"></i>');
                 });
+            });
+
+            $('#voltar').on('click', function () {
+                if (window.history.length > 1) {
+                    window.history.back();
+                    return;
+                }
+
+                window.location = base_url + 'documento';
             });
         });
     </script>

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +8,7 @@
     <title>Documentos | e-Doc</title>
     <?php $this->load->view('css'); ?>
 </head>
+
 <body class="bg-body-tertiary">
     <?php $this->load->view('nav'); ?>
 
@@ -63,7 +65,7 @@
                                 <?php foreach ($localizacoes as $localizacao): ?>
                                     <option value="<?= $localizacao['codigo']; ?>"
                                         <?= $filtro_localizacao == $localizacao['codigo'] ? 'selected' : ''; ?>>
-                                        <?= htmlspecialchars($localizacao['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                        <?= htmlspecialchars($localizacao['classificacao'] . ' - ' . $localizacao['nome'], ENT_QUOTES, 'UTF-8'); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -74,16 +76,17 @@
                             <select class="form-select" id="status" name="status">
                                 <option value="">Todos</option>
                                 <option value="ativo" <?= $filtro_status == 'ativo' ? 'selected' : ''; ?>>Ativo</option>
-                                <option value="inativo" <?= $filtro_status == 'inativo' ? 'selected' : ''; ?>>Inativo</option>
+                                <option value="inativo" <?= $filtro_status == 'inativo' ? 'selected' : ''; ?>>Inativo
+                                </option>
                             </select>
                         </div>
 
                         <div class="col-12 col-lg-2">
                             <div class="d-flex gap-2">
-                                <button class="btn btn-primary flex-fill" type="submit">
+                                <a class="btn btn-primary flex-fill" role="button" id="filtrar">
                                     <i class="fa-solid fa-filter me-2"></i>Filtrar
-                                </button>
-                                <a class="btn btn-light border flex-fill" href="<?= base_url('documento'); ?>">Limpar</a>
+                                </a>
+                                <a class="btn btn-light border flex-fill" id="limpar_filtro" role="button">Limpar</a>
                             </div>
                         </div>
                     </div>
@@ -127,7 +130,8 @@
                                     <td><?= htmlspecialchars($documento['tipo_documento'], ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td><?= htmlspecialchars($documento['localizacao'], ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td class="text-center">
-                                        <span class="badge <?= $documento['ativo'] ? 'text-bg-success' : 'text-bg-secondary'; ?>">
+                                        <span
+                                            class="badge <?= $documento['ativo'] ? 'text-bg-success' : 'text-bg-secondary'; ?>">
                                             <?= $documento['ativo'] ? 'Ativo' : 'Inativo'; ?>
                                         </span>
                                     </td>
@@ -135,7 +139,7 @@
                                         <a class="btn btn-sm btn-primary"
                                             href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>"
                                             title="Acessar documento">
-                                            <i class="fa-solid fa-eye me-1"></i>Acessar
+                                            Acessar
                                         </a>
                                         <a class="btn btn-sm btn-light border"
                                             href="<?= base_url('documento/atualizar/' . $documento['codigo']); ?>"
@@ -162,7 +166,8 @@
                             <?= min($offset + $limite - 1, $total_documentos); ?> de
                             <?= $total_documentos; ?> documentos
                         </p>
-                        <?php parse_str($_SERVER['QUERY_STRING'], $params); unset($params['pagina']); ?>
+                        <?php parse_str($_SERVER['QUERY_STRING'], $params);
+                        unset($params['pagina']); ?>
                         <nav aria-label="Paginação de documentos">
                             <ul class="pagination pagination-sm mb-0">
                                 <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
@@ -223,6 +228,29 @@
         const base_url = '<?= base_url(); ?>';
 
         $(document).ready(function () {
+            $('#limpar_filtro').on('click', function () {
+                window.location = base_url + 'documento';
+                return;
+            });
+
+            $('#filtrar').click(function (e) {
+                e.preventDefault();
+                $(this).prop('disabled', true).html("<span class='spinner-border spinner-border-sm' aria-hidden='true'></span>");
+
+                const params = new URLSearchParams();
+                const termo = $('#termo').val().trim();
+                const status = $('#status').val();
+                const tipo_documento = $('#tipo_documento_codigo').val();
+                const localizacao = $('#localizacao_codigo').val();
+
+                if (termo) params.append('termo', termo);
+                if (status) params.append('status', status);
+                if (tipo_documento) params.append('tipo_documento', tipo_documento);
+                if (localizacao) params.append('localizacao', localizacao);
+
+                window.location = base_url + 'documento?' + params.toString();
+            });
+
             $('.excluir-documento').on('click', function () {
                 $('#titulo-exclusao').text(
                     $(this).data('titulo')
@@ -293,4 +321,5 @@
         });
     </script>
 </body>
+
 </html>

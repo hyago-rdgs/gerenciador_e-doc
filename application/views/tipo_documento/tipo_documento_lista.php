@@ -140,7 +140,6 @@
                                     <td class="text-end pe-3 pe-lg-4">
                                         <a class="btn btn-sm btn-primary"
                                             href="<?= base_url('tipo_documento/detalhes/' . $tipo_documento['codigo']); ?>">
-                                            <i class="fa-solid fa-arrow-right me-2" aria-hidden="true"></i>
                                             Acessar
                                         </a>
 

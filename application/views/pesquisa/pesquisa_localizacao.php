@@ -121,7 +121,6 @@
                                         <a class="btn btn-sm btn-primary"
                                             href="<?= base_url('pesquisa/localizacao/' . $item['codigo']); ?>">
                                             Acessar
-                                            <i class="fa-solid fa-arrow-right ms-2"></i>
                                         </a>
                                     </td>
                                 </tr>

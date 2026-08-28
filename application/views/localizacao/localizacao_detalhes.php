@@ -22,9 +22,10 @@
                     Organize e gerencie os locais físicos utilizados para armazenamento dos documentos.
                 </p>
             </section>
-            <a class="btn btn-primary flex-shrink-0" href="<?= base_url('localizacao/cadastrar/' . $localizacao['codigo']); ?>">
+            <a class="btn btn-primary flex-shrink-0"
+                href="<?= base_url('localizacao/cadastrar/' . $localizacao['codigo']); ?>">
                 <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
-                Nova localização
+                Adicionar sublocalização
             </a>
         </header>
 
@@ -60,7 +61,8 @@
                 <header class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
                     <section>
                         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                            <span class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded p-2"
+                            <span
+                                class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded p-2"
                                 aria-hidden="true">
                                 <i class="fa-solid fa-building"></i>
                             </span>
@@ -96,7 +98,7 @@
 
                     <section class="d-grid d-sm-flex flex-wrap gap-2" aria-label="Ações da localização atual">
                         <?php if ($tipo_documento && (int) $localizacao['ativo'] === 1): ?>
-                            <a class="btn btn-primary"
+                            <a class="btn btn-outline-primary"
                                 href="<?= base_url('documento/cadastrar/' . $localizacao['codigo']); ?>">
                                 <i class="fa-solid fa-file-circle-plus me-2" aria-hidden="true"></i>
                                 Novo documento
@@ -108,35 +110,6 @@
                                 Definir tipo de documento
                             </a>
                         <?php endif; ?>
-
-                        <a class="btn btn-outline-secondary"
-                            href="<?= base_url('localizacao/atualizar/' . $localizacao['codigo']); ?>">
-                            <i class="fa-regular fa-pen-to-square me-2" aria-hidden="true"></i>
-                            Editar
-                        </a>
-
-                        <a class="btn btn-outline-dark"
-                            href="<?= base_url('etiqueta/localizacao/' . rawurlencode($localizacao['protocolo'])); ?>"
-                            target="_blank" rel="noopener">
-                            <i class="fa-solid fa-qrcode me-2" aria-hidden="true"></i>
-                            Imprimir etiqueta
-                        </a>
-
-                        <a class="btn btn-outline-primary"
-                            href="<?= base_url('localizacao/cadastrar/' . $localizacao['codigo']); ?>">
-                            <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
-                            Adicionar sublocalização
-                        </a>
-
-                        <button type="button" class="btn btn-outline-danger excluir-localizacao"
-                            data-codigo="<?= $localizacao['codigo']; ?>"
-                            data-nome="<?= htmlspecialchars($localizacao['nome'], ENT_QUOTES, 'UTF-8'); ?>"
-                            data-classificacao="<?= htmlspecialchars($localizacao['classificacao'], ENT_QUOTES, 'UTF-8'); ?>"
-                            data-bs-toggle="modal" data-bs-target="#modalExcluirLocalizacao"
-                            aria-label="Excluir <?= htmlspecialchars($localizacao['nome'], ENT_QUOTES, 'UTF-8'); ?>">
-                            <i class="fa-regular fa-trash-can me-2" aria-hidden="true"></i>
-                            Excluir
-                        </button>
                     </section>
                 </header>
 
@@ -251,7 +224,8 @@
                                     <td class="ps-3 ps-lg-4">
                                         <a class="d-flex align-items-center gap-3 text-decoration-none fw-semibold acessar"
                                             data-codigo="<?= $localizacao_filho['codigo']; ?>" role="button">
-                                            <span class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded p-2"
+                                            <span
+                                                class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded p-2"
                                                 aria-hidden="true">
                                                 <i class="fa-solid fa-building"></i>
                                             </span>
@@ -293,23 +267,66 @@
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-end pe-3 pe-lg-4">
-                                        <button class="btn btn-sm btn-primary acessar" data-codigo="<?= $localizacao_filho['codigo']; ?>" role="button">
-                                            <i class="fa-solid fa-arrow-right me-2" aria-hidden="true"></i>
-                                            Acessar
-                                        </button>
-                                        <a class="btn btn-sm btn-light border"
-                                            href="<?= base_url('localizacao/atualizar/' . $localizacao_filho['codigo']); ?>"
-                                            aria-label="Editar localização">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-light border text-danger excluir-localizacao"
-                                            data-codigo="<?= $localizacao_filho['codigo']; ?>"
-                                            data-nome="<?= htmlspecialchars($localizacao_filho['nome'], ENT_QUOTES, 'UTF-8'); ?>"
-                                            data-classificacao="<?= htmlspecialchars($localizacao_filho['classificacao'], ENT_QUOTES, 'UTF-8'); ?>"
-                                            data-bs-toggle="modal" data-bs-target="#modalExcluirLocalizacao"
-                                            aria-label="Excluir <?= htmlspecialchars($localizacao_filho['nome'], ENT_QUOTES, 'UTF-8'); ?>">
-                                            <i class="fa-solid fa-trash-can"></i>
-                                        </button>
+                                        <div class="d-inline-flex align-items-center gap-1">
+
+                                            <button class="btn btn-sm btn-primary acessar"
+                                                data-codigo="<?= $localizacao_filho['codigo']; ?>" type="button">
+                                                Acessar
+                                            </button>
+
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-light border dropdown-toggle-acoes" type="button"
+                                                    data-bs-toggle="dropdown" aria-expanded="false" aria-label="Mais ações">
+                                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                                </button>
+
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item" href="<?= base_url(
+                                                            'etiqueta/localizacao/' .
+                                                            rawurlencode(
+                                                                $localizacao_filho['protocolo']
+                                                            )
+                                                        ); ?>" target="_blank" rel="noopener">
+                                                            <i class="fa-solid fa-qrcode fa-fw me-2"></i>
+                                                            Imprimir etiqueta
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a class="dropdown-item" href="<?= base_url(
+                                                            'localizacao/atualizar/' .
+                                                            $localizacao_filho['codigo']
+                                                        ); ?>">
+                                                            <i class="fa-solid fa-pen fa-fw me-2"></i>
+                                                            Editar
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <hr class="dropdown-divider">
+                                                    </li>
+
+                                                    <li>
+                                                        <button class="dropdown-item text-danger excluir-localizacao"
+                                                            type="button" data-codigo="<?= $localizacao_filho['codigo']; ?>"
+                                                            data-nome="<?= htmlspecialchars(
+                                                                $localizacao_filho['nome'],
+                                                                ENT_QUOTES,
+                                                                'UTF-8'
+                                                            ); ?>" data-classificacao="<?= htmlspecialchars(
+                                                                 $localizacao_filho['classificacao'],
+                                                                 ENT_QUOTES,
+                                                                 'UTF-8'
+                                                             ); ?>" data-bs-toggle="modal" data-bs-target="#modalExcluirLocalizacao">
+                                                            <i class="fa-solid fa-trash-can fa-fw me-2"></i>
+                                                            Excluir
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -338,7 +355,8 @@
                             <ul class="pagination pagination-sm mb-0">
                                 <li class="page-item">
                                     <?php if ($pagina_atual_localizacao > 1): ?>
-                                        <a class="page-link" href="<?= $gerar_url_localizacao($pagina_atual_localizacao - 1); ?>">Anterior</a>
+                                        <a class="page-link"
+                                            href="<?= $gerar_url_localizacao($pagina_atual_localizacao - 1); ?>">Anterior</a>
                                     <?php else: ?>
                                         <span class="page-link disabled">Anterior</span>
                                     <?php endif; ?>
@@ -356,7 +374,8 @@
 
                                 <li class="page-item">
                                     <?php if ($pagina_atual_localizacao < $total_paginas_localizacao): ?>
-                                        <a class="page-link" href="<?= $gerar_url_localizacao($pagina_atual_localizacao + 1); ?>">Próximo</a>
+                                        <a class="page-link"
+                                            href="<?= $gerar_url_localizacao($pagina_atual_localizacao + 1); ?>">Próximo</a>
                                     <?php else: ?>
                                         <span class="page-link disabled">Próximo</span>
                                     <?php endif; ?>
@@ -423,7 +442,8 @@
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-end pe-3 pe-lg-4">
-                                        <a class="btn btn-sm btn-primary" href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
+                                        <a class="btn btn-sm btn-primary"
+                                            href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
                                             <i class="fa-solid fa-arrow-right me-2" aria-hidden="true"></i>
                                             Acessar
                                         </a>
@@ -455,7 +475,8 @@
                             <ul class="pagination pagination-sm mb-0">
                                 <li class="page-item">
                                     <?php if ($pagina_atual_documento > 1): ?>
-                                        <a class="page-link" href="<?= $gerar_url_documento($pagina_atual_documento - 1); ?>">Anterior</a>
+                                        <a class="page-link"
+                                            href="<?= $gerar_url_documento($pagina_atual_documento - 1); ?>">Anterior</a>
                                     <?php else: ?>
                                         <span class="page-link disabled">Anterior</span>
                                     <?php endif; ?>
@@ -473,7 +494,8 @@
 
                                 <li class="page-item">
                                     <?php if ($pagina_atual_documento < $total_paginas_documento): ?>
-                                        <a class="page-link" href="<?= $gerar_url_documento($pagina_atual_documento + 1); ?>">Próximo</a>
+                                        <a class="page-link"
+                                            href="<?= $gerar_url_documento($pagina_atual_documento + 1); ?>">Próximo</a>
                                     <?php else: ?>
                                         <span class="page-link disabled">Próximo</span>
                                     <?php endif; ?>
@@ -507,7 +529,8 @@
         <?php endif; ?>
     </main>
 
-    <div class="modal fade" id="modalExcluirLocalizacao" tabindex="-1" aria-labelledby="modalExcluirLocalizacaoLabel" aria-hidden="true">
+    <div class="modal fade" id="modalExcluirLocalizacao" tabindex="-1" aria-labelledby="modalExcluirLocalizacaoLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content border-0 shadow">
                 <form id="formulario_exclusao_localizacao" method="post">
@@ -519,7 +542,8 @@
                         <p class="text-body-secondary mb-2">Você está prestes a excluir:</p>
                         <p class="fw-semibold mb-1" id="nome-localizacao-exclusao"></p>
                         <p class="small text-body-secondary mb-3" id="classificacao-localizacao-exclusao"></p>
-                        <div id="alerta-exclusao-localizacao" class="alert alert-danger text-start d-none" role="alert"></div>
+                        <div id="alerta-exclusao-localizacao" class="alert alert-danger text-start d-none" role="alert">
+                        </div>
                         <p class="small text-body-secondary mb-0">A localização deixará de aparecer nas listagens.</p>
                     </div>
 
