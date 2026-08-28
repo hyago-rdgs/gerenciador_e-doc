@@ -1,0 +1,211 @@
+-- Estrutura completa do banco do gerenciador e-Doc.
+-- Compatível com MariaDB 10.11 e destinada somente a bancos vazios.
+
+SET NAMES utf8mb4;
+SET time_zone = '+00:00';
+
+CREATE TABLE `usuarios` (
+    `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `nome` varchar(255) NOT NULL,
+    `usuario` varchar(100) NOT NULL,
+    `email` varchar(255) NOT NULL,
+    `senha` varchar(255) NOT NULL,
+    `ativo` tinyint(1) NOT NULL DEFAULT 1,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `atualizacao` datetime DEFAULT NULL,
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`codigo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `tipos_documento` (
+    `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `nome` varchar(150) NOT NULL,
+    `descricao` text DEFAULT NULL,
+    `ativo` tinyint(1) NOT NULL DEFAULT 1,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `atualizacao` datetime DEFAULT NULL,
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`codigo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `metadados` (
+    `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `chave` varchar(100) DEFAULT NULL,
+    `nome` varchar(150) NOT NULL,
+    `descricao` text DEFAULT NULL,
+    `tipo_campo` varchar(30) NOT NULL,
+    `mascara` varchar(100) DEFAULT NULL,
+    `opcoes` text DEFAULT NULL COMMENT 'Opcoes para campos de selecao, preferencialmente em JSON',
+    `ativo` tinyint(1) NOT NULL DEFAULT 1,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `atualizacao` datetime DEFAULT NULL,
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`codigo`),
+    UNIQUE KEY `uk_metadados_chave` (`chave`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `tipos_localizacao` (
+    `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `chave` varchar(50) DEFAULT NULL,
+    `nome` varchar(100) NOT NULL,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `atualizacao` datetime DEFAULT NULL,
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`codigo`),
+    UNIQUE KEY `uk_tipos_localizacao_chave` (`chave`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `localizacoes` (
+    `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `protocolo` varchar(40) DEFAULT NULL,
+    `tipo_localizacao_codigo` bigint(20) UNSIGNED NOT NULL,
+    `localizacao_codigo_pai` bigint(20) UNSIGNED DEFAULT NULL,
+    `sequencial` bigint(20) UNSIGNED NOT NULL,
+    `nome` varchar(255) NOT NULL,
+    `classificacao` varchar(500) NOT NULL,
+    `descricao` text DEFAULT NULL,
+    `ativo` tinyint(1) NOT NULL DEFAULT 1,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `atualizacao` datetime DEFAULT NULL,
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`codigo`),
+    UNIQUE KEY `uk_localizacoes_protocolo` (`protocolo`),
+    KEY `idx_localizacoes_pai` (`localizacao_codigo_pai`),
+    KEY `idx_localizacoes_ativo` (`ativo`),
+    KEY `idx_localizacoes_tipo_localizacao` (`tipo_localizacao_codigo`),
+    CONSTRAINT `fk_localizacoes_pai`
+        FOREIGN KEY (`localizacao_codigo_pai`)
+        REFERENCES `localizacoes` (`codigo`) ON UPDATE CASCADE,
+    CONSTRAINT `fk_localizacoes_tipo_localizacao`
+        FOREIGN KEY (`tipo_localizacao_codigo`)
+        REFERENCES `tipos_localizacao` (`codigo`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `documentos` (
+    `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `protocolo` varchar(40) DEFAULT NULL,
+    `tipo_documento_codigo` bigint(20) UNSIGNED NOT NULL,
+    `localizacao_codigo` bigint(20) UNSIGNED NOT NULL,
+    `titulo` varchar(255) NOT NULL,
+    `descricao` text DEFAULT NULL,
+    `numero_identificacao` varchar(100) DEFAULT NULL,
+    `data_documento` date DEFAULT NULL,
+    `ativo` tinyint(4) NOT NULL DEFAULT 1,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `atualizacao` datetime DEFAULT NULL,
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`codigo`),
+    UNIQUE KEY `uk_documentos_protocolo` (`protocolo`),
+    KEY `idx_documentos_tipo` (`tipo_documento_codigo`),
+    KEY `idx_documentos_localizacao` (`localizacao_codigo`),
+    KEY `idx_documentos_titulo` (`titulo`),
+    KEY `idx_documentos_numero_identificacao` (`numero_identificacao`),
+    KEY `idx_documentos_data` (`data_documento`),
+    KEY `idx_documentos_ativo` (`ativo`),
+    CONSTRAINT `fk_documentos_localizacao`
+        FOREIGN KEY (`localizacao_codigo`)
+        REFERENCES `localizacoes` (`codigo`) ON UPDATE CASCADE,
+    CONSTRAINT `fk_documentos_tipo`
+        FOREIGN KEY (`tipo_documento_codigo`)
+        REFERENCES `tipos_documento` (`codigo`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `documento_arquivos` (
+    `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `documento_codigo` bigint(20) UNSIGNED NOT NULL,
+    `nome_original` varchar(255) NOT NULL,
+    `nome_armazenado` varchar(255) NOT NULL,
+    `extensao` varchar(20) NOT NULL,
+    `mime_type` varchar(100) DEFAULT NULL,
+    `caminho` varchar(500) NOT NULL,
+    `tamanho` bigint(20) UNSIGNED DEFAULT NULL COMMENT 'Tamanho do arquivo em bytes',
+    `versao` int(10) UNSIGNED NOT NULL DEFAULT 1,
+    `principal` tinyint(1) NOT NULL DEFAULT 0,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`codigo`),
+    KEY `idx_documento_arquivos_documento` (`documento_codigo`),
+    KEY `idx_documento_arquivos_versao` (`documento_codigo`, `versao`),
+    CONSTRAINT `fk_documento_arquivos_documento`
+        FOREIGN KEY (`documento_codigo`)
+        REFERENCES `documentos` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `documento_metadados` (
+    `documento_codigo` bigint(20) UNSIGNED NOT NULL,
+    `metadado_codigo` bigint(20) UNSIGNED NOT NULL,
+    `valor` text DEFAULT NULL,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `atualizacao` datetime DEFAULT NULL,
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`documento_codigo`, `metadado_codigo`),
+    KEY `idx_documento_metadados_metadado` (`metadado_codigo`),
+    CONSTRAINT `fk_documento_metadados_documento`
+        FOREIGN KEY (`documento_codigo`)
+        REFERENCES `documentos` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `fk_documento_metadados_metadado`
+        FOREIGN KEY (`metadado_codigo`)
+        REFERENCES `metadados` (`codigo`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `documento_movimentacoes` (
+    `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `documento_codigo` bigint(20) UNSIGNED NOT NULL,
+    `localizacao_origem_codigo` bigint(20) UNSIGNED DEFAULT NULL,
+    `localizacao_destino_codigo` bigint(20) UNSIGNED DEFAULT NULL,
+    `tipo_movimentacao` varchar(30) NOT NULL,
+    `observacao` text DEFAULT NULL,
+    `data_movimentacao` datetime NOT NULL DEFAULT current_timestamp(),
+    `data_devolucao` datetime DEFAULT NULL,
+    PRIMARY KEY (`codigo`),
+    KEY `idx_documento_movimentacoes_documento` (`documento_codigo`),
+    KEY `idx_documento_movimentacoes_origem` (`localizacao_origem_codigo`),
+    KEY `idx_documento_movimentacoes_destino` (`localizacao_destino_codigo`),
+    KEY `idx_documento_movimentacoes_data` (`data_movimentacao`),
+    CONSTRAINT `fk_documento_movimentacoes_destino`
+        FOREIGN KEY (`localizacao_destino_codigo`)
+        REFERENCES `localizacoes` (`codigo`) ON UPDATE CASCADE,
+    CONSTRAINT `fk_documento_movimentacoes_documento`
+        FOREIGN KEY (`documento_codigo`)
+        REFERENCES `documentos` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `fk_documento_movimentacoes_origem`
+        FOREIGN KEY (`localizacao_origem_codigo`)
+        REFERENCES `localizacoes` (`codigo`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `localizacao_tipo_documentos` (
+    `localizacao_codigo` bigint(20) UNSIGNED NOT NULL,
+    `tipo_documento_codigo` bigint(20) UNSIGNED NOT NULL,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `atualizacao` datetime DEFAULT NULL,
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`localizacao_codigo`, `tipo_documento_codigo`),
+    KEY `idx_localizacao_tipo_documentos_tipo_documento` (`tipo_documento_codigo`),
+    CONSTRAINT `fk_localizacao_tipo_documentos_localizacao`
+        FOREIGN KEY (`localizacao_codigo`)
+        REFERENCES `localizacoes` (`codigo`) ON UPDATE CASCADE,
+    CONSTRAINT `fk_localizacao_tipo_documentos_tipo_documento`
+        FOREIGN KEY (`tipo_documento_codigo`)
+        REFERENCES `tipos_documento` (`codigo`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `tipo_documento_metadados` (
+    `tipo_documento_codigo` bigint(20) UNSIGNED NOT NULL,
+    `metadado_codigo` bigint(20) UNSIGNED NOT NULL,
+    `ordem` smallint(5) UNSIGNED NOT NULL DEFAULT 1,
+    `obrigatorio` tinyint(1) NOT NULL DEFAULT 0,
+    `visivel` tinyint(1) NOT NULL DEFAULT 1,
+    `pesquisavel` tinyint(1) NOT NULL DEFAULT 1,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `atualizacao` datetime DEFAULT NULL,
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`tipo_documento_codigo`, `metadado_codigo`),
+    KEY `idx_tipo_documento_metadados_ordem` (`tipo_documento_codigo`, `ordem`),
+    KEY `idx_tipo_documento_metadados_metadado` (`metadado_codigo`),
+    CONSTRAINT `fk_tipo_documento_metadados_metadado`
+        FOREIGN KEY (`metadado_codigo`)
+        REFERENCES `metadados` (`codigo`) ON UPDATE CASCADE,
+    CONSTRAINT `fk_tipo_documento_metadados_tipo`
+        FOREIGN KEY (`tipo_documento_codigo`)
+        REFERENCES `tipos_documento` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
