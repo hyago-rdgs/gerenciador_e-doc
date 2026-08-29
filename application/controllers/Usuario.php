@@ -5,8 +5,10 @@ class Usuario extends CI_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->controle_acesso->valida_acesso();
+        $this->controle_acesso->valida_permissao('usuarios.gerenciar');
         $this->load->model('usuario_model');
+        $this->load->model('perfil_model');
+        $this->load->model('permissao_model');
     }
 
     public function index()
@@ -36,7 +38,6 @@ class Usuario extends CI_Controller
         $dados = [
             'filtro_termo' => $filtro_termo,
             'filtro_status' => $filtro_status,
-
             'usuarios' => $this->usuario_model->listar_tudo(
                 $filtro_termo,
                 $filtro_status,
@@ -89,7 +90,9 @@ class Usuario extends CI_Controller
             );
         }
 
-        $this->load->view('usuario/usuario_form');
+        $dados['perfis'] = $this->perfil_model->listar_ativos();
+
+        $this->load->view('usuario/usuario_form', $dados);
     }
 
     public function atualizar($codigo = NULL)
@@ -121,6 +124,28 @@ class Usuario extends CI_Controller
                 );
             }
 
+            if (
+                $codigo === (int) $this->controle_acesso->get('codigo') &&
+                (
+                    $resultado['dados']['ativo'] !== 1 ||
+                    !$this->permissao_model->perfil_possui(
+                        $resultado['dados']['perfil_codigo'],
+                        'usuarios.gerenciar'
+                    )
+                )
+            ) {
+                resposta_json(
+                    FALSE,
+                    'Não é possível remover o seu próprio acesso ao gerenciamento de usuários.',
+                    [
+                        'erros' => [
+                            'A conta autenticada deve permanecer ativa e com permissão para gerenciar usuários.'
+                        ]
+                    ],
+                    422
+                );
+            }
+
             $atualizado = $this->usuario_model->atualizar(
                 $codigo,
                 $resultado['dados']
@@ -142,7 +167,10 @@ class Usuario extends CI_Controller
             );
         }
 
-        $dados['usuario'] = $usuario;
+        $dados = [
+            'usuario' => $usuario,
+            'perfis' => $this->perfil_model->listar_ativos()
+        ];
 
         $this->load->view('usuario/usuario_form', $dados);
     }
@@ -209,12 +237,14 @@ class Usuario extends CI_Controller
             'nome' => trim($reg['nome'] ?? ''),
             'usuario' => trim($reg['usuario'] ?? ''),
             'email' => trim($reg['email'] ?? ''),
+            'perfil_codigo' => trim($reg['perfil_codigo'] ?? ''),
             'senha' => $reg['senha'] ?? '',
             'confirmar_senha' => $reg['confirmar_senha'] ?? '',
             'ativo' => trim($reg['ativo'] ?? '')
         ];
 
         $erros = [];
+        $perfil = NULL;
 
         if ($reg['nome'] === '') {
             $erros[] = 'O campo Nome é obrigatório.';
@@ -232,6 +262,20 @@ class Usuario extends CI_Controller
             $erros[] = 'Informe um endereço de e-mail válido.';
         } elseif ($this->usuario_model->email_em_uso($reg['email'], $codigo)) {
             $erros[] = 'O e-mail informado já está em uso.';
+        }
+
+        if ($reg['perfil_codigo'] === '') {
+            $erros[] = 'O campo Perfil é obrigatório.';
+        } elseif (!ctype_digit($reg['perfil_codigo'])) {
+            $erros[] = 'O perfil informado é inválido.';
+        } else {
+            $perfil = $this->perfil_model->buscar_por_codigo(
+                (int) $reg['perfil_codigo']
+            );
+
+            if (!$perfil) {
+                $erros[] = 'O perfil informado não foi encontrado.';
+            }
         }
 
         if ($codigo === NULL && $reg['senha'] === '') {
@@ -270,10 +314,12 @@ class Usuario extends CI_Controller
         }
 
         $reg['ativo'] = (int) $reg['ativo'];
+        $reg['perfil_codigo'] = (int) $reg['perfil_codigo'];
 
         return [
             'sucesso' => TRUE,
-            'dados' => $reg
+            'dados' => $reg,
+            'perfil' => $perfil
         ];
     }
 }

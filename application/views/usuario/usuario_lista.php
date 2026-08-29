@@ -91,6 +91,7 @@
                                 <th class="px-3 py-3" scope="col">Usuário</th>
                                 <th class="py-3" scope="col">Login</th>
                                 <th class="py-3" scope="col">E-mail</th>
+                                <th class="py-3" scope="col">Perfil</th>
                                 <th class="py-3 text-center" scope="col">Status</th>
                                 <th class="px-3 py-3 text-end" scope="col">Ações</th>
                             </tr>
@@ -115,6 +116,9 @@
                                         </span>
                                     </td>
                                     <td><?= htmlspecialchars($usuario['email'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td>
+                                        <?= html_escape($usuario['perfil_nome']); ?>
+                                    </td>
                                     <td class="text-center">
                                         <?php if ($usuario['ativo'] == 1): ?>
                                             <span class="badge text-bg-success">Ativo</span>

@@ -5,10 +5,13 @@ branch `main` do core.
 
 ## Instalação nova
 
-Execute apenas o arquivo `schema.sql` em um banco vazio.
+Execute o schema e, em seguida, os seeds técnicos:
 
 ```bash
 mariadb -u USUARIO -p NOME_DO_BANCO < database/schema.sql
+
+mariadb -u USUARIO -p NOME_DO_BANCO \
+    < database/seeds/20260829_001_controle_acesso.sql
 ```
 
 ## Atualização de uma instalação existente
@@ -18,6 +21,9 @@ Execute, em ordem alfabética, somente as migrations ainda não aplicadas.
 ```bash
 mariadb -u USUARIO -p NOME_DO_BANCO \
     < database/migrations/20260828_001_adiciona_chaves_tecnicas.sql
+
+mariadb -u USUARIO -p NOME_DO_BANCO \
+    < database/migrations/20260829_001_adiciona_controle_acesso.sql
 ```
 
 O `schema.sql` já contém o resultado das migrations e não deve ser executado

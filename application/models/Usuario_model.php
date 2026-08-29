@@ -18,11 +18,19 @@ class Usuario_model extends CI_Model
             'u.nome',
             'u.usuario',
             'u.email',
+            'u.perfil_codigo',
+            'p.chave AS perfil',
+            'p.nome AS perfil_nome',
             'u.ativo',
             'u.cadastro',
             'u.atualizacao'
         ]);
         $this->db->from($this->tabela . ' u');
+        $this->db->join(
+            'perfis p',
+            'p.codigo = u.perfil_codigo',
+            'INNER'
+        );
 
         if (!empty($termo)) {
             $this->db->group_start();
@@ -41,6 +49,7 @@ class Usuario_model extends CI_Model
         }
 
         $this->db->where('u.exclusao IS NULL', NULL, FALSE);
+        $this->db->where('p.exclusao IS NULL', NULL, FALSE);
         $this->db->order_by('u.nome', 'ASC');
 
         if ($limite !== NULL) {
@@ -55,6 +64,11 @@ class Usuario_model extends CI_Model
     {
         $this->db->select('u.codigo');
         $this->db->from($this->tabela . ' u');
+        $this->db->join(
+            'perfis p',
+            'p.codigo = u.perfil_codigo',
+            'INNER'
+        );
 
         if (!empty($termo)) {
             $this->db->group_start();
@@ -73,6 +87,7 @@ class Usuario_model extends CI_Model
         }
 
         $this->db->where('u.exclusao IS NULL', NULL, FALSE);
+        $this->db->where('p.exclusao IS NULL', NULL, FALSE);
 
         $query = $this->db->get();
         return $query->num_rows();
@@ -81,35 +96,81 @@ class Usuario_model extends CI_Model
     public function buscar_por_codigo($codigo)
     {
         $this->db->select([
-            'codigo',
-            'nome',
-            'usuario',
-            'email',
-            'ativo',
-            'cadastro',
-            'atualizacao'
+            'u.codigo',
+            'u.nome',
+            'u.usuario',
+            'u.email',
+            'u.perfil_codigo',
+            'p.chave AS perfil',
+            'p.nome AS perfil_nome',
+            'u.ativo',
+            'u.cadastro',
+            'u.atualizacao'
         ]);
-        $this->db->where('codigo', $codigo);
-        $this->db->where('exclusao IS NULL', NULL, FALSE);
+        $this->db->from($this->tabela . ' u');
+        $this->db->join(
+            'perfis p',
+            'p.codigo = u.perfil_codigo',
+            'INNER'
+        );
+        $this->db->where('u.codigo', $codigo);
+        $this->db->where('u.exclusao IS NULL', NULL, FALSE);
+        $this->db->where('p.exclusao IS NULL', NULL, FALSE);
+        $this->db->limit(1);
 
-        $query = $this->db->get($this->tabela, 1);
+        $query = $this->db->get();
         return $query->row_array();
     }
 
     public function buscar_por_usuario($usuario)
     {
         $this->db->select([
-            'codigo',
-            'nome',
-            'usuario',
-            'email',
-            'senha'
+            'u.codigo',
+            'u.nome',
+            'u.usuario',
+            'u.email',
+            'u.perfil_codigo',
+            'p.chave AS perfil',
+            'p.nome AS perfil_nome',
+            'u.senha'
         ]);
 
-        $this->db->from($this->tabela);
-        $this->db->where('usuario', $usuario);
-        $this->db->where('ativo', 1);
-        $this->db->where('exclusao', NULL);
+        $this->db->from($this->tabela . ' u');
+        $this->db->join(
+            'perfis p',
+            'p.codigo = u.perfil_codigo',
+            'INNER'
+        );
+        $this->db->where('u.usuario', $usuario);
+        $this->db->where('u.ativo', 1);
+        $this->db->where('u.exclusao IS NULL', NULL, FALSE);
+        $this->db->where('p.exclusao IS NULL', NULL, FALSE);
+        $this->db->limit(1);
+
+        return $this->db->get()->row_array();
+    }
+
+    public function buscar_para_sessao($codigo)
+    {
+        $this->db->select([
+            'u.codigo',
+            'u.nome',
+            'u.usuario',
+            'u.email',
+            'u.perfil_codigo',
+            'p.chave AS perfil',
+            'p.nome AS perfil_nome'
+        ]);
+        $this->db->from($this->tabela . ' u');
+        $this->db->join(
+            'perfis p',
+            'p.codigo = u.perfil_codigo',
+            'INNER'
+        );
+        $this->db->where('u.codigo', $codigo);
+        $this->db->where('u.ativo', 1);
+        $this->db->where('u.exclusao IS NULL', NULL, FALSE);
+        $this->db->where('p.exclusao IS NULL', NULL, FALSE);
         $this->db->limit(1);
 
         return $this->db->get()->row_array();

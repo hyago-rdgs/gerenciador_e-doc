@@ -100,7 +100,10 @@ class Autenticacao extends CI_Controller
                 'codigo' => $usuario['codigo'],
                 'nome' => $usuario['nome'],
                 'usuario' => $usuario['usuario'],
-                'email' => $usuario['email']
+                'email' => $usuario['email'],
+                'perfil_codigo' => $usuario['perfil_codigo'],
+                'perfil' => $usuario['perfil'],
+                'perfil_nome' => $usuario['perfil_nome']
             ]
         ];
     }

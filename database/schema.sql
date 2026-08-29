@@ -4,17 +4,82 @@
 SET NAMES utf8mb4;
 SET time_zone = '+00:00';
 
+CREATE TABLE `perfis` (
+    `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `nome` varchar(100) NOT NULL,
+    `chave` varchar(50) NOT NULL,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `atualizacao` datetime DEFAULT NULL,
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`codigo`),
+    UNIQUE KEY `uk_perfis_chave` (`chave`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `modulos` (
+    `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `nome` varchar(100) NOT NULL,
+    `chave` varchar(50) NOT NULL,
+    `descricao` text DEFAULT NULL,
+    `ordem` smallint(5) UNSIGNED NOT NULL DEFAULT 1,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `atualizacao` datetime DEFAULT NULL,
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`codigo`),
+    UNIQUE KEY `uk_modulos_chave` (`chave`),
+    KEY `idx_modulos_ordem` (`ordem`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `permissoes` (
+    `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `modulo_codigo` bigint(20) UNSIGNED NOT NULL,
+    `nome` varchar(100) NOT NULL,
+    `chave` varchar(100) NOT NULL,
+    `descricao` text DEFAULT NULL,
+    `ordem` smallint(5) UNSIGNED NOT NULL DEFAULT 1,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `atualizacao` datetime DEFAULT NULL,
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`codigo`),
+    UNIQUE KEY `uk_permissoes_chave` (`chave`),
+    KEY `idx_permissoes_modulo` (`modulo_codigo`),
+    KEY `idx_permissoes_ordem` (`modulo_codigo`, `ordem`),
+    CONSTRAINT `fk_permissoes_modulo`
+        FOREIGN KEY (`modulo_codigo`)
+        REFERENCES `modulos` (`codigo`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `perfil_permissoes` (
+    `perfil_codigo` bigint(20) UNSIGNED NOT NULL,
+    `permissao_codigo` bigint(20) UNSIGNED NOT NULL,
+    `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
+    `atualizacao` datetime DEFAULT NULL,
+    `exclusao` datetime DEFAULT NULL,
+    PRIMARY KEY (`perfil_codigo`, `permissao_codigo`),
+    KEY `idx_perfil_permissoes_permissao` (`permissao_codigo`),
+    CONSTRAINT `fk_perfil_permissoes_perfil`
+        FOREIGN KEY (`perfil_codigo`)
+        REFERENCES `perfis` (`codigo`) ON UPDATE CASCADE,
+    CONSTRAINT `fk_perfil_permissoes_permissao`
+        FOREIGN KEY (`permissao_codigo`)
+        REFERENCES `permissoes` (`codigo`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `usuarios` (
     `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
     `nome` varchar(255) NOT NULL,
     `usuario` varchar(100) NOT NULL,
     `email` varchar(255) NOT NULL,
     `senha` varchar(255) NOT NULL,
+    `perfil_codigo` bigint(20) UNSIGNED NOT NULL,
     `ativo` tinyint(1) NOT NULL DEFAULT 1,
     `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
     `atualizacao` datetime DEFAULT NULL,
     `exclusao` datetime DEFAULT NULL,
-    PRIMARY KEY (`codigo`)
+    PRIMARY KEY (`codigo`),
+    KEY `idx_usuarios_perfil` (`perfil_codigo`),
+    CONSTRAINT `fk_usuarios_perfil`
+        FOREIGN KEY (`perfil_codigo`)
+        REFERENCES `perfis` (`codigo`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `tipos_documento` (

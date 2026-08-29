@@ -70,14 +70,28 @@
                                     value="<?= htmlspecialchars($usuario['usuario'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                             </div>
 
-                            <div class="col-12 col-md-8">
+                            <div class="col-12 col-lg-6">
                                 <label class="form-label" for="email">E-mail</label>
                                 <input class="form-control" id="email" maxlength="255" name="email"
                                     placeholder="usuario@exemplo.com" required type="email"
                                     value="<?= htmlspecialchars($usuario['email'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                             </div>
 
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label class="form-label" for="perfil">Perfil</label>
+                                <select class="form-select" id="perfil" name="perfil" required>
+                                    <option value="">Selecione</option>
+
+                                    <?php foreach ($perfis as $perfil): ?>
+                                        <option value="<?= $perfil['codigo']; ?>"
+                                            <?= isset($usuario['perfil_codigo']) && $usuario['perfil_codigo'] == $perfil['codigo'] ? 'selected' : ''; ?>>
+                                            <?= html_escape($perfil['nome']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-lg-3">
                                 <label class="form-label" for="ativo">Status</label>
                                 <select class="form-select" id="ativo" name="ativo" required>
                                     <option value="1" <?= !isset($usuario['ativo']) || $usuario['ativo'] == 1 ? 'selected' : ''; ?>>Ativo</option>

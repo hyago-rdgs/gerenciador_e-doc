@@ -51,19 +51,38 @@
             </a>
           </li>
 
-          <li class="nav-item">
-            <a class="nav-link <?= $modulo_atual == 'usuario' ? 'active fw-semibold' : ''; ?>"
-              <?= $modulo_atual == 'usuario' ? 'aria-current="page"' : ''; ?>
-              href="<?= base_url('usuario'); ?>">
-              Usuários
-            </a>
-          </li>
+          <?php if ($this->controle_acesso->tem_permissao('usuarios.gerenciar')): ?>
+            <li class="nav-item">
+              <a class="nav-link <?= $modulo_atual == 'usuario' ? 'active fw-semibold' : ''; ?>"
+                <?= $modulo_atual == 'usuario' ? 'aria-current="page"' : ''; ?>
+                href="<?= base_url('usuario'); ?>">
+                Usuários
+              </a>
+            </li>
+          <?php endif; ?>
+
+          <?php if ($this->controle_acesso->tem_permissao('perfis.gerenciar')): ?>
+            <li class="nav-item">
+              <a class="nav-link <?= $modulo_atual == 'perfil' ? 'active fw-semibold' : ''; ?>"
+                <?= $modulo_atual == 'perfil' ? 'aria-current="page"' : ''; ?>
+                href="<?= base_url('perfil'); ?>">
+                Perfis
+              </a>
+            </li>
+          <?php endif; ?>
         </ul>
         <ul class="navbar-nav">
           <li class="nav-item dropdown">
             <button class="btn btn-light border dropdown-toggle d-flex align-items-center gap-2" type="button"
               data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-regular fa-circle-user"
-                aria-hidden="true"></i><span><?= html_escape($this->controle_acesso->get('nome')); ?></span></button>
+                aria-hidden="true"></i>
+              <span class="d-flex flex-column text-start">
+                <span><?= html_escape($this->controle_acesso->get('nome')); ?></span>
+                <small class="text-body-secondary">
+                  <?= html_escape($this->controle_acesso->get('perfil_nome')); ?>
+                </small>
+              </span>
+            </button>
             <ul class="dropdown-menu dropdown-menu-end">
               <li><a class="dropdown-item log-out" href="<?= base_url('autenticacao/logout'); ?>">Sair</a></li>
             </ul>
