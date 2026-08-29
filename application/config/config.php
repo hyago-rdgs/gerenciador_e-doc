@@ -26,6 +26,25 @@ $config['base_url'] = '';
 
 /*
 |--------------------------------------------------------------------------
+| Document Storage Directory
+|--------------------------------------------------------------------------
+|
+| Document files must be stored outside the public web directory. The path
+| can be configured through the EDOC_DOCUMENTOS_DIRETORIO environment
+| variable. New uploads are rejected while a private path is not configured.
+|
+*/
+$documentos_diretorio = getenv('EDOC_DOCUMENTOS_DIRETORIO');
+
+$config['documentos_diretorio'] =
+	$documentos_diretorio !== FALSE && trim($documentos_diretorio) !== ''
+		? rtrim(trim($documentos_diretorio), '/\\')
+		: '';
+
+unset($documentos_diretorio);
+
+/*
+|--------------------------------------------------------------------------
 | Index File
 |--------------------------------------------------------------------------
 |

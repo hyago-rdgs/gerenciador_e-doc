@@ -443,24 +443,12 @@ class Documento extends CI_Controller
             $arquivo_codigo
         );
 
-        $diretorio = realpath(
-            FCPATH . 'uploads/documentos/' . $documento['codigo']
+        $caminho = $this->resolver_caminho_arquivo(
+            $documento['codigo'],
+            $arquivo['caminho']
         );
 
-        $caminho = realpath(
-            FCPATH . $arquivo['caminho']
-        );
-
-        if (
-            !$diretorio ||
-            !$caminho ||
-            strpos(
-                $caminho,
-                $diretorio . DIRECTORY_SEPARATOR
-            ) !== 0 ||
-            !is_file($caminho) ||
-            !is_readable($caminho)
-        ) {
+        if (!$caminho) {
             show_404();
         }
 
@@ -483,17 +471,39 @@ class Documento extends CI_Controller
             basename($arquivo['nome_original'])
         );
 
+        $tipos_inline = [
+            'application/pdf',
+            'image/jpeg',
+            'image/png'
+        ];
+
+        $disposicao = in_array(
+            strtolower($mime_type),
+            $tipos_inline,
+            TRUE
+        ) ? 'inline' : 'attachment';
+
+        clearstatcache(TRUE, $caminho);
+        $tamanho = filesize($caminho);
+
+        if ($tamanho === FALSE) {
+            show_404();
+        }
+
         $this->output
             ->set_content_type($mime_type)
             ->set_header('X-Content-Type-Options: nosniff')
+            ->set_header('X-Frame-Options: SAMEORIGIN')
+            ->set_header('Cache-Control: private, no-store, max-age=0')
+            ->set_header('Pragma: no-cache')
             ->set_header(
-                'Content-Disposition: inline; filename="' .
+                'Content-Disposition: ' . $disposicao . '; filename="' .
                 $nome_original .
                 '"; filename*=UTF-8\'\'' .
                 rawurlencode($nome_original)
             )
             ->set_header(
-                'Content-Length: ' . filesize($caminho)
+                'Content-Length: ' . $tamanho
             )
             ->_display();
 
@@ -540,9 +550,38 @@ class Documento extends CI_Controller
             );
         }
 
-        $diretorio = FCPATH . 'uploads/documentos/' . $documento['codigo'] . '/';
+        $diretorio_base = $this->diretorio_documentos();
 
-        if (!is_dir($diretorio) && !mkdir($diretorio, 0775, TRUE)) {
+        if ($diretorio_base === FALSE) {
+            resposta_json(
+                FALSE,
+                'O diretório de documentos não foi configurado.',
+                [],
+                500
+            );
+        }
+
+        if (
+            !is_dir($diretorio_base) &&
+            !mkdir($diretorio_base, 0770, TRUE) &&
+            !is_dir($diretorio_base)
+        ) {
+            resposta_json(
+                FALSE,
+                'Não foi possível preparar o armazenamento de documentos.',
+                [],
+                500
+            );
+        }
+
+        $diretorio = $diretorio_base . DIRECTORY_SEPARATOR .
+            $documento['codigo'] . DIRECTORY_SEPARATOR;
+
+        if (
+            !is_dir($diretorio) &&
+            !mkdir($diretorio, 0770, TRUE) &&
+            !is_dir($diretorio)
+        ) {
             resposta_json(
                 FALSE,
                 'Não foi possível preparar o diretório do documento.',
@@ -590,7 +629,7 @@ class Documento extends CI_Controller
             'nome_armazenado' => $arquivo['file_name'],
             'extensao' => ltrim($arquivo['file_ext'], '.'),
             'mime_type' => $arquivo['file_type'],
-            'caminho' => 'uploads/documentos/' . $documento['codigo'] . '/' . $arquivo['file_name'],
+            'caminho' => $documento['codigo'] . '/' . $arquivo['file_name'],
             'tamanho' => round($arquivo['file_size'] * 1024),
             'versao' => 1,
             'principal' => $principal
@@ -766,6 +805,109 @@ class Documento extends CI_Controller
         }
 
         return $arquivo;
+    }
+
+    private function diretorio_documentos()
+    {
+        $diretorio = trim(
+            (string) $this->config->item('documentos_diretorio')
+        );
+
+        if ($diretorio === '') {
+            return FALSE;
+        }
+
+        if (!preg_match('#^(?:[a-z]:[\\\\/]|/|\\\\\\\\)#i', $diretorio)) {
+            return FALSE;
+        }
+
+        return rtrim($diretorio, '/\\');
+    }
+
+    private function resolver_caminho_arquivo(
+        $documento_codigo,
+        $caminho_registrado
+    ) {
+        $caminho_registrado = str_replace(
+            '\\',
+            '/',
+            trim((string) $caminho_registrado)
+        );
+
+        if (
+            $caminho_registrado === '' ||
+            strpos($caminho_registrado, "\0") !== FALSE
+        ) {
+            return FALSE;
+        }
+
+        $prefixo_legado = 'uploads/documentos/';
+        $caminho_legado = strpos(
+            $caminho_registrado,
+            $prefixo_legado
+        ) === 0;
+
+        $caminho_relativo = $caminho_legado
+            ? substr($caminho_registrado, strlen($prefixo_legado))
+            : ltrim($caminho_registrado, '/');
+
+        $prefixo_documento = (int) $documento_codigo . '/';
+
+        if (
+            strpos($caminho_relativo, $prefixo_documento) !== 0 ||
+            in_array('..', explode('/', $caminho_relativo), TRUE)
+        ) {
+            return FALSE;
+        }
+
+        $caminho_sistema = str_replace(
+            '/',
+            DIRECTORY_SEPARATOR,
+            $caminho_relativo
+        );
+
+        $candidatos = [];
+        $diretorio_privado = $this->diretorio_documentos();
+
+        if ($diretorio_privado !== FALSE) {
+            $candidatos[] = [
+                'raiz' => $diretorio_privado,
+                'caminho' => $diretorio_privado . DIRECTORY_SEPARATOR .
+                    $caminho_sistema
+            ];
+        }
+
+        if ($caminho_legado) {
+            $diretorio_legado = FCPATH . 'uploads/documentos';
+
+            $candidatos[] = [
+                'raiz' => $diretorio_legado,
+                'caminho' => $diretorio_legado . DIRECTORY_SEPARATOR .
+                    $caminho_sistema
+            ];
+        }
+
+        foreach ($candidatos as $candidato) {
+            $raiz = realpath($candidato['raiz']);
+            $caminho = realpath($candidato['caminho']);
+
+            if (
+                !$raiz ||
+                !$caminho ||
+                strpos(
+                    $caminho,
+                    $raiz . DIRECTORY_SEPARATOR
+                ) !== 0 ||
+                !is_file($caminho) ||
+                !is_readable($caminho)
+            ) {
+                continue;
+            }
+
+            return $caminho;
+        }
+
+        return FALSE;
     }
 
     private function validar($reg)

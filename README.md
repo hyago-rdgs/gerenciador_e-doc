@@ -268,6 +268,13 @@ Em seguida, configure o servidor web para servir o diretório do projeto e dispo
 
 > A configuração exata do ambiente pode variar de acordo com o servidor utilizado no desenvolvimento ou em produção.
 
+## Armazenamento dos documentos
+
+Os arquivos documentais são armazenados fora do diretório público e acessados
+somente pelo controller autenticado. A preparação do diretório, a migração de
+arquivos antigos e o bloqueio para Apache e Nginx estão documentados em
+[`ARMAZENAMENTO.md`](ARMAZENAMENTO.md).
+
 ## Fluxo de autenticação
 
 O acesso aos módulos internos exige autenticação.

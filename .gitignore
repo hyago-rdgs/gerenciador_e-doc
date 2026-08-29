@@ -26,6 +26,7 @@ docker-compose.yml
 docs/*
 
 uploads/documentos/*
+!uploads/documentos/.htaccess
 
 # IDE Files
 #-------------------------
