@@ -361,7 +361,7 @@
                         </p>
 
                         <?php
-                        parse_str($_SERVER['QUERY_STRING'], $params_localizacao);
+                        parse_str($_SERVER['QUERY_STRING'] ?? '', $params_localizacao);
                         unset($params_localizacao['pagina_localizacao']);
                         $gerar_url_localizacao = function ($num_pagina) use ($params_localizacao) {
                             $params_localizacao['pagina_localizacao'] = $num_pagina;
@@ -419,7 +419,12 @@
             </section>
         <?php endif; ?>
 
-        <?php if ($documentos): ?>
+        <?php if (!$pode_visualizar_documentos): ?>
+            <section class="alert alert-light border mb-0" role="status">
+                <i class="fa-solid fa-lock me-2" aria-hidden="true"></i>
+                Você não possui permissão para visualizar os documentos desta localização.
+            </section>
+        <?php elseif ($documentos): ?>
             <section aria-labelledby="lista-documentos-title" class="card border shadow-sm mb-4">
                 <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
                     <div>
@@ -493,7 +498,7 @@
                         </p>
 
                         <?php
-                        parse_str($_SERVER['QUERY_STRING'], $params_documento);
+                        parse_str($_SERVER['QUERY_STRING'] ?? '', $params_documento);
                         unset($params_documento['pagina_documento']);
                         $gerar_url_documento = function ($num_pagina) use ($params_documento) {
                             $params_documento['pagina_documento'] = $num_pagina;

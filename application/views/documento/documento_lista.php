@@ -172,7 +172,7 @@
                             <?= min($offset + $limite - 1, $total_documentos); ?> de
                             <?= $total_documentos; ?> documentos
                         </p>
-                        <?php parse_str($_SERVER['QUERY_STRING'], $params);
+                        <?php parse_str($_SERVER['QUERY_STRING'] ?? '', $params);
                         unset($params['pagina']); ?>
                         <nav aria-label="Paginação de documentos">
                             <ul class="pagination pagination-sm mb-0">
@@ -253,8 +253,8 @@
 
                 if (termo) params.append('termo', termo);
                 if (status) params.append('status', status);
-                if (tipo_documento) params.append('tipo_documento', tipo_documento);
-                if (localizacao) params.append('localizacao', localizacao);
+                if (tipo_documento) params.append('tipo_documento_codigo', tipo_documento);
+                if (localizacao) params.append('localizacao_codigo', localizacao);
 
                 window.location = base_url + 'documento?' + params.toString();
             });

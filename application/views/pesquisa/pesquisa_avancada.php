@@ -191,7 +191,7 @@
                                 <?= min($offset + $limite - 1, $total_documentos); ?> de
                                 <?= $total_documentos; ?>
                             </p>
-                            <?php parse_str($_SERVER['QUERY_STRING'], $params);
+                            <?php parse_str($_SERVER['QUERY_STRING'] ?? '', $params);
                             unset($params['pagina']); ?>
                             <nav aria-label="Paginação da pesquisa">
                                 <ul class="pagination pagination-sm mb-0">

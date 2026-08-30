@@ -29,8 +29,20 @@ class Documento extends CI_Controller
         );
 
         $filtro_termo = $this->input->get('termo', TRUE) !== NULL ? $this->input->get('termo', TRUE) : '';
-        $filtro_tipo_documento = $this->input->get('tipo_documento', TRUE) !== NULL ? $this->input->get('tipo_documento', TRUE) : '';
-        $filtro_localizacao = $this->input->get('localizacao', TRUE) !== NULL ? $this->input->get('localizacao', TRUE) : '';
+        $filtro_tipo_documento = $this->input->get('tipo_documento_codigo', TRUE);
+        $filtro_localizacao = $this->input->get('localizacao_codigo', TRUE);
+
+        // Mantém compatibilidade com URLs geradas antes da padronização.
+        if ($filtro_tipo_documento === NULL) {
+            $filtro_tipo_documento = $this->input->get('tipo_documento', TRUE);
+        }
+
+        if ($filtro_localizacao === NULL) {
+            $filtro_localizacao = $this->input->get('localizacao', TRUE);
+        }
+
+        $filtro_tipo_documento = $filtro_tipo_documento ?? '';
+        $filtro_localizacao = $filtro_localizacao ?? '';
         $filtro_status = $this->input->get('status', TRUE) !== NULL ? $this->input->get('status', TRUE) : '';
 
         $pagina_atual = (int) $this->input->get('pagina', TRUE);

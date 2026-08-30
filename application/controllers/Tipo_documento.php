@@ -1,4 +1,6 @@
 <?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
 class Tipo_documento extends CI_Controller
 {
 
@@ -501,6 +503,8 @@ class Tipo_documento extends CI_Controller
 
         if ($reg['nome'] === '') {
             $erros[] = 'O campo Nome é obrigatório.';
+        } elseif (strlen($reg['nome']) > 150) {
+            $erros[] = 'O campo Nome deve possuir no máximo 150 caracteres.';
         }
 
         if ($reg['ativo'] === '') {

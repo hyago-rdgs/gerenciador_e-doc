@@ -135,6 +135,12 @@
                 </div>
             </section>
 
+            <?php if (!$pode_visualizar_documentos): ?>
+                <section class="alert alert-light border mb-0" role="status">
+                    <i class="fa-solid fa-lock me-2" aria-hidden="true"></i>
+                    Você não possui permissão para visualizar os documentos desta localização.
+                </section>
+            <?php else: ?>
             <section class="card border shadow-sm">
                 <div class="card-header bg-white py-3">
                     <h2 class="h6 fw-semibold mb-1">Documentos armazenados</h2>
@@ -251,6 +257,7 @@
                     </div>
                 <?php endif; ?>
             </section>
+            <?php endif; ?>
         <?php endif; ?>
     </main>
 

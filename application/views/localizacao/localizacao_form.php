@@ -65,7 +65,7 @@ $localizacao_pai_selecionada =
                         <div class="row g-3">
                             <div class="col-12 col-lg-8">
                                 <label class="form-label" for="nome">Nome</label>
-                                <input class="form-control" id="nome" maxlength="150" name="nome"
+                                <input class="form-control" id="nome" maxlength="255" name="nome"
                                     placeholder="Ex.: Arquivo administrativo" required type="text"
                                     value="<?= htmlspecialchars($localizacao['nome'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                             </div>

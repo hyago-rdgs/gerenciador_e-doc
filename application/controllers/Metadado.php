@@ -1,4 +1,6 @@
 <?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
 class Metadado extends CI_Controller
 {
 
@@ -184,6 +186,19 @@ class Metadado extends CI_Controller
             );
         }
 
+        if ($this->metadado_model->possui_vinculos($codigo)) {
+            resposta_json(
+                FALSE,
+                'Não é possível excluir um metadado em uso.',
+                [
+                    'erros' => [
+                        'Desvincule o metadado dos tipos de documento antes de continuar.'
+                    ]
+                ],
+                409
+            );
+        }
+
         if (!$this->metadado_model->excluir($codigo)) {
             resposta_json(
                 FALSE,
@@ -252,6 +267,12 @@ class Metadado extends CI_Controller
 
         if ($reg['nome'] === '') {
             $erros[] = 'O campo Nome é obrigatório.';
+        } elseif (strlen($reg['nome']) > 150) {
+            $erros[] = 'O campo Nome deve possuir no máximo 150 caracteres.';
+        }
+
+        if ($reg['mascara'] !== '' && strlen($reg['mascara']) > 100) {
+            $erros[] = 'A máscara deve possuir no máximo 100 caracteres.';
         }
 
         if ($reg['tipo_campo'] === '') {

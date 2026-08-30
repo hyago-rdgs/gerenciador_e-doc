@@ -38,15 +38,23 @@ class Consulta extends CI_Controller
                 'localizacoes.visualizar'
             );
 
+        $pode_visualizar_documentos = $autenticado &&
+            $this->controle_acesso->tem_permissao(
+                'documentos.visualizar'
+            );
+
         $dados = [
             'autenticado' => $autenticado,
+            'pode_visualizar_documentos' => $pode_visualizar_documentos,
             'protocolo' => $localizacao['protocolo']
         ];
 
         if ($autenticado) {
-            $documentos = $this->documento_model->listar_por_localizacao(
-                $localizacao['codigo']
-            );
+            $documentos = $pode_visualizar_documentos
+                ? $this->documento_model->listar_por_localizacao(
+                    $localizacao['codigo']
+                )
+                : [];
 
             $metadados = $this->preparar_metadados($documentos);
 

@@ -1,4 +1,6 @@
 <?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
 class Localizacao extends CI_Controller
 {
 
@@ -457,7 +459,13 @@ class Localizacao extends CI_Controller
             $filtro_status_localizacao
         );
 
-        $total_documentos = $this->documento_model->contar_por_localizacao($codigo);
+        $pode_visualizar_documentos = $this->controle_acesso->tem_permissao(
+            'documentos.visualizar'
+        );
+
+        $total_documentos = $pode_visualizar_documentos
+            ? $this->documento_model->contar_por_localizacao($codigo)
+            : 0;
 
         $dados = [
             'localizacao' => $localizacao,
@@ -475,11 +483,14 @@ class Localizacao extends CI_Controller
                 $offset_localizacao
             ),
             'total_localizacoes' => $total_localizacoes,
-            'documentos' => $this->documento_model->listar_por_localizacao(
-                $codigo,
-                $limite,
-                $offset_documento
-            ),
+            'pode_visualizar_documentos' => $pode_visualizar_documentos,
+            'documentos' => $pode_visualizar_documentos
+                ? $this->documento_model->listar_por_localizacao(
+                    $codigo,
+                    $limite,
+                    $offset_documento
+                )
+                : [],
             'total_documentos' => $total_documentos,
             'limite' => $limite,
             'offset_localizacao' => $offset_localizacao + 1,
@@ -516,6 +527,8 @@ class Localizacao extends CI_Controller
 
         if ($reg['nome'] === '') {
             $erros[] = 'O campo Nome é obrigatório.';
+        } elseif (strlen($reg['nome']) > 255) {
+            $erros[] = 'O campo Nome deve possuir no máximo 255 caracteres.';
         }
 
         if ($reg['tipo_localizacao_codigo'] === '') {

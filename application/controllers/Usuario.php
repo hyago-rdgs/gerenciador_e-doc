@@ -1,4 +1,6 @@
 <?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
 class Usuario extends CI_Controller
 {
 
@@ -248,16 +250,22 @@ class Usuario extends CI_Controller
 
         if ($reg['nome'] === '') {
             $erros[] = 'O campo Nome é obrigatório.';
+        } elseif (strlen($reg['nome']) > 255) {
+            $erros[] = 'O campo Nome deve possuir no máximo 255 caracteres.';
         }
 
         if ($reg['usuario'] === '') {
             $erros[] = 'O campo Usuário é obrigatório.';
+        } elseif (strlen($reg['usuario']) > 100) {
+            $erros[] = 'O campo Usuário deve possuir no máximo 100 caracteres.';
         } elseif ($this->usuario_model->usuario_em_uso($reg['usuario'], $codigo)) {
             $erros[] = 'O usuário informado já está em uso.';
         }
 
         if ($reg['email'] === '') {
             $erros[] = 'O campo E-mail é obrigatório.';
+        } elseif (strlen($reg['email']) > 255) {
+            $erros[] = 'O campo E-mail deve possuir no máximo 255 caracteres.';
         } elseif (!filter_var($reg['email'], FILTER_VALIDATE_EMAIL)) {
             $erros[] = 'Informe um endereço de e-mail válido.';
         } elseif ($this->usuario_model->email_em_uso($reg['email'], $codigo)) {

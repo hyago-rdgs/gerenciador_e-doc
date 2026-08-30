@@ -173,7 +173,7 @@
                         </p>
 
                         <?php
-                        parse_str($_SERVER['QUERY_STRING'], $params);
+                        parse_str($_SERVER['QUERY_STRING'] ?? '', $params);
                         unset($params['pagina']);
 
                         $gerar_url = function ($num_pagina) use ($params) {

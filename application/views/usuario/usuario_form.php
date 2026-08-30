@@ -78,8 +78,8 @@
                             </div>
 
                             <div class="col-12 col-md-6 col-lg-3">
-                                <label class="form-label" for="perfil">Perfil</label>
-                                <select class="form-select" id="perfil" name="perfil" required>
+                                <label class="form-label" for="perfil_codigo">Perfil</label>
+                                <select class="form-select" id="perfil_codigo" name="perfil_codigo" required>
                                     <option value="">Selecione</option>
 
                                     <?php foreach ($perfis as $perfil): ?>

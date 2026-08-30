@@ -125,6 +125,16 @@ class Metadado_model extends CI_Model
         return $this->db->update($this->tabela, $reg);
     }
 
+    public function possui_vinculos($codigo)
+    {
+        $this->db->where('metadado_codigo', (int) $codigo);
+        $this->db->where('exclusao IS NULL', NULL, FALSE);
+
+        return $this->db->count_all_results(
+            'tipo_documento_metadados'
+        ) > 0;
+    }
+
     public function excluir($codigo)
     {
         $dados = [
