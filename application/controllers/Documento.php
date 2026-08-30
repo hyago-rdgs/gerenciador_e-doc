@@ -24,6 +24,10 @@ class Documento extends CI_Controller
 
     public function listar()
     {
+        $this->controle_acesso->valida_permissao(
+            'documentos.visualizar'
+        );
+
         $filtro_termo = $this->input->get('termo', TRUE) !== NULL ? $this->input->get('termo', TRUE) : '';
         $filtro_tipo_documento = $this->input->get('tipo_documento', TRUE) !== NULL ? $this->input->get('tipo_documento', TRUE) : '';
         $filtro_localizacao = $this->input->get('localizacao', TRUE) !== NULL ? $this->input->get('localizacao', TRUE) : '';
@@ -62,6 +66,10 @@ class Documento extends CI_Controller
 
     public function cadastrar($localizacao_codigo = NULL)
     {
+        $this->controle_acesso->valida_permissao(
+            'documentos.gerenciar'
+        );
+
         $localizacao_selecionada = NULL;
         $tipo_documento_selecionado = NULL;
 
@@ -213,6 +221,10 @@ class Documento extends CI_Controller
 
     public function atualizar($codigo = NULL)
     {
+        $this->controle_acesso->valida_permissao(
+            'documentos.gerenciar'
+        );
+
         $documento = $this->buscar_documento($codigo);
         $codigo = (int) $documento['codigo'];
 
@@ -292,6 +304,10 @@ class Documento extends CI_Controller
 
     public function excluir($codigo = NULL)
     {
+        $this->controle_acesso->valida_permissao(
+            'documentos.excluir'
+        );
+
         if ($this->input->method() !== 'post') {
             show_404();
         }
@@ -340,6 +356,10 @@ class Documento extends CI_Controller
 
     public function detalhes($codigo = NULL)
     {
+        $this->controle_acesso->valida_permissao(
+            'documentos.visualizar'
+        );
+
         $documento = $this->buscar_documento($codigo);
 
         $dados = [
@@ -365,6 +385,10 @@ class Documento extends CI_Controller
         $tipo_documento_codigo = NULL,
         $documento_codigo = NULL
     ) {
+        $this->controle_acesso->valida_permissao(
+            'documentos.gerenciar'
+        );
+
         if (
             empty($tipo_documento_codigo) ||
             !ctype_digit((string) $tipo_documento_codigo)
@@ -433,6 +457,10 @@ class Documento extends CI_Controller
         $codigo = NULL,
         $arquivo_codigo = NULL
     ) {
+        $this->controle_acesso->valida_permissao(
+            'arquivos.visualizar'
+        );
+
         if ($this->input->method() !== 'get') {
             show_404();
         }
@@ -513,6 +541,10 @@ class Documento extends CI_Controller
 
     public function cadastrar_arquivo($codigo = NULL)
     {
+        $this->controle_acesso->valida_permissao(
+            'arquivos.gerenciar'
+        );
+
         if ($this->input->method() !== 'post') {
             show_404();
         }
@@ -655,6 +687,10 @@ class Documento extends CI_Controller
 
     public function definir_arquivo_principal($codigo = NULL, $arquivo_codigo = NULL)
     {
+        $this->controle_acesso->valida_permissao(
+            'arquivos.gerenciar'
+        );
+
         if ($this->input->method() !== 'post') {
             show_404();
         }
@@ -690,6 +726,10 @@ class Documento extends CI_Controller
         $codigo = NULL,
         $arquivo_codigo = NULL
     ) {
+        $this->controle_acesso->valida_permissao(
+            'arquivos.gerenciar'
+        );
+
         if ($this->input->method() !== 'post') {
             show_404();
         }

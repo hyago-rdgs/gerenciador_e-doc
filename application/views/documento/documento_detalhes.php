@@ -117,17 +117,19 @@
                             <h2 class="h6 fw-semibold mb-1">Arquivos</h2>
                             <p class="small text-secondary mb-0">Arquivos digitais vinculados ao documento.</p>
                         </div>
-                        <form action="<?= base_url('documento/cadastrar_arquivo/' . $documento['codigo']); ?>"
-                            id="formulario-arquivo" method="post" enctype="multipart/form-data">
-                            <div class="input-group mb-3">
-                                <input accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png"
-                                    class="form-control" id="arquivo" name="arquivo" required
-                                    type="file" aria-describedby="enviar-arquivo">
-                                <button class="btn btn-primary" id="enviar-arquivo" type="submit">
-                                    <i class="fa-solid fa-upload me-2"></i>Enviar
-                                </button>
-                            </div>
-                        </form>
+                        <?php if ($this->controle_acesso->tem_permissao('arquivos.gerenciar')): ?>
+                            <form action="<?= base_url('documento/cadastrar_arquivo/' . $documento['codigo']); ?>"
+                                id="formulario-arquivo" method="post" enctype="multipart/form-data">
+                                <div class="input-group mb-3">
+                                    <input accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png"
+                                        class="form-control" id="arquivo" name="arquivo" required
+                                        type="file" aria-describedby="enviar-arquivo">
+                                    <button class="btn btn-primary" id="enviar-arquivo" type="submit">
+                                        <i class="fa-solid fa-upload me-2"></i>Enviar
+                                    </button>
+                                </div>
+                            </form>
+                        <?php endif; ?>
                     </div>
 
                     <div class="card-body p-0">
@@ -148,13 +150,17 @@
                                         <?php foreach ($arquivos as $arquivo): ?>
                                             <tr>
                                                 <td class="ps-3">
-                                                    <a class="text-decoration-none fw-semibold" href="<?= base_url(
-                                                        'documento/acessar_arquivo/' .
-                                                        $documento['codigo'] . '/' .
-                                                        $arquivo['codigo']
-                                                    ); ?>" target="_blank">
+                                                    <?php if ($this->controle_acesso->tem_permissao('arquivos.visualizar')): ?>
+                                                        <a class="text-decoration-none fw-semibold" href="<?= base_url(
+                                                            'documento/acessar_arquivo/' .
+                                                            $documento['codigo'] . '/' .
+                                                            $arquivo['codigo']
+                                                        ); ?>" target="_blank">
+                                                            <?= htmlspecialchars($arquivo['nome_original'], ENT_QUOTES, 'UTF-8'); ?>
+                                                        </a>
+                                                    <?php else: ?>
                                                         <?= htmlspecialchars($arquivo['nome_original'], ENT_QUOTES, 'UTF-8'); ?>
-                                                    </a>
+                                                    <?php endif; ?>
                                                     <?php if ($arquivo['principal']): ?>
                                                         <span class="badge text-bg-primary ms-2">Principal</span>
                                                     <?php endif; ?>
@@ -163,18 +169,20 @@
                                                 <td><?= number_format($arquivo['tamanho'] / 1024, 1, ',', '.'); ?> KB</td>
                                                 <td><?= (int) $arquivo['versao']; ?></td>
                                                 <td class="pe-3 text-end">
-                                                    <?php if (!$arquivo['principal']): ?>
-                                                        <button class="btn btn-sm btn-light border arquivo-principal"
+                                                    <?php if ($this->controle_acesso->tem_permissao('arquivos.gerenciar')): ?>
+                                                        <?php if (!$arquivo['principal']): ?>
+                                                            <button class="btn btn-sm btn-light border arquivo-principal"
+                                                                data-codigo="<?= $arquivo['codigo']; ?>" type="button"
+                                                                title="Definir como principal">
+                                                                <i class="fa-solid fa-star"></i>
+                                                            </button>
+                                                        <?php endif; ?>
+                                                        <button class="btn btn-sm btn-light border text-danger excluir-arquivo"
                                                             data-codigo="<?= $arquivo['codigo']; ?>" type="button"
-                                                            title="Definir como principal">
-                                                            <i class="fa-solid fa-star"></i>
+                                                            title="Excluir arquivo">
+                                                            <i class="fa-solid fa-trash-can"></i>
                                                         </button>
                                                     <?php endif; ?>
-                                                    <button class="btn btn-sm btn-light border text-danger excluir-arquivo"
-                                                        data-codigo="<?= $arquivo['codigo']; ?>" type="button"
-                                                        title="Excluir arquivo">
-                                                        <i class="fa-solid fa-trash-can"></i>
-                                                    </button>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>

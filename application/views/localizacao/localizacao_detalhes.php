@@ -22,11 +22,13 @@
                     Organize e gerencie os locais físicos utilizados para armazenamento dos documentos.
                 </p>
             </section>
-            <a class="btn btn-primary flex-shrink-0"
-                href="<?= base_url('localizacao/cadastrar/' . $localizacao['codigo']); ?>">
-                <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
-                Adicionar sublocalização
-            </a>
+            <?php if ($this->controle_acesso->tem_permissao('localizacoes.gerenciar')): ?>
+                <a class="btn btn-primary flex-shrink-0"
+                    href="<?= base_url('localizacao/cadastrar/' . $localizacao['codigo']); ?>">
+                    <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
+                    Adicionar sublocalização
+                </a>
+            <?php endif; ?>
         </header>
 
         <nav aria-label="Caminho da localização" class="mb-4">
@@ -97,13 +99,20 @@
                     </section>
 
                     <section class="d-grid d-sm-flex flex-wrap gap-2" aria-label="Ações da localização atual">
-                        <?php if ($tipo_documento && (int) $localizacao['ativo'] === 1): ?>
+                        <?php if (
+                            $tipo_documento &&
+                            (int) $localizacao['ativo'] === 1 &&
+                            $this->controle_acesso->tem_permissao('documentos.gerenciar')
+                        ): ?>
                             <a class="btn btn-outline-primary"
                                 href="<?= base_url('documento/cadastrar/' . $localizacao['codigo']); ?>">
                                 <i class="fa-solid fa-file-circle-plus me-2" aria-hidden="true"></i>
                                 Novo documento
                             </a>
-                        <?php elseif (!$tipo_documento): ?>
+                        <?php elseif (
+                            !$tipo_documento &&
+                            $this->controle_acesso->tem_permissao('localizacoes.gerenciar')
+                        ): ?>
                             <a class="btn btn-warning"
                                 href="<?= base_url('localizacao/atualizar/' . $localizacao['codigo']); ?>">
                                 <i class="fa-solid fa-link me-2" aria-hidden="true"></i>
@@ -274,6 +283,10 @@
                                                 Acessar
                                             </button>
 
+                                            <?php if (
+                                                $this->controle_acesso->tem_permissao('etiquetas.gerar') ||
+                                                $this->controle_acesso->tem_permissao('localizacoes.gerenciar')
+                                            ): ?>
                                             <div class="dropdown">
                                                 <button class="btn btn-sm btn-light border dropdown-toggle-acoes" type="button"
                                                     data-bs-toggle="dropdown" aria-expanded="false" aria-label="Mais ações">
@@ -281,6 +294,7 @@
                                                 </button>
 
                                                 <ul class="dropdown-menu dropdown-menu-end">
+                                                    <?php if ($this->controle_acesso->tem_permissao('etiquetas.gerar')): ?>
                                                     <li>
                                                         <a class="dropdown-item" href="<?= base_url(
                                                             'etiqueta/localizacao/' .
@@ -292,7 +306,9 @@
                                                             Imprimir etiqueta
                                                         </a>
                                                     </li>
+                                                    <?php endif; ?>
 
+                                                    <?php if ($this->controle_acesso->tem_permissao('localizacoes.gerenciar')): ?>
                                                     <li>
                                                         <a class="dropdown-item" href="<?= base_url(
                                                             'localizacao/atualizar/' .
@@ -323,8 +339,10 @@
                                                             Excluir
                                                         </button>
                                                     </li>
+                                                    <?php endif; ?>
                                                 </ul>
                                             </div>
+                                            <?php endif; ?>
 
                                         </div>
                                     </td>
@@ -391,10 +409,12 @@
                     <div class="mb-3"><i class="fa-solid fa-landmark fa-2x text-secondary"></i></div>
                     <h2 class="h5 fw-semibold" id="estado-vazio-localizacoes">Nenhuma sublocalização cadastrada</h2>
                     <p class="text-secondary mb-4">Cadastre a primeira sublocalização desta estrutura.</p>
-                    <a class="btn btn-primary" href="<?= base_url('localizacao/cadastrar/' . $localizacao['codigo']); ?>">
-                        <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
-                        Cadastrar localização
-                    </a>
+                    <?php if ($this->controle_acesso->tem_permissao('localizacoes.gerenciar')): ?>
+                        <a class="btn btn-primary" href="<?= base_url('localizacao/cadastrar/' . $localizacao['codigo']); ?>">
+                            <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
+                            Cadastrar localização
+                        </a>
+                    <?php endif; ?>
                 </div>
             </section>
         <?php endif; ?>
@@ -422,8 +442,12 @@
                             <?php foreach ($documentos as $documento): ?>
                                 <tr>
                                     <td class="ps-3 ps-lg-4">
-                                        <a class="text-decoration-none fw-semibold"
-                                            href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
+                                        <?php if ($this->controle_acesso->tem_permissao('documentos.visualizar')): ?>
+                                            <a class="text-decoration-none fw-semibold"
+                                                href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
+                                        <?php else: ?>
+                                            <span class="fw-semibold">
+                                        <?php endif; ?>
                                             <?= htmlspecialchars($documento['titulo'], ENT_QUOTES, 'UTF-8'); ?>
                                             <small class="d-block text-body-secondary fw-normal font-monospace">
                                                 <?= htmlspecialchars($documento['protocolo'], ENT_QUOTES, 'UTF-8'); ?>
@@ -431,7 +455,11 @@
                                             <small class="d-block text-body-secondary fw-normal">
                                                 <?= htmlspecialchars($documento['numero_identificacao'] ?? 'Sem identificação', ENT_QUOTES, 'UTF-8'); ?>
                                             </small>
-                                        </a>
+                                        <?php if ($this->controle_acesso->tem_permissao('documentos.visualizar')): ?>
+                                            </a>
+                                        <?php else: ?>
+                                            </span>
+                                        <?php endif; ?>
                                     </td>
                                     <td><?= htmlspecialchars($documento['tipo_documento'], ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td class="text-center">
@@ -442,11 +470,13 @@
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-end pe-3 pe-lg-4">
-                                        <a class="btn btn-sm btn-primary"
-                                            href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
-                                            <i class="fa-solid fa-arrow-right me-2" aria-hidden="true"></i>
-                                            Acessar
-                                        </a>
+                                        <?php if ($this->controle_acesso->tem_permissao('documentos.visualizar')): ?>
+                                            <a class="btn btn-sm btn-primary"
+                                                href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
+                                                <i class="fa-solid fa-arrow-right me-2" aria-hidden="true"></i>
+                                                Acessar
+                                            </a>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -511,13 +541,19 @@
                     <div class="mb-3"><i class="fa-regular fa-file-lines fa-2x text-secondary"></i></div>
                     <h2 class="h5 fw-semibold" id="estado-vazio-documentos">Nenhum documento nesta localização</h2>
 
-                    <?php if ($tipo_documento): ?>
+                    <?php if (
+                        $tipo_documento &&
+                        $this->controle_acesso->tem_permissao('documentos.gerenciar')
+                    ): ?>
                         <p class="text-secondary mb-4">Cadastre o primeiro documento desta localização.</p>
                         <a class="btn btn-primary" href="<?= base_url('documento/cadastrar/' . $localizacao['codigo']); ?>">
                             <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
                             Cadastrar documento
                         </a>
-                    <?php else: ?>
+                    <?php elseif (
+                        !$tipo_documento &&
+                        $this->controle_acesso->tem_permissao('localizacoes.gerenciar')
+                    ): ?>
                         <p class="text-secondary mb-4">Defina primeiro o tipo de documento permitido nesta localização.</p>
                         <a class="btn btn-warning" href="<?= base_url('localizacao/atualizar/' . $localizacao['codigo']); ?>">
                             <i class="fa-solid fa-link me-2" aria-hidden="true"></i>

@@ -5,7 +5,9 @@ class Metadado extends CI_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->controle_acesso->valida_acesso();
+        $this->controle_acesso->valida_permissao(
+            'metadados.gerenciar'
+        );
         $this->load->model('metadado_model');
     }
 

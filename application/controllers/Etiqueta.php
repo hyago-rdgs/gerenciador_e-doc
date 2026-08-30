@@ -6,7 +6,9 @@ class Etiqueta extends CI_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->controle_acesso->valida_acesso();
+        $this->controle_acesso->valida_permissao(
+            'etiquetas.gerar'
+        );
         $this->load->model('localizacao_model');
         $this->load->model('localizacao_tipo_documento_model');
     }

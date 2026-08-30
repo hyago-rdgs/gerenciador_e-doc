@@ -18,10 +18,12 @@
                 <h1 class="h3 mb-1">Documentos</h1>
                 <p class="text-body-secondary mb-0">Consulte e gerencie os documentos cadastrados.</p>
             </section>
-            <a class="btn btn-primary flex-shrink-0" href="<?= base_url('documento/cadastrar'); ?>">
+            <?php if ($this->controle_acesso->tem_permissao('documentos.gerenciar')): ?>
+                <a class="btn btn-primary flex-shrink-0" href="<?= base_url('documento/cadastrar'); ?>">
                 <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
                 Novo documento
-            </a>
+                </a>
+            <?php endif; ?>
         </header>
 
         <nav aria-label="Caminho do documento" class="mb-4">
@@ -141,17 +143,21 @@
                                             title="Acessar documento">
                                             Acessar
                                         </a>
-                                        <a class="btn btn-sm btn-light border"
-                                            href="<?= base_url('documento/atualizar/' . $documento['codigo']); ?>"
-                                            aria-label="Editar documento">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </a>
-                                        <button class="btn btn-sm btn-light border text-danger excluir-documento"
-                                            data-codigo="<?= $documento['codigo']; ?>"
-                                            data-titulo="<?= htmlspecialchars($documento['titulo'], ENT_QUOTES, 'UTF-8'); ?>"
-                                            data-bs-toggle="modal" data-bs-target="#modalExcluir" type="button">
-                                            <i class="fa-solid fa-trash-can"></i>
-                                        </button>
+                                        <?php if ($this->controle_acesso->tem_permissao('documentos.gerenciar')): ?>
+                                            <a class="btn btn-sm btn-light border"
+                                                href="<?= base_url('documento/atualizar/' . $documento['codigo']); ?>"
+                                                aria-label="Editar documento">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                        <?php if ($this->controle_acesso->tem_permissao('documentos.excluir')): ?>
+                                            <button class="btn btn-sm btn-light border text-danger excluir-documento"
+                                                data-codigo="<?= $documento['codigo']; ?>"
+                                                data-titulo="<?= htmlspecialchars($documento['titulo'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                data-bs-toggle="modal" data-bs-target="#modalExcluir" type="button">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -187,7 +193,9 @@
                     <i class="fa-regular fa-file-lines fa-2x text-secondary mb-3"></i>
                     <h2 class="h5">Nenhum documento encontrado</h2>
                     <p class="text-secondary">Cadastre um documento ou ajuste os filtros.</p>
-                    <a class="btn btn-primary" href="<?= base_url('documento/cadastrar'); ?>">Cadastrar documento</a>
+                    <?php if ($this->controle_acesso->tem_permissao('documentos.gerenciar')): ?>
+                        <a class="btn btn-primary" href="<?= base_url('documento/cadastrar'); ?>">Cadastrar documento</a>
+                    <?php endif; ?>
                 </div>
             </section>
         <?php endif; ?>

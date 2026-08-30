@@ -230,12 +230,14 @@
                                             </div>
                                         </div>
 
-                                        <div class="text-end mt-4">
-                                            <a class="btn btn-sm btn-primary"
-                                                href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
-                                                Acessar documento
-                                            </a>
-                                        </div>
+                                        <?php if ($this->controle_acesso->tem_permissao('documentos.visualizar')): ?>
+                                            <div class="text-end mt-4">
+                                                <a class="btn btn-sm btn-primary"
+                                                    href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
+                                                    Acessar documento
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </article>

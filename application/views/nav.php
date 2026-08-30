@@ -15,41 +15,55 @@
           class="navbar-toggler-icon"></span></button>
       <section class="collapse navbar-collapse" id="navegacao-principal">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4 gap-lg-1">
-          <li class="nav-item">
-            <a class="nav-link <?= $modulo_atual == 'documento' ? 'active fw-semibold' : ''; ?>"
-              <?= $modulo_atual == 'documento' ? 'aria-current="page"' : ''; ?>
-              href="<?= base_url('documento'); ?>">
-              Documentos
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link <?= $modulo_atual == 'pesquisa' ? 'active fw-semibold' : ''; ?>"
-              <?= $modulo_atual == 'pesquisa' ? 'aria-current="page"' : ''; ?>
-              href="<?= base_url('pesquisa'); ?>">
-              Pesquisa
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link <?= $modulo_atual == 'tipo_documento' ? 'active fw-semibold' : ''; ?>"
-              <?= $modulo_atual == 'tipo_documento' ? 'aria-current="page"' : ''; ?>
-              href="<?= base_url('tipo_documento'); ?>">
-              Tipos de documento
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link <?= $modulo_atual == 'metadado' ? 'active fw-semibold' : ''; ?>"
-              <?= $modulo_atual == 'metadado' ? 'aria-current="page"' : ''; ?>
-              href="<?= base_url('metadado'); ?>">
-              Metadados
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link <?= $modulo_atual == 'localizacao' ? 'active fw-semibold' : ''; ?>"
-              <?= $modulo_atual == 'localizacao' ? 'aria-current="page"' : ''; ?>
-              href="<?= base_url('localizacao'); ?>">
-              Localizações
-            </a>
-          </li>
+          <?php if ($this->controle_acesso->tem_permissao('documentos.visualizar')): ?>
+            <li class="nav-item">
+              <a class="nav-link <?= $modulo_atual == 'documento' ? 'active fw-semibold' : ''; ?>"
+                <?= $modulo_atual == 'documento' ? 'aria-current="page"' : ''; ?>
+                href="<?= base_url('documento'); ?>">
+                Documentos
+              </a>
+            </li>
+          <?php endif; ?>
+
+          <?php if ($this->controle_acesso->tem_permissao('pesquisa.acessar')): ?>
+            <li class="nav-item">
+              <a class="nav-link <?= $modulo_atual == 'pesquisa' ? 'active fw-semibold' : ''; ?>"
+                <?= $modulo_atual == 'pesquisa' ? 'aria-current="page"' : ''; ?>
+                href="<?= base_url('pesquisa'); ?>">
+                Pesquisa
+              </a>
+            </li>
+          <?php endif; ?>
+
+          <?php if ($this->controle_acesso->tem_permissao('tipos_documento.gerenciar')): ?>
+            <li class="nav-item">
+              <a class="nav-link <?= $modulo_atual == 'tipo_documento' ? 'active fw-semibold' : ''; ?>"
+                <?= $modulo_atual == 'tipo_documento' ? 'aria-current="page"' : ''; ?>
+                href="<?= base_url('tipo_documento'); ?>">
+                Tipos de documento
+              </a>
+            </li>
+          <?php endif; ?>
+
+          <?php if ($this->controle_acesso->tem_permissao('metadados.gerenciar')): ?>
+            <li class="nav-item">
+              <a class="nav-link <?= $modulo_atual == 'metadado' ? 'active fw-semibold' : ''; ?>"
+                <?= $modulo_atual == 'metadado' ? 'aria-current="page"' : ''; ?>
+                href="<?= base_url('metadado'); ?>">
+                Metadados
+              </a>
+            </li>
+          <?php endif; ?>
+
+          <?php if ($this->controle_acesso->tem_permissao('localizacoes.visualizar')): ?>
+            <li class="nav-item">
+              <a class="nav-link <?= $modulo_atual == 'localizacao' ? 'active fw-semibold' : ''; ?>"
+                <?= $modulo_atual == 'localizacao' ? 'aria-current="page"' : ''; ?>
+                href="<?= base_url('localizacao'); ?>">
+                Localizações
+              </a>
+            </li>
+          <?php endif; ?>
 
           <?php if ($this->controle_acesso->tem_permissao('usuarios.gerenciar')): ?>
             <li class="nav-item">

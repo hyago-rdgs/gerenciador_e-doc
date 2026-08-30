@@ -33,7 +33,10 @@ class Consulta extends CI_Controller
         );
         $this->output->set_header('Pragma: no-cache');
 
-        $autenticado = $this->controle_acesso->logado();
+        $autenticado = $this->controle_acesso->logado() &&
+            $this->controle_acesso->tem_permissao(
+                'localizacoes.visualizar'
+            );
 
         $dados = [
             'autenticado' => $autenticado,

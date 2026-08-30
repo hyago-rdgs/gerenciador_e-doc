@@ -6,7 +6,9 @@ class Pesquisa extends CI_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->controle_acesso->valida_acesso();
+        $this->controle_acesso->valida_permissao(
+            'pesquisa.acessar'
+        );
         $this->load->model('pesquisa_model');
         $this->load->model('tipo_documento_model');
         $this->load->model('localizacao_model');

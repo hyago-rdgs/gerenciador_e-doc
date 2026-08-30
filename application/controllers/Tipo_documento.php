@@ -5,7 +5,9 @@ class Tipo_documento extends CI_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->controle_acesso->valida_acesso();
+        $this->controle_acesso->valida_permissao(
+            'tipos_documento.gerenciar'
+        );
         $this->load->model('tipo_documento_model');
         $this->load->model('tipo_documento_metadado_model');
         $this->load->model('localizacao_tipo_documento_model');

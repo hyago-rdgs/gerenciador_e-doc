@@ -22,10 +22,12 @@
                     Organize e gerencie os locais físicos utilizados para armazenamento dos documentos.
                 </p>
             </section>
-            <a class="btn btn-primary flex-shrink-0" href="<?= base_url('localizacao/cadastrar'); ?>">
-                <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
-                Nova localização
-            </a>
+            <?php if ($this->controle_acesso->tem_permissao('localizacoes.gerenciar')): ?>
+                <a class="btn btn-primary flex-shrink-0" href="<?= base_url('localizacao/cadastrar'); ?>">
+                    <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
+                    Nova localização
+                </a>
+            <?php endif; ?>
         </header>
 
         <nav aria-label="Caminho da localização" class="mb-4">
@@ -148,6 +150,10 @@
                                                 Acessar
                                             </button>
 
+                                            <?php if (
+                                                $this->controle_acesso->tem_permissao('etiquetas.gerar') ||
+                                                $this->controle_acesso->tem_permissao('localizacoes.gerenciar')
+                                            ): ?>
                                             <div class="dropdown">
                                                 <button class="btn btn-sm btn-light border dropdown-toggle-acoes" type="button"
                                                     data-bs-toggle="dropdown" aria-expanded="false" aria-label="Mais ações">
@@ -155,6 +161,7 @@
                                                 </button>
 
                                                 <ul class="dropdown-menu dropdown-menu-end">
+                                                    <?php if ($this->controle_acesso->tem_permissao('etiquetas.gerar')): ?>
                                                     <li>
                                                         <a class="dropdown-item" href="<?= base_url(
                                                             'etiqueta/localizacao/' .
@@ -166,7 +173,9 @@
                                                             Imprimir etiqueta
                                                         </a>
                                                     </li>
+                                                    <?php endif; ?>
 
+                                                    <?php if ($this->controle_acesso->tem_permissao('localizacoes.gerenciar')): ?>
                                                     <li>
                                                         <a class="dropdown-item" href="<?= base_url(
                                                             'localizacao/atualizar/' .
@@ -197,8 +206,10 @@
                                                             Excluir
                                                         </button>
                                                     </li>
+                                                    <?php endif; ?>
                                                 </ul>
                                             </div>
+                                            <?php endif; ?>
 
                                         </div>
                                     </td>
@@ -273,10 +284,12 @@
                     <p class="text-secondary mb-4">
                         Cadastre sua primeira localização para começar a organizar seus documentos.
                     </p>
-                    <a class="btn btn-primary flex-shrink-0" href="<?= base_url('localizacao/cadastrar'); ?>">
-                        <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
-                        Cadastrar localização
-                    </a>
+                    <?php if ($this->controle_acesso->tem_permissao('localizacoes.gerenciar')): ?>
+                        <a class="btn btn-primary flex-shrink-0" href="<?= base_url('localizacao/cadastrar'); ?>">
+                            <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>
+                            Cadastrar localização
+                        </a>
+                    <?php endif; ?>
                 </div>
             </section>
         <?php endif; ?>

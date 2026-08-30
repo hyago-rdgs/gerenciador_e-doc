@@ -24,6 +24,7 @@
             </header>
 
             <div class="row g-3">
+                <?php if ($this->controle_acesso->tem_permissao('documentos.visualizar')): ?>
                 <div class="col-12 col-md-6 col-xl-4">
                     <a class="card h-100 border shadow-sm text-decoration-none text-body"
                         href="<?= base_url('documento'); ?>">
@@ -43,7 +44,9 @@
                         </div>
                     </a>
                 </div>
+                <?php endif; ?>
 
+                <?php if ($this->controle_acesso->tem_permissao('pesquisa.acessar')): ?>
                 <div class="col-12 col-md-6 col-xl-4">
                     <a class="card h-100 border shadow-sm text-decoration-none text-body"
                         href="<?= base_url('pesquisa'); ?>">
@@ -63,7 +66,9 @@
                         </div>
                     </a>
                 </div>
+                <?php endif; ?>
 
+                <?php if ($this->controle_acesso->tem_permissao('localizacoes.visualizar')): ?>
                 <div class="col-12 col-md-6 col-xl-4">
                     <a class="card h-100 border shadow-sm text-decoration-none text-body"
                         href="<?= base_url('localizacao'); ?>">
@@ -83,7 +88,9 @@
                         </div>
                     </a>
                 </div>
+                <?php endif; ?>
 
+                <?php if ($this->controle_acesso->tem_permissao('tipos_documento.gerenciar')): ?>
                 <div class="col-12 col-md-6 col-xl-4">
                     <a class="card h-100 border shadow-sm text-decoration-none text-body"
                         href="<?= base_url('tipo_documento'); ?>">
@@ -103,7 +110,9 @@
                         </div>
                     </a>
                 </div>
+                <?php endif; ?>
 
+                <?php if ($this->controle_acesso->tem_permissao('metadados.gerenciar')): ?>
                 <div class="col-12 col-md-6 col-xl-4">
                     <a class="card h-100 border shadow-sm text-decoration-none text-body"
                         href="<?= base_url('metadado'); ?>">
@@ -123,6 +132,7 @@
                         </div>
                     </a>
                 </div>
+                <?php endif; ?>
 
                 <div class="col-12 col-md-6 col-xl-4">
                     <div class="card h-100 border shadow-sm bg-body-secondary">

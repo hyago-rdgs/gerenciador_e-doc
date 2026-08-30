@@ -175,10 +175,12 @@
                                             </span>
                                         </td>
                                         <td class="pe-3 text-end">
-                                            <a class="btn btn-sm btn-primary"
-                                                href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
-                                                Visualizar
-                                            </a>
+                                            <?php if ($this->controle_acesso->tem_permissao('documentos.visualizar')): ?>
+                                                <a class="btn btn-sm btn-primary"
+                                                    href="<?= base_url('documento/detalhes/' . $documento['codigo']); ?>">
+                                                    Visualizar
+                                                </a>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

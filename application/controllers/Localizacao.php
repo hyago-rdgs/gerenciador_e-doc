@@ -21,6 +21,10 @@ class Localizacao extends CI_Controller
 
     public function listar()
     {
+        $this->controle_acesso->valida_permissao(
+            'localizacoes.visualizar'
+        );
+
         $filtro_termo = $this->input->get('termo', TRUE) !== NULL ? $this->input->get('termo', TRUE) : '';
         $filtro_status = $this->input->get('status', TRUE) !== NULL ? $this->input->get('status', TRUE) : '';
 
@@ -55,6 +59,10 @@ class Localizacao extends CI_Controller
 
     public function cadastrar($localizacao_codigo_pai = NULL)
     {
+        $this->controle_acesso->valida_permissao(
+            'localizacoes.gerenciar'
+        );
+
         if ($localizacao_codigo_pai !== NULL) {
             if (
                 !ctype_digit((string) $localizacao_codigo_pai) ||
@@ -169,6 +177,10 @@ class Localizacao extends CI_Controller
 
     public function atualizar($codigo = NULL)
     {
+        $this->controle_acesso->valida_permissao(
+            'localizacoes.gerenciar'
+        );
+
         if (empty($codigo) || !ctype_digit((string) $codigo)) {
             show_404();
         }
@@ -319,6 +331,10 @@ class Localizacao extends CI_Controller
 
     public function excluir($codigo = NULL)
     {
+        $this->controle_acesso->valida_permissao(
+            'localizacoes.gerenciar'
+        );
+
         if ($this->input->method() !== 'post') {
             show_404();
             return;
@@ -403,6 +419,10 @@ class Localizacao extends CI_Controller
 
     public function detalhes($codigo = NULL)
     {
+        $this->controle_acesso->valida_permissao(
+            'localizacoes.visualizar'
+        );
+
         if (empty($codigo) || !ctype_digit((string) $codigo)) {
             show_404();
         }
