@@ -562,113 +562,15 @@ class Documento extends CI_Controller
         }
 
         $documento = $this->buscar_documento($codigo, TRUE);
+        $arquivo = $this->receber_arquivo($documento);
 
-        if (!isset($_FILES['arquivo'])) {
-            resposta_json(
-                FALSE,
-                'Selecione um arquivo.',
-                ['erros' => ['O arquivo é obrigatório.']],
-                422
-            );
-        }
-
-        $erros_upload = [
-            UPLOAD_ERR_INI_SIZE => 'O arquivo ultrapassa o limite permitido pelo servidor.',
-            UPLOAD_ERR_FORM_SIZE => 'O arquivo ultrapassa o limite permitido pelo formulário.',
-            UPLOAD_ERR_PARTIAL => 'O arquivo foi enviado parcialmente. Tente novamente.',
-            UPLOAD_ERR_NO_FILE => 'Selecione um arquivo.',
-            UPLOAD_ERR_NO_TMP_DIR => 'O diretório temporário do servidor não está disponível.',
-            UPLOAD_ERR_CANT_WRITE => 'O servidor não conseguiu gravar o arquivo.',
-            UPLOAD_ERR_EXTENSION => 'O envio foi interrompido por uma extensão do servidor.'
-        ];
-
-        if ($_FILES['arquivo']['error'] !== UPLOAD_ERR_OK) {
-            $erro = $erros_upload[$_FILES['arquivo']['error']]
-                ?? 'Não foi possível receber o arquivo.';
-
-            resposta_json(
-                FALSE,
-                'Não foi possível enviar o arquivo.',
-                ['erros' => [$erro]],
-                422
-            );
-        }
-
-        $diretorio_base = $this->diretorio_documentos();
-
-        if ($diretorio_base === FALSE) {
-            resposta_json(
-                FALSE,
-                'O diretório de documentos não foi configurado.',
-                [],
-                500
-            );
-        }
-
-        if (
-            !is_dir($diretorio_base) &&
-            !mkdir($diretorio_base, 0770, TRUE) &&
-            !is_dir($diretorio_base)
-        ) {
-            resposta_json(
-                FALSE,
-                'Não foi possível preparar o armazenamento de documentos.',
-                [],
-                500
-            );
-        }
-
-        $diretorio = $diretorio_base . DIRECTORY_SEPARATOR .
-            $documento['codigo'] . DIRECTORY_SEPARATOR;
-
-        if (
-            !is_dir($diretorio) &&
-            !mkdir($diretorio, 0770, TRUE) &&
-            !is_dir($diretorio)
-        ) {
-            resposta_json(
-                FALSE,
-                'Não foi possível preparar o diretório do documento.',
-                [],
-                500
-            );
-        }
-
-        if (!is_writable($diretorio)) {
-            resposta_json(
-                FALSE,
-                'O diretório do documento não possui permissão de escrita.',
-                [],
-                500
-            );
-        }
-
-        $configuracao = [
-            'upload_path' => $diretorio,
-            'allowed_types' => 'pdf|doc|docx|xls|xlsx|csv|txt|jpg|jpeg|png',
-            'max_size' => 20480,
-            'encrypt_name' => TRUE
-        ];
-
-        $this->load->library('upload');
-        $this->upload->initialize($configuracao, TRUE);
-
-        if (!$this->upload->do_upload('arquivo')) {
-            resposta_json(
-                FALSE,
-                'Não foi possível enviar o arquivo.',
-                ['erros' => [$this->upload->display_errors('', '')]],
-                422
-            );
-        }
-
-        $arquivo = $this->upload->data();
         $principal = $this->documento_arquivo_model->possui_arquivos(
             $documento['codigo']
         ) ? 0 : 1;
 
         $arquivo_codigo = $this->documento_arquivo_model->cadastrar([
             'documento_codigo' => $documento['codigo'],
+            'arquivo_raiz_codigo' => NULL,
             'nome_original' => $arquivo['orig_name'],
             'nome_armazenado' => $arquivo['file_name'],
             'extensao' => ltrim($arquivo['file_ext'], '.'),
@@ -681,6 +583,7 @@ class Documento extends CI_Controller
 
         if (!$arquivo_codigo) {
             unlink($arquivo['full_path']);
+
             resposta_json(
                 FALSE,
                 'Não foi possível cadastrar o arquivo.',
@@ -693,6 +596,115 @@ class Documento extends CI_Controller
             TRUE,
             'Arquivo enviado com sucesso.',
             ['codigo' => $arquivo_codigo],
+            201
+        );
+    }
+
+    public function cadastrar_versao(
+        $codigo = NULL,
+        $arquivo_codigo = NULL
+    ) {
+        $this->controle_acesso->valida_permissao(
+            'arquivos.gerenciar'
+        );
+
+        if ($this->input->method() !== 'post') {
+            show_404();
+        }
+
+        $documento = $this->buscar_documento($codigo, TRUE);
+        $arquivo_atual = $this->buscar_arquivo(
+            $documento['codigo'],
+            $arquivo_codigo
+        );
+
+        $arquivo_raiz_codigo = !empty(
+            $arquivo_atual['arquivo_raiz_codigo']
+        )
+            ? (int) $arquivo_atual['arquivo_raiz_codigo']
+            : (int) $arquivo_atual['codigo'];
+
+        $arquivo = $this->receber_arquivo($documento);
+
+        $this->db->trans_begin();
+
+        $arquivo_raiz = $this->documento_arquivo_model->bloquear_arquivo_raiz(
+            $documento['codigo'],
+            $arquivo_raiz_codigo
+        );
+
+        $ultima_versao = $this->documento_arquivo_model->buscar_ultima_versao(
+            $documento['codigo'],
+            $arquivo_raiz_codigo
+        );
+
+        if (!$arquivo_raiz || !$ultima_versao) {
+            $this->db->trans_rollback();
+            unlink($arquivo['full_path']);
+
+            resposta_json(
+                FALSE,
+                'Não foi possível identificar a linhagem do arquivo.',
+                [],
+                404
+            );
+        }
+
+        $versao = $this->documento_arquivo_model->proxima_versao(
+            $documento['codigo'],
+            $arquivo_raiz_codigo
+        );
+
+        $nova_versao_codigo = $this->documento_arquivo_model->cadastrar([
+            'documento_codigo' => $documento['codigo'],
+            'arquivo_raiz_codigo' => $arquivo_raiz_codigo,
+            'nome_original' => $arquivo['orig_name'],
+            'nome_armazenado' => $arquivo['file_name'],
+            'extensao' => ltrim($arquivo['file_ext'], '.'),
+            'mime_type' => $arquivo['file_type'],
+            'caminho' => $documento['codigo'] . '/' . $arquivo['file_name'],
+            'tamanho' => round($arquivo['file_size'] * 1024),
+            'versao' => $versao,
+            'principal' => 0
+        ]);
+
+        $principal_atualizado = TRUE;
+
+        if (
+            $nova_versao_codigo &&
+            (int) $ultima_versao['principal'] === 1
+        ) {
+            $principal_atualizado = $this->documento_arquivo_model->definir_principal(
+                $documento['codigo'],
+                $nova_versao_codigo
+            );
+        }
+
+        if (
+            !$nova_versao_codigo ||
+            !$principal_atualizado ||
+            $this->db->trans_status() === FALSE
+        ) {
+            $this->db->trans_rollback();
+            unlink($arquivo['full_path']);
+
+            resposta_json(
+                FALSE,
+                'Não foi possível cadastrar a nova versão.',
+                [],
+                500
+            );
+        }
+
+        $this->db->trans_commit();
+
+        resposta_json(
+            TRUE,
+            'Versão ' . $versao . ' cadastrada com sucesso.',
+            [
+                'codigo' => $nova_versao_codigo,
+                'versao' => $versao
+            ],
             201
         );
     }
@@ -792,6 +804,110 @@ class Documento extends CI_Controller
             'Arquivo excluído com sucesso.',
             ['codigo' => (int) $arquivo['codigo']]
         );
+    }
+
+    private function receber_arquivo($documento)
+    {
+        if (!isset($_FILES['arquivo'])) {
+            resposta_json(
+                FALSE,
+                'Selecione um arquivo.',
+                ['erros' => ['O arquivo é obrigatório.']],
+                422
+            );
+        }
+
+        $erros_upload = [
+            UPLOAD_ERR_INI_SIZE => 'O arquivo ultrapassa o limite permitido pelo servidor.',
+            UPLOAD_ERR_FORM_SIZE => 'O arquivo ultrapassa o limite permitido pelo formulário.',
+            UPLOAD_ERR_PARTIAL => 'O arquivo foi enviado parcialmente. Tente novamente.',
+            UPLOAD_ERR_NO_FILE => 'Selecione um arquivo.',
+            UPLOAD_ERR_NO_TMP_DIR => 'O diretório temporário do servidor não está disponível.',
+            UPLOAD_ERR_CANT_WRITE => 'O servidor não conseguiu gravar o arquivo.',
+            UPLOAD_ERR_EXTENSION => 'O envio foi interrompido por uma extensão do servidor.'
+        ];
+
+        if ($_FILES['arquivo']['error'] !== UPLOAD_ERR_OK) {
+            $erro = $erros_upload[$_FILES['arquivo']['error']]
+                ?? 'Não foi possível receber o arquivo.';
+
+            resposta_json(
+                FALSE,
+                'Não foi possível enviar o arquivo.',
+                ['erros' => [$erro]],
+                422
+            );
+        }
+
+        $diretorio_base = $this->diretorio_documentos();
+
+        if ($diretorio_base === FALSE) {
+            resposta_json(
+                FALSE,
+                'O diretório de documentos não foi configurado.',
+                [],
+                500
+            );
+        }
+
+        if (
+            !is_dir($diretorio_base) &&
+            !mkdir($diretorio_base, 0770, TRUE) &&
+            !is_dir($diretorio_base)
+        ) {
+            resposta_json(
+                FALSE,
+                'Não foi possível preparar o armazenamento de documentos.',
+                [],
+                500
+            );
+        }
+
+        $diretorio = $diretorio_base . DIRECTORY_SEPARATOR .
+            $documento['codigo'] . DIRECTORY_SEPARATOR;
+
+        if (
+            !is_dir($diretorio) &&
+            !mkdir($diretorio, 0770, TRUE) &&
+            !is_dir($diretorio)
+        ) {
+            resposta_json(
+                FALSE,
+                'Não foi possível preparar o diretório do documento.',
+                [],
+                500
+            );
+        }
+
+        if (!is_writable($diretorio)) {
+            resposta_json(
+                FALSE,
+                'O diretório do documento não possui permissão de escrita.',
+                [],
+                500
+            );
+        }
+
+        $configuracao = [
+            'upload_path' => $diretorio,
+            'allowed_types' => 'pdf|doc|docx|xls|xlsx|csv|txt|jpg|jpeg|png',
+            'max_size' => 20480,
+            'encrypt_name' => TRUE
+        ];
+
+        $this->load->library('upload');
+        $this->upload->initialize($configuracao, TRUE);
+
+        if (!$this->upload->do_upload('arquivo')) {
+            resposta_json(
+                FALSE,
+                'Não foi possível enviar o arquivo.',
+                ['erros' => [$this->upload->display_errors('', '')]],
+                422
+            );
+        }
+
+        return $this->upload->data();
     }
 
     private function buscar_documento($codigo, $resposta_json = FALSE)
