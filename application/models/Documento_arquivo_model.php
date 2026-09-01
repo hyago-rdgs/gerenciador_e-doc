@@ -21,6 +21,81 @@ class Documento_arquivo_model extends CI_Model
         return $this->db->get($this->tabela, 1)->row_array();
     }
 
+    public function bloquear_arquivo_raiz(
+        $documento_codigo,
+        $arquivo_raiz_codigo
+    ) {
+        return $this->db->query(
+            'SELECT `codigo`
+                FROM `documento_arquivos`
+                WHERE `codigo` = ?
+                    AND `documento_codigo` = ?
+                FOR UPDATE',
+            [
+                (int) $arquivo_raiz_codigo,
+                (int) $documento_codigo
+            ]
+        )->row_array();
+    }
+
+    public function buscar_ultima_versao(
+        $documento_codigo,
+        $arquivo_raiz_codigo
+    ) {
+        $this->aplicar_filtro_linhagem(
+            $documento_codigo,
+            $arquivo_raiz_codigo
+        );
+        $this->db->where('exclusao IS NULL', NULL, FALSE);
+        $this->db->order_by('versao', 'DESC');
+        $this->db->order_by('codigo', 'DESC');
+
+        return $this->db->get($this->tabela, 1)->row_array();
+    }
+
+    public function listar_versoes(
+        $documento_codigo,
+        $arquivo_raiz_codigo
+    ) {
+        $this->aplicar_filtro_linhagem(
+            $documento_codigo,
+            $arquivo_raiz_codigo
+        );
+        $this->db->where('exclusao IS NULL', NULL, FALSE);
+        $this->db->order_by('versao', 'DESC');
+        $this->db->order_by('codigo', 'DESC');
+
+        return $this->db->get($this->tabela)->result_array();
+    }
+
+    public function proxima_versao(
+        $documento_codigo,
+        $arquivo_raiz_codigo
+    ) {
+        $this->db->select_max('versao', 'ultima_versao');
+        $this->aplicar_filtro_linhagem(
+            $documento_codigo,
+            $arquivo_raiz_codigo
+        );
+
+        $resultado = $this->db
+            ->get($this->tabela)
+            ->row_array();
+
+        return (int) ($resultado['ultima_versao'] ?? 0) + 1;
+    }
+
+    private function aplicar_filtro_linhagem(
+        $documento_codigo,
+        $arquivo_raiz_codigo
+    ) {
+        $this->db->where('documento_codigo', $documento_codigo);
+        $this->db->group_start();
+        $this->db->where('codigo', $arquivo_raiz_codigo);
+        $this->db->or_where('arquivo_raiz_codigo', $arquivo_raiz_codigo);
+        $this->db->group_end();
+    }
+
     public function cadastrar($reg)
     {
         $reg['cadastro'] = date('Y-m-d H:i:s');
@@ -130,3 +205,4 @@ class Documento_arquivo_model extends CI_Model
     }
 
 }
+

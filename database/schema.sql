@@ -178,6 +178,7 @@ CREATE TABLE `documentos` (
 CREATE TABLE `documento_arquivos` (
     `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
     `documento_codigo` bigint(20) UNSIGNED NOT NULL,
+    `arquivo_raiz_codigo` bigint(20) UNSIGNED DEFAULT NULL COMMENT 'Arquivo da versão 1 que identifica a linhagem',
     `nome_original` varchar(255) NOT NULL,
     `nome_armazenado` varchar(255) NOT NULL,
     `extensao` varchar(20) NOT NULL,
@@ -191,9 +192,13 @@ CREATE TABLE `documento_arquivos` (
     PRIMARY KEY (`codigo`),
     KEY `idx_documento_arquivos_documento` (`documento_codigo`),
     KEY `idx_documento_arquivos_versao` (`documento_codigo`, `versao`),
+    UNIQUE KEY `uk_documento_arquivos_raiz_versao` (`arquivo_raiz_codigo`, `versao`),
     CONSTRAINT `fk_documento_arquivos_documento`
         FOREIGN KEY (`documento_codigo`)
-        REFERENCES `documentos` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE
+        REFERENCES `documentos` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `fk_documento_arquivos_raiz`
+        FOREIGN KEY (`arquivo_raiz_codigo`)
+        REFERENCES `documento_arquivos` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `documento_metadados` (
@@ -274,3 +279,4 @@ CREATE TABLE `tipo_documento_metadados` (
         FOREIGN KEY (`tipo_documento_codigo`)
         REFERENCES `tipos_documento` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

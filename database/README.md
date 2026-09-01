@@ -24,6 +24,9 @@ mariadb -u USUARIO -p NOME_DO_BANCO \
 
 mariadb -u USUARIO -p NOME_DO_BANCO \
     < database/migrations/20260829_001_adiciona_controle_acesso.sql
+mariadb -u USUARIO -p NOME_DO_BANCO \
+    < database/migrations/20260901_001_adiciona_versionamento_arquivos.sql
+
 ```
 
 O `schema.sql` já contém o resultado das migrations e não deve ser executado
@@ -39,3 +42,4 @@ sobre uma instalação que possua dados.
 Antes de criar uma migration, confirme que a mudança pertence ao core. Dados
 e estruturas exclusivos de uma implementação devem permanecer no repositório
 correspondente.
+
