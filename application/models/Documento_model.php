@@ -11,7 +11,7 @@ class Documento_model extends CI_Model
         $this->load->database();
     }
 
-    public function listar_tudo($termo = '', $tipo_documento_codigo = '', $localizacao_codigo = '', $status = '', $limite = NULL, $offset = NULL)
+    public function listar_tudo($termo = '', $tipo_documento_codigo = '', $localizacao_codigo = '', $limite = NULL, $offset = NULL)
     {
         $this->preparar_consulta_listagem();
 
@@ -31,10 +31,6 @@ class Documento_model extends CI_Model
             $this->db->where('d.localizacao_codigo', $localizacao_codigo);
         }
 
-        if (!empty($status)) {
-            $this->db->where('d.ativo', $status == 'ativo' ? 1 : 0);
-        }
-
         $this->db->where('d.exclusao IS NULL', NULL, FALSE);
         $this->db->order_by('d.titulo', 'ASC');
 
@@ -45,7 +41,7 @@ class Documento_model extends CI_Model
         return $this->db->get()->result_array();
     }
 
-    public function contar_tudo($termo = '', $tipo_documento_codigo = '', $localizacao_codigo = '', $status = '')
+    public function contar_tudo($termo = '', $tipo_documento_codigo = '', $localizacao_codigo = '')
     {
         $this->db->select('d.codigo');
         $this->db->from($this->tabela . ' d');
@@ -64,10 +60,6 @@ class Documento_model extends CI_Model
 
         if (!empty($localizacao_codigo)) {
             $this->db->where('d.localizacao_codigo', $localizacao_codigo);
-        }
-
-        if (!empty($status)) {
-            $this->db->where('d.ativo', $status == 'ativo' ? 1 : 0);
         }
 
         $this->db->where('d.exclusao IS NULL', NULL, FALSE);
@@ -195,7 +187,6 @@ class Documento_model extends CI_Model
     public function excluir($codigo)
     {
         $reg = [
-            'ativo' => 0,
             'atualizacao' => date('Y-m-d H:i:s'),
             'exclusao' => date('Y-m-d H:i:s')
         ];
@@ -221,7 +212,6 @@ class Documento_model extends CI_Model
             'd.descricao',
             'd.numero_identificacao',
             'd.data_documento',
-            'd.ativo',
             'd.cadastro',
             'd.atualizacao',
             'td.nome AS tipo_documento',
