@@ -18,6 +18,7 @@ VALUES
     ('Arquivos', 'arquivos', 'Arquivos digitais vinculados aos documentos.', 20),
     ('Movimentações', 'movimentacoes', 'Transferência, retirada, devolução e rastreabilidade documental.', 25),
     ('Pesquisa', 'pesquisa', 'Pesquisa documental e por localização.', 30),
+    ('Dashboard', 'dashboard', 'Indicadores gerenciais e operacionais do acervo.', 35),
     ('Localizações', 'localizacoes', 'Estrutura hierárquica de armazenamento.', 40),
     ('Tipos de documento', 'tipos_documento', 'Configuração dos tipos documentais.', 50),
     ('Metadados', 'metadados', 'Configuração dos campos de metadados.', 60),
@@ -53,6 +54,7 @@ FROM (
     UNION ALL SELECT 'movimentacoes', 'Visualizar', 'movimentacoes.visualizar', 'Consultar o histórico e a situação das movimentações.', 10
     UNION ALL SELECT 'movimentacoes', 'Gerenciar', 'movimentacoes.gerenciar', 'Transferir, retirar e devolver documentos.', 20
     UNION ALL SELECT 'pesquisa', 'Acessar', 'pesquisa.acessar', 'Realizar pesquisas documentais.', 10
+    UNION ALL SELECT 'dashboard', 'Visualizar', 'dashboard.visualizar', 'Consultar dashboards e indicadores gerenciais.', 10
     UNION ALL SELECT 'localizacoes', 'Visualizar', 'localizacoes.visualizar', 'Listar e consultar localizações.', 10
     UNION ALL SELECT 'localizacoes', 'Gerenciar', 'localizacoes.gerenciar', 'Cadastrar, editar e excluir localizações.', 20
     UNION ALL SELECT 'tipos_documento', 'Gerenciar', 'tipos_documento.gerenciar', 'Administrar tipos de documento e seus vínculos.', 10
