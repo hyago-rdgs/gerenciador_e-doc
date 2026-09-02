@@ -192,13 +192,6 @@
                                                         <?= $documento['data_documento'] ? date('d/m/Y', strtotime($documento['data_documento'])) : 'Não informada'; ?>
                                                     </dd>
 
-                                                    <dt class="col-sm-5 text-body-secondary">Status</dt>
-                                                    <dd class="col-sm-7">
-                                                        <span class="badge <?= $documento['ativo'] ? 'text-bg-success' : 'text-bg-secondary'; ?>">
-                                                            <?= $documento['ativo'] ? 'Ativo' : 'Inativo'; ?>
-                                                        </span>
-                                                    </dd>
-
                                                     <dt class="col-sm-5 text-body-secondary">Descrição</dt>
                                                     <dd class="col-sm-7 mb-0">
                                                         <?= nl2br(htmlspecialchars($documento['descricao'] ?? 'Não informada', ENT_QUOTES, 'UTF-8')); ?>
