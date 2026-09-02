@@ -21,7 +21,7 @@
                 </p>
             </section>
             <div class="d-flex flex-wrap gap-2">
-                <?php if ($this->controle_acesso->tem_permissao('movimentacoes.gerenciar') && $documento['ativo']): ?>
+                <?php if ($this->controle_acesso->tem_permissao('movimentacoes.gerenciar')): ?>
                     <?php if ($movimentacao_aberta): ?>
                         <button class="btn btn-primary" data-bs-toggle="modal"
                             data-bs-target="#modal-devolucao" type="button">
@@ -70,13 +70,6 @@
                             <dt class="col-sm-4 text-body-secondary">Data do documento</dt>
                             <dd class="col-sm-8">
                                 <?= $documento['data_documento'] ? date('d/m/Y', strtotime($documento['data_documento'])) : 'Não informada'; ?>
-                            </dd>
-
-                            <dt class="col-sm-4 text-body-secondary">Status</dt>
-                            <dd class="col-sm-8">
-                                <span class="badge <?= $documento['ativo'] ? 'text-bg-success' : 'text-bg-secondary'; ?>">
-                                    <?= $documento['ativo'] ? 'Ativo' : 'Inativo'; ?>
-                                </span>
                             </dd>
 
                             <dt class="col-sm-4 text-body-secondary">Descrição</dt>
