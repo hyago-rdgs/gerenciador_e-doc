@@ -40,7 +40,7 @@
                 <h2 class="h6 fw-semibold mb-3">Filtros</h2>
                 <form method="get">
                     <div class="row g-3 align-items-end">
-                        <div class="col-12 col-lg-4">
+                        <div class="col-12 col-lg-6">
                             <label class="form-label" for="termo">Buscar documento</label>
                             <input class="form-control" id="termo" name="termo"
                                 placeholder="Título, identificação ou protocolo" type="search"
@@ -73,16 +73,6 @@
                             </select>
                         </div>
 
-                        <div class="col-12 col-md-4 col-lg-2">
-                            <label class="form-label" for="status">Status</label>
-                            <select class="form-select" id="status" name="status">
-                                <option value="">Todos</option>
-                                <option value="ativo" <?= $filtro_status == 'ativo' ? 'selected' : ''; ?>>Ativo</option>
-                                <option value="inativo" <?= $filtro_status == 'inativo' ? 'selected' : ''; ?>>Inativo
-                                </option>
-                            </select>
-                        </div>
-
                         <div class="col-12 col-lg-2">
                             <div class="d-flex gap-2">
                                 <a class="btn btn-primary flex-fill" role="button" id="filtrar">
@@ -111,7 +101,6 @@
                                 <th>Tipo</th>
                                 <th>Localização</th>
                                 <th>Custódia</th>
-                                <th class="text-center">Status</th>
                                 <th class="px-3 text-end">Ações</th>
                             </tr>
                         </thead>
@@ -147,12 +136,6 @@
                                         <?php else: ?>
                                             <span class="badge text-bg-success">No acervo</span>
                                         <?php endif; ?>
-                                    </td>
-                                    <td class="text-center">
-                                        <span
-                                            class="badge <?= $documento['ativo'] ? 'text-bg-success' : 'text-bg-secondary'; ?>">
-                                            <?= $documento['ativo'] ? 'Ativo' : 'Inativo'; ?>
-                                        </span>
                                     </td>
                                     <td class="pe-3 text-end">
                                         <a class="btn btn-sm btn-primary"
@@ -311,12 +294,10 @@
 
                 const params = new URLSearchParams();
                 const termo = $('#termo').val().trim();
-                const status = $('#status').val();
                 const tipo_documento = $('#tipo_documento_codigo').val();
                 const localizacao = $('#localizacao_codigo').val();
 
                 if (termo) params.append('termo', termo);
-                if (status) params.append('status', status);
                 if (tipo_documento) params.append('tipo_documento_codigo', tipo_documento);
                 if (localizacao) params.append('localizacao_codigo', localizacao);
 
