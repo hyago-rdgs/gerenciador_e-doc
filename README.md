@@ -6,7 +6,7 @@ O e-Doc combina uma estrutura hierárquica de localizações com tipos de docume
 
 ## Estado atual do projeto
 
-O projeto está em desenvolvimento ativo e já possui uma base funcional para os principais fluxos do sistema.
+O projeto é mantido em desenvolvimento contínuo e já possui uma base funcional para os principais fluxos do sistema.
 
 Atualmente estão disponíveis:
 
@@ -22,7 +22,9 @@ Atualmente estão disponíveis:
 - pesquisa avançada por dados básicos e metadados;
 - navegação de documentos pela estrutura de localizações;
 - controle de registros ativos e inativos;
-- validação de acesso aos módulos autenticados.
+- controle de acesso por perfis e permissões;
+- geração de etiquetas;
+- versionamento e auditoria de arquivos documentais.
 
 ## Tela inicial
 
@@ -163,8 +165,8 @@ Estrutura hierárquica
 
 ## Tecnologias utilizadas
 
-- PHP;
-- CodeIgniter 3;
+- PHP 7.4 como ambiente de referência;
+- CodeIgniter 3.1.13;
 - MySQL/MariaDB;
 - HTML5;
 - Bootstrap 5;
@@ -182,12 +184,16 @@ application/
 ├── config/
 ├── controllers/
 │   ├── Autenticacao.php
+│   ├── Consulta.php
 │   ├── Documento.php
+│   ├── Etiqueta.php
 │   ├── Localizacao.php
 │   ├── Metadado.php
+│   ├── Perfil.php
 │   ├── Pesquisa.php
 │   ├── Principal.php
-│   └── Tipo_documento.php
+│   ├── Tipo_documento.php
+│   └── Usuario.php
 ├── libraries/
 ├── models/
 └── views/
@@ -195,8 +201,10 @@ application/
     ├── documento/
     ├── localizacao/
     ├── metadado/
+    ├── perfil/
     ├── pesquisa/
     ├── tipo_documento/
+    ├── usuario/
     ├── principal.php
     ├── nav.php
     ├── css.php
@@ -223,9 +231,10 @@ Alguns princípios utilizados no desenvolvimento do projeto:
 
 ## Requisitos
 
-Para executar o projeto localmente, é necessário possuir:
+Para executar o projeto localmente, o ambiente de referência utiliza:
 
-- PHP compatível com CodeIgniter 3;
+- PHP 7.4;
+- CodeIgniter 3.1.13, já incluído no projeto;
 - Apache ou Nginx;
 - MySQL ou MariaDB;
 - Git.
@@ -263,6 +272,8 @@ Exemplo:
 ```php
 $config['base_url'] = 'http://localhost/gerenciador_e-doc/';
 ```
+
+Prepare o banco conforme as instruções de [`database/README.md`](database/README.md).
 
 Em seguida, configure o servidor web para servir o diretório do projeto e disponibilize o banco de dados utilizado pela aplicação.
 
@@ -351,7 +362,7 @@ style: ajusta formatação ou interface
 
 ## Status
 
-O e-Doc ainda está em desenvolvimento e pode sofrer mudanças na estrutura do banco, nas regras de negócio e na organização dos módulos.
+O e-Doc é mantido em desenvolvimento contínuo e pode receber mudanças na estrutura do banco, nas regras de negócio e na organização dos módulos conforme a evolução do projeto.
 
 ## Autor
 
