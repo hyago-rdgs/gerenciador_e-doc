@@ -112,7 +112,7 @@ class Movimentacao extends CI_Controller
 
         $documento = $this->documento_model->buscar_por_codigo($documento['codigo']);
 
-        if (!$documento || (int) $documento['ativo'] !== 1) {
+        if (!$documento) {
             $this->db->trans_rollback();
             resposta_json(FALSE, 'O documento não está mais disponível para movimentação.', [], 409);
         }
@@ -216,7 +216,7 @@ class Movimentacao extends CI_Controller
 
         $documento = $this->documento_model->buscar_por_codigo($documento['codigo']);
 
-        if (!$documento || (int) $documento['ativo'] !== 1) {
+        if (!$documento) {
             $this->db->trans_rollback();
             resposta_json(FALSE, 'O documento não está mais disponível para movimentação.', [], 409);
         }
@@ -292,7 +292,7 @@ class Movimentacao extends CI_Controller
 
         $documento = $this->documento_model->buscar_por_codigo($documento['codigo']);
 
-        if (!$documento || (int) $documento['ativo'] !== 1) {
+        if (!$documento) {
             $this->db->trans_rollback();
             resposta_json(FALSE, 'O documento não está mais disponível para movimentação.', [], 409);
         }
@@ -360,8 +360,8 @@ class Movimentacao extends CI_Controller
 
         $documento = $this->documento_model->buscar_por_codigo((int) $codigo);
 
-        if (!$documento || (int) $documento['ativo'] !== 1) {
-            resposta_json(FALSE, 'Documento não encontrado ou inativo.', [], 404);
+        if (!$documento) {
+            resposta_json(FALSE, 'Documento não encontrado.', [], 404);
         }
 
         return $documento;
