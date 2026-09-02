@@ -26,6 +26,7 @@ Atualmente estão disponíveis:
 - geração de etiquetas;
 - versionamento e auditoria de arquivos documentais.
 - movimentação, retirada, devolução e rastreabilidade de documentos.
+- dashboard e indicadores gerenciais do acervo.
 
 ## Tela inicial
 
@@ -148,6 +149,30 @@ Estão disponíveis:
 As regras funcionais e a implantação estão detalhadas em
 [`MOVIMENTACOES.md`](MOVIMENTACOES.md).
 
+### Dashboard
+
+O módulo de dashboard apresenta indicadores operacionais e gerenciais sem
+substituir a tela inicial do sistema.
+
+Atualmente são apresentados:
+
+- total de documentos no acervo;
+- documentos cadastrados no mês;
+- percentual de documentos com arquivo digital;
+- total de localizações;
+- movimentações registradas no mês;
+- evolução de cadastros nos últimos 12 meses;
+- distribuição dos documentos por tipo e localização;
+- documentos sem arquivo digital;
+- retiradas em aberto e em atraso;
+- movimentações recentes.
+
+Os gráficos são renderizados com Apache ECharts. O dashboard não utiliza o
+campo `documentos.ativo` como indicador de negócio; documentos pertencentes ao
+acervo são considerados pelos registros não excluídos.
+
+Mais detalhes estão disponíveis em [`DASHBOARD.md`](DASHBOARD.md).
+
 ## Modelo conceitual
 
 O domínio principal do sistema utiliza as seguintes entidades:
@@ -191,6 +216,7 @@ Estrutura hierárquica
 - HTML5;
 - Bootstrap 5;
 - jQuery;
+- Apache ECharts;
 - Font Awesome.
 
 A interface segue uma abordagem simples e consistente, priorizando componentes nativos do Bootstrap e evitando CSS e JavaScript adicionais quando não são necessários.
@@ -205,6 +231,7 @@ application/
 ├── controllers/
 │   ├── Autenticacao.php
 │   ├── Consulta.php
+│   ├── Dashboard.php
 │   ├── Documento.php
 │   ├── Etiqueta.php
 │   ├── Localizacao.php
@@ -219,6 +246,7 @@ application/
 ├── models/
 └── views/
     ├── autenticacao/
+    ├── dashboard/
     ├── documento/
     ├── localizacao/
     ├── metadado/
@@ -374,10 +402,10 @@ style: ajusta formatação ou interface
 - [x] Pesquisa por metadados
 - [x] Navegação de documentos por localização
 - [x] Movimentação e rastreabilidade de documentos
+- [x] Dashboard e indicadores gerenciais
 
 ### Próximas etapas
 
-- [ ] Dashboard e indicadores gerenciais
 - [ ] Auditoria das operações dos usuários
 - [ ] Melhorias na pesquisa global
 - [ ] Recursos adicionais de gestão documental
