@@ -125,6 +125,18 @@ class Documento_model extends CI_Model
         return $this->db->get()->row_array();
     }
 
+    public function bloquear($codigo)
+    {
+        return $this->db->query(
+            'SELECT `codigo`
+                FROM `documentos`
+                WHERE `codigo` = ?
+                    AND `exclusao` IS NULL
+                FOR UPDATE',
+            [(int) $codigo]
+        )->row_array();
+    }
+
     public function buscar_por_protocolo($protocolo)
     {
         $this->preparar_consulta_listagem();

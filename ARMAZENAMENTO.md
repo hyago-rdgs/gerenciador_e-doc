@@ -51,6 +51,26 @@ Novos uploads armazenam no banco somente o caminho relativo:
 15/arquivo.pdf
 ```
 
+## Versionamento e retenção
+
+Cada arquivo enviado inicialmente representa a versão 1 de uma linhagem. As
+versões posteriores recebem um novo nome físico e permanecem no mesmo
+diretório privado do documento. O arquivo anterior não é sobrescrito.
+
+A exclusão de um arquivo é lógica e abrange toda a linhagem. Os arquivos
+físicos são preservados para manter a rastreabilidade e permitir que uma
+política de retenção seja definida antes de qualquer remoção definitiva.
+
+Quando o banco rejeita o cadastro de um upload, o controller tenta remover
+imediatamente o arquivo físico recém-criado. A remoção só é aceita dentro do
+diretório configurado em `EDOC_DOCUMENTOS_DIRETORIO`. Falhas nessa limpeza são
+registradas no log do CodeIgniter para tratamento operacional.
+
+Não remova arquivos diretamente do armazenamento. Uma limpeza definitiva deve
+comparar o caminho físico com os registros de `documento_arquivos`, considerar
+os registros excluídos logicamente e respeitar a política de retenção da
+implantação.
+
 ## Bloqueio do caminho antigo
 
 O arquivo `uploads/documentos/.htaccess` bloqueia o acesso direto no Apache.

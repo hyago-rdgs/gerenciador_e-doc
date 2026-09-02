@@ -7,6 +7,7 @@ class Documento extends CI_Controller
     {
         parent::__construct();
         $this->controle_acesso->valida_acesso();
+        $this->load->library('auditoria');
         $this->load->model('documento_model');
         $this->load->model('documento_metadado_model');
         $this->load->model('documento_arquivo_model');
@@ -564,11 +565,17 @@ class Documento extends CI_Controller
         $documento = $this->buscar_documento($codigo, TRUE);
         $arquivo = $this->receber_arquivo($documento);
 
+        $this->db->trans_begin();
+
+        $documento_bloqueado = $this->documento_model->bloquear(
+            $documento['codigo']
+        );
+
         $principal = $this->documento_arquivo_model->possui_arquivos(
             $documento['codigo']
         ) ? 0 : 1;
 
-        $arquivo_codigo = $this->documento_arquivo_model->cadastrar([
+        $registro_arquivo = [
             'documento_codigo' => $documento['codigo'],
             'arquivo_raiz_codigo' => NULL,
             'nome_original' => $arquivo['orig_name'],
@@ -579,10 +586,35 @@ class Documento extends CI_Controller
             'tamanho' => round($arquivo['file_size'] * 1024),
             'versao' => 1,
             'principal' => $principal
-        ]);
+        ];
 
-        if (!$arquivo_codigo) {
-            unlink($arquivo['full_path']);
+        $arquivo_codigo = $documento_bloqueado
+            ? $this->documento_arquivo_model->cadastrar(
+                $registro_arquivo
+            )
+            : FALSE;
+
+        $auditoria_salva = $arquivo_codigo
+            ? $this->auditoria->registrar(
+                'arquivos',
+                'ARQUIVO_CADASTRADO',
+                'documento_arquivo',
+                $arquivo_codigo,
+                NULL,
+                array_merge(
+                    ['codigo' => (int) $arquivo_codigo],
+                    $registro_arquivo
+                )
+            )
+            : FALSE;
+
+        if (
+            !$arquivo_codigo ||
+            !$auditoria_salva ||
+            $this->db->trans_status() === FALSE
+        ) {
+            $this->db->trans_rollback();
+            $this->remover_arquivo_fisico($arquivo['full_path']);
 
             resposta_json(
                 FALSE,
@@ -591,6 +623,8 @@ class Documento extends CI_Controller
                 500
             );
         }
+
+        $this->db->trans_commit();
 
         resposta_json(
             TRUE,
@@ -628,19 +662,27 @@ class Documento extends CI_Controller
 
         $this->db->trans_begin();
 
-        $arquivo_raiz = $this->documento_arquivo_model->bloquear_arquivo_raiz(
-            $documento['codigo'],
-            $arquivo_raiz_codigo
+        $documento_bloqueado = $this->documento_model->bloquear(
+            $documento['codigo']
         );
 
-        $ultima_versao = $this->documento_arquivo_model->buscar_ultima_versao(
-            $documento['codigo'],
-            $arquivo_raiz_codigo
-        );
+        $arquivo_raiz = $documento_bloqueado
+            ? $this->documento_arquivo_model->bloquear_arquivo_raiz(
+                $documento['codigo'],
+                $arquivo_raiz_codigo
+            )
+            : FALSE;
+
+        $ultima_versao = $arquivo_raiz
+            ? $this->documento_arquivo_model->buscar_ultima_versao(
+                $documento['codigo'],
+                $arquivo_raiz_codigo
+            )
+            : FALSE;
 
         if (!$arquivo_raiz || !$ultima_versao) {
             $this->db->trans_rollback();
-            unlink($arquivo['full_path']);
+            $this->remover_arquivo_fisico($arquivo['full_path']);
 
             resposta_json(
                 FALSE,
@@ -655,7 +697,7 @@ class Documento extends CI_Controller
             $arquivo_raiz_codigo
         );
 
-        $nova_versao_codigo = $this->documento_arquivo_model->cadastrar([
+        $registro_nova_versao = [
             'documento_codigo' => $documento['codigo'],
             'arquivo_raiz_codigo' => $arquivo_raiz_codigo,
             'nome_original' => $arquivo['orig_name'],
@@ -666,7 +708,11 @@ class Documento extends CI_Controller
             'tamanho' => round($arquivo['file_size'] * 1024),
             'versao' => $versao,
             'principal' => 0
-        ]);
+        ];
+
+        $nova_versao_codigo = $this->documento_arquivo_model->cadastrar(
+            $registro_nova_versao
+        );
 
         $principal_atualizado = TRUE;
 
@@ -678,15 +724,37 @@ class Documento extends CI_Controller
                 $documento['codigo'],
                 $nova_versao_codigo
             );
+
+            if ($principal_atualizado) {
+                $registro_nova_versao['principal'] = 1;
+            }
         }
+
+        $auditoria_salva = (
+            $nova_versao_codigo &&
+            $principal_atualizado
+        )
+            ? $this->auditoria->registrar(
+                'arquivos',
+                'VERSAO_CADASTRADA',
+                'documento_arquivo',
+                $nova_versao_codigo,
+                $ultima_versao,
+                array_merge(
+                    ['codigo' => (int) $nova_versao_codigo],
+                    $registro_nova_versao
+                )
+            )
+            : FALSE;
 
         if (
             !$nova_versao_codigo ||
             !$principal_atualizado ||
+            !$auditoria_salva ||
             $this->db->trans_status() === FALSE
         ) {
             $this->db->trans_rollback();
-            unlink($arquivo['full_path']);
+            $this->remover_arquivo_fisico($arquivo['full_path']);
 
             resposta_json(
                 FALSE,
@@ -770,12 +838,76 @@ class Documento extends CI_Controller
             $arquivo_codigo
         );
 
-        if (
-            !$this->documento_arquivo_model->definir_principal(
+        $arquivo_raiz_codigo = !empty(
+            $arquivo['arquivo_raiz_codigo']
+        )
+            ? (int) $arquivo['arquivo_raiz_codigo']
+            : (int) $arquivo['codigo'];
+
+        $this->db->trans_begin();
+
+        $documento_bloqueado = $this->documento_model->bloquear(
+            $documento['codigo']
+        );
+
+        $arquivo_raiz = $documento_bloqueado
+            ? $this->documento_arquivo_model->bloquear_arquivo_raiz(
                 $documento['codigo'],
-                $arquivo['codigo']
+                $arquivo_raiz_codigo
             )
+            : FALSE;
+
+        $ultima_versao = $arquivo_raiz
+            ? $this->documento_arquivo_model->buscar_ultima_versao(
+                $documento['codigo'],
+                $arquivo_raiz_codigo
+            )
+            : FALSE;
+
+        if (
+            !$ultima_versao ||
+            (int) $ultima_versao['codigo'] !== (int) $arquivo['codigo']
         ) {
+            $this->db->trans_rollback();
+
+            resposta_json(
+                FALSE,
+                'Somente a versão atual pode ser definida como principal.',
+                [],
+                422
+            );
+        }
+
+        $principal_anterior = $this->documento_arquivo_model->buscar_principal(
+            $documento['codigo']
+        );
+
+        $principal_definido = $this->documento_arquivo_model->definir_principal(
+            $documento['codigo'],
+            $arquivo['codigo']
+        );
+
+        $arquivo_principal = $arquivo;
+        $arquivo_principal['principal'] = 1;
+
+        $auditoria_salva = $principal_definido
+            ? $this->auditoria->registrar(
+                'arquivos',
+                'ARQUIVO_PRINCIPAL_ALTERADO',
+                'documento',
+                $documento['codigo'],
+                $principal_anterior,
+                $arquivo_principal
+            )
+            : FALSE;
+
+        if (
+            !$principal_definido ||
+            !$auditoria_salva ||
+            $this->db->trans_status() === FALSE
+        ) {
+            $this->db->trans_rollback();
+
             resposta_json(
                 FALSE,
                 'Não foi possível definir o arquivo principal.',
@@ -783,6 +915,8 @@ class Documento extends CI_Controller
                 500
             );
         }
+
+        $this->db->trans_commit();
 
         resposta_json(
             TRUE,
@@ -816,17 +950,39 @@ class Documento extends CI_Controller
             ? (int) $arquivo['arquivo_raiz_codigo']
             : (int) $arquivo['codigo'];
 
-        $ultima_versao = $this->documento_arquivo_model->buscar_ultima_versao(
-            $documento['codigo'],
-            $arquivo_raiz_codigo
-        );
-
         $this->db->trans_begin();
 
-        $arquivo_excluido = $this->documento_arquivo_model->excluir_linhagem(
-            $documento['codigo'],
-            $arquivo_raiz_codigo
+        $documento_bloqueado = $this->documento_model->bloquear(
+            $documento['codigo']
         );
+
+        $arquivo_raiz = $documento_bloqueado
+            ? $this->documento_arquivo_model->bloquear_arquivo_raiz(
+                $documento['codigo'],
+                $arquivo_raiz_codigo
+            )
+            : FALSE;
+
+        $ultima_versao = $arquivo_raiz
+            ? $this->documento_arquivo_model->buscar_ultima_versao(
+                $documento['codigo'],
+                $arquivo_raiz_codigo
+            )
+            : FALSE;
+
+        $versoes = $ultima_versao
+            ? $this->documento_arquivo_model->listar_versoes(
+                $documento['codigo'],
+                $arquivo_raiz_codigo
+            )
+            : [];
+
+        $arquivo_excluido = $ultima_versao
+            ? $this->documento_arquivo_model->excluir_linhagem(
+                $documento['codigo'],
+                $arquivo_raiz_codigo
+            )
+            : FALSE;
 
         $principal_definido = TRUE;
 
@@ -840,9 +996,28 @@ class Documento extends CI_Controller
             );
         }
 
+        $auditoria_salva = (
+            $arquivo_excluido &&
+            $principal_definido
+        )
+            ? $this->auditoria->registrar(
+                'arquivos',
+                'LINHAGEM_EXCLUIDA',
+                'documento_arquivo_linhagem',
+                $arquivo_raiz_codigo,
+                ['versoes' => $versoes],
+                [
+                    'documento_codigo' => (int) $documento['codigo'],
+                    'arquivo_raiz_codigo' => $arquivo_raiz_codigo,
+                    'excluida' => TRUE
+                ]
+            )
+            : FALSE;
+
         if (
             !$arquivo_excluido ||
             !$principal_definido ||
+            !$auditoria_salva ||
             $this->db->trans_status() === FALSE
         ) {
             $this->db->trans_rollback();
@@ -966,6 +1141,46 @@ class Documento extends CI_Controller
         }
 
         return $this->upload->data();
+    }
+
+    private function remover_arquivo_fisico($caminho)
+    {
+        if (!is_file($caminho)) {
+            return TRUE;
+        }
+
+        $diretorio_base = $this->diretorio_documentos();
+        $diretorio_real = $diretorio_base !== FALSE
+            ? realpath($diretorio_base)
+            : FALSE;
+        $arquivo_real = realpath($caminho);
+
+        if (
+            !$diretorio_real ||
+            !$arquivo_real ||
+            strpos(
+                $arquivo_real,
+                $diretorio_real . DIRECTORY_SEPARATOR
+            ) !== 0
+        ) {
+            log_message(
+                'error',
+                'Tentativa de remover upload fora do diretório privado.'
+            );
+
+            return FALSE;
+        }
+
+        if (@unlink($arquivo_real)) {
+            return TRUE;
+        }
+
+        log_message(
+            'error',
+            'Não foi possível remover o upload órfão: ' . $arquivo_real
+        );
+
+        return FALSE;
     }
 
     private function buscar_documento($codigo, $resposta_json = FALSE)

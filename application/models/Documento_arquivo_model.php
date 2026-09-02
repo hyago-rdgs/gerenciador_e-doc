@@ -51,10 +51,12 @@ class Documento_arquivo_model extends CI_Model
         $arquivo_raiz_codigo
     ) {
         return $this->db->query(
-            'SELECT `codigo`
+            'SELECT `codigo`, `versao`, `arquivo_raiz_codigo`, `exclusao`
                 FROM `documento_arquivos`
                 WHERE `codigo` = ?
                     AND `documento_codigo` = ?
+                    AND `versao` = 1
+                    AND `arquivo_raiz_codigo` IS NULL
                 FOR UPDATE',
             [
                 (int) $arquivo_raiz_codigo,
@@ -74,6 +76,15 @@ class Documento_arquivo_model extends CI_Model
         $this->db->where('exclusao IS NULL', NULL, FALSE);
         $this->db->order_by('versao', 'DESC');
         $this->db->order_by('codigo', 'DESC');
+
+        return $this->db->get($this->tabela, 1)->row_array();
+    }
+
+    public function buscar_principal($documento_codigo)
+    {
+        $this->db->where('documento_codigo', $documento_codigo);
+        $this->db->where('principal', 1);
+        $this->db->where('exclusao IS NULL', NULL, FALSE);
 
         return $this->db->get($this->tabela, 1)->row_array();
     }

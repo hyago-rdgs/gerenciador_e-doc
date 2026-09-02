@@ -26,6 +26,8 @@ mariadb -u USUARIO -p NOME_DO_BANCO \
     < database/migrations/20260829_001_adiciona_controle_acesso.sql
 mariadb -u USUARIO -p NOME_DO_BANCO \
     < database/migrations/20260901_001_adiciona_versionamento_arquivos.sql
+mariadb -u USUARIO -p NOME_DO_BANCO \
+    < database/migrations/20260902_001_adiciona_auditoria.sql
 
 ```
 
@@ -36,10 +38,10 @@ sobre uma instalação que possua dados.
 
 - `schema.sql`: estado completo e atual do banco do core;
 - `migrations/`: alterações incrementais para bancos existentes;
+- `diagnosticos/`: consultas somente leitura para validar a integridade;
 - `seeds/`: dados técnicos reutilizáveis, quando existirem;
 - nomes de migration: `AAAAMMDD_NNN_descricao.sql`.
 
 Antes de criar uma migration, confirme que a mudança pertence ao core. Dados
 e estruturas exclusivos de uma implementação devem permanecer no repositório
 correspondente.
-

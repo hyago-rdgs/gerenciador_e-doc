@@ -275,6 +275,11 @@ somente pelo controller autenticado. A preparação do diretório, a migração 
 arquivos antigos e o bloqueio para Apache e Nginx estão documentados em
 [`ARMAZENAMENTO.md`](ARMAZENAMENTO.md).
 
+As operações de cadastro, versionamento, definição do arquivo principal e
+exclusão de linhagens são registradas na auditoria do core. A estrutura e o
+procedimento de implantação estão documentados em
+[`AUDITORIA.md`](AUDITORIA.md).
+
 ## Fluxo de autenticação
 
 O acesso aos módulos internos exige autenticação.
@@ -318,6 +323,7 @@ style: ajusta formatação ou interface
 - [x] Estrutura inicial do projeto em CodeIgniter 3
 - [x] Autenticação de usuários
 - [x] Controle de acesso aos módulos autenticados
+- [x] Perfis e níveis de permissão
 - [x] Tela inicial pós-login
 - [x] Pesquisa rápida na tela inicial
 - [x] Cadastro, edição e listagem de localizações
@@ -329,6 +335,8 @@ style: ajusta formatação ou interface
 - [x] Vinculação de metadados aos tipos de documento
 - [x] Cadastro e gerenciamento de documentos
 - [x] Upload de arquivos de documentos
+- [x] Versionamento de arquivos documentais
+- [x] Auditoria das operações de arquivos
 - [x] Pesquisa avançada de documentos
 - [x] Pesquisa por metadados
 - [x] Navegação de documentos por localização
@@ -336,11 +344,9 @@ style: ajusta formatação ou interface
 ### Próximas etapas
 
 - [ ] Dashboard e indicadores gerenciais
-- [ ] Perfis e níveis de permissão
 - [ ] Histórico detalhado de movimentações
 - [ ] Auditoria das operações dos usuários
 - [ ] Melhorias na pesquisa global
-- [ ] Versionamento de documentos
 - [ ] Recursos adicionais de gestão documental
 
 ## Status
