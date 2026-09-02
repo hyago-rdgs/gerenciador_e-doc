@@ -41,14 +41,13 @@ A área de atenção apresenta:
 A tabela final apresenta as últimas movimentações registradas, incluindo
 documento, tipo de movimentação, origem, destino ou responsável e usuário.
 
-## Regra sobre status de documento
+## Regra de domínio dos documentos
 
-O dashboard não utiliza o campo `documentos.ativo` para classificar o acervo
-como ativo ou inativo.
+Documentos não possuem status ativo/inativo.
 
-Para os indicadores documentais, um documento pertence ao acervo enquanto
-`exclusao IS NULL`. Situações físicas ou de custódia devem ser representadas
-pelas movimentações e não por um status ativo/inativo.
+Um documento pertence ao acervo enquanto `exclusao IS NULL`. Situações físicas
+ou de custódia, como retirada e devolução, são representadas pelas
+movimentações.
 
 ## Permissão
 
