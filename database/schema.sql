@@ -179,7 +179,6 @@ CREATE TABLE `documentos` (
     `descricao` text DEFAULT NULL,
     `numero_identificacao` varchar(100) DEFAULT NULL,
     `data_documento` date DEFAULT NULL,
-    `ativo` tinyint(4) NOT NULL DEFAULT 1,
     `cadastro` datetime NOT NULL DEFAULT current_timestamp(),
     `atualizacao` datetime DEFAULT NULL,
     `exclusao` datetime DEFAULT NULL,
@@ -190,7 +189,6 @@ CREATE TABLE `documentos` (
     KEY `idx_documentos_titulo` (`titulo`),
     KEY `idx_documentos_numero_identificacao` (`numero_identificacao`),
     KEY `idx_documentos_data` (`data_documento`),
-    KEY `idx_documentos_ativo` (`ativo`),
     CONSTRAINT `fk_documentos_localizacao`
         FOREIGN KEY (`localizacao_codigo`)
         REFERENCES `localizacoes` (`codigo`) ON UPDATE CASCADE,
