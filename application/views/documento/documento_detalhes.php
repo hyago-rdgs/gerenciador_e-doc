@@ -142,7 +142,7 @@
                                             <th class="px-3 py-3">Arquivo</th>
                                             <th>Tipo</th>
                                             <th>Tamanho</th>
-                                            <th>Versão</th>
+                                            <th>Versão atual</th>
                                             <th class="px-3 text-end">Ações</th>
                                         </tr>
                                     </thead>
@@ -167,9 +167,26 @@
                                                 </td>
                                                 <td><?= strtoupper(htmlspecialchars($arquivo['extensao'], ENT_QUOTES, 'UTF-8')); ?></td>
                                                 <td><?= number_format($arquivo['tamanho'] / 1024, 1, ',', '.'); ?> KB</td>
-                                                <td><?= (int) $arquivo['versao']; ?></td>
+                                                <td>
+                                                    <span class="badge text-bg-secondary">
+                                                        v<?= (int) $arquivo['versao']; ?>
+                                                    </span>
+                                                </td>
                                                 <td class="pe-3 text-end">
+                                                    <?php if ($this->controle_acesso->tem_permissao('arquivos.visualizar')): ?>
+                                                        <button class="btn btn-sm btn-light border historico-versoes"
+                                                            data-codigo="<?= $arquivo['codigo']; ?>" type="button"
+                                                            title="Visualizar histórico">
+                                                            <i class="fa-solid fa-clock-rotate-left"></i>
+                                                        </button>
+                                                    <?php endif; ?>
                                                     <?php if ($this->controle_acesso->tem_permissao('arquivos.gerenciar')): ?>
+                                                        <button class="btn btn-sm btn-light border nova-versao"
+                                                            data-codigo="<?= $arquivo['codigo']; ?>"
+                                                            data-nome="<?= htmlspecialchars($arquivo['nome_original'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                            type="button" title="Enviar nova versão">
+                                                            <i class="fa-solid fa-upload"></i>
+                                                        </button>
                                                         <?php if (!$arquivo['principal']): ?>
                                                             <button class="btn btn-sm btn-light border arquivo-principal"
                                                                 data-codigo="<?= $arquivo['codigo']; ?>" type="button"
@@ -179,7 +196,7 @@
                                                         <?php endif; ?>
                                                         <button class="btn btn-sm btn-light border text-danger excluir-arquivo"
                                                             data-codigo="<?= $arquivo['codigo']; ?>" type="button"
-                                                            title="Excluir arquivo">
+                                                            title="Excluir arquivo e seu histórico">
                                                             <i class="fa-solid fa-trash-can"></i>
                                                         </button>
                                                     <?php endif; ?>
@@ -235,6 +252,69 @@
         </div>
     </main>
 
+    <?php if ($this->controle_acesso->tem_permissao('arquivos.gerenciar')): ?>
+        <div class="modal fade" id="modal-nova-versao" tabindex="-1"
+            aria-labelledby="titulo-modal-nova-versao" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="formulario-nova-versao" method="post" enctype="multipart/form-data">
+                        <div class="modal-header">
+                            <div>
+                                <h2 class="modal-title fs-5" id="titulo-modal-nova-versao">
+                                    Enviar nova versão
+                                </h2>
+                                <p class="small text-body-secondary mb-0" id="nome-arquivo-versao"></p>
+                            </div>
+                            <button class="btn-close" data-bs-dismiss="modal" type="button"
+                                aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-danger d-none" id="alerta-nova-versao"></div>
+
+                            <label class="form-label" for="arquivo-versao">Arquivo</label>
+                            <input accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png"
+                                class="form-control" id="arquivo-versao" name="arquivo"
+                                required type="file">
+                            <p class="form-text mb-0">
+                                O arquivo anterior permanecerá disponível no histórico.
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-light border" data-bs-dismiss="modal" type="button">
+                                Cancelar
+                            </button>
+                            <button class="btn btn-primary" id="enviar-nova-versao" type="submit">
+                                <i class="fa-solid fa-upload me-2"></i>Enviar versão
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($this->controle_acesso->tem_permissao('arquivos.visualizar')): ?>
+        <div class="modal fade" id="modal-historico-versoes" tabindex="-1"
+            aria-labelledby="titulo-modal-historico-versoes" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-5" id="titulo-modal-historico-versoes">
+                            Histórico de versões
+                        </h2>
+                        <button class="btn-close" data-bs-dismiss="modal" type="button"
+                            aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div class="alert alert-danger d-none m-3"
+                            id="alerta-historico-versoes"></div>
+                        <div id="conteudo-historico-versoes"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="toast-feedback" class="toast border-0 shadow">
             <div class="toast-body d-flex align-items-center gap-3">
@@ -252,6 +332,14 @@
         const documento_codigo = <?= (int) $documento['codigo']; ?>;
 
         $(document).ready(function () {
+            const modal_nova_versao = $('#modal-nova-versao').length
+                ? bootstrap.Modal.getOrCreateInstance($('#modal-nova-versao')[0])
+                : null;
+
+            const modal_historico_versoes = $('#modal-historico-versoes').length
+                ? bootstrap.Modal.getOrCreateInstance($('#modal-historico-versoes')[0])
+                : null;
+
             const feedback = sessionStorage.getItem('feedback');
 
             if (feedback) {
@@ -296,6 +384,97 @@
                 });
             });
 
+            $('.nova-versao').on('click', function () {
+                const arquivo_codigo = $(this).data('codigo');
+
+                $('#formulario-nova-versao').attr(
+                    'action',
+                    base_url + 'documento/cadastrar_versao/' +
+                        documento_codigo + '/' + arquivo_codigo
+                );
+
+                $('#nome-arquivo-versao').text($(this).data('nome'));
+                $('#arquivo-versao').val('');
+                $('#alerta-nova-versao').empty().addClass('d-none');
+
+                modal_nova_versao.show();
+            });
+
+            $('#formulario-nova-versao').on('submit', function (e) {
+                e.preventDefault();
+
+                const formulario = $(this);
+                const dados = new FormData(this);
+                const texto_botao = '<i class="fa-solid fa-upload me-2"></i>Enviar versão';
+
+                $('#enviar-nova-versao')
+                    .prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>');
+
+                $('#alerta-nova-versao').empty().addClass('d-none');
+
+                $.ajax({
+                    url: formulario.attr('action'),
+                    method: 'POST',
+                    data: dados,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json'
+                }).done(function (response) {
+                    if (!response.sucesso) {
+                        mostrar_erros(
+                            response.dados?.erros || response.mensagem?.conteudo,
+                            'alerta-nova-versao'
+                        );
+                        return;
+                    }
+
+                    sessionStorage.setItem('feedback', response.mensagem?.conteudo);
+                    window.location.reload();
+                }).fail(function (xhr) {
+                    mostrar_erro_ajax(xhr, 'alerta-nova-versao');
+                }).always(function () {
+                    $('#enviar-nova-versao')
+                        .prop('disabled', false)
+                        .html(texto_botao);
+                });
+            });
+
+            $('.historico-versoes').on('click', function () {
+                const arquivo_codigo = $(this).data('codigo');
+
+                $('#alerta-historico-versoes').empty().addClass('d-none');
+                $('#conteudo-historico-versoes').html(
+                    '<div class="text-center py-5">' +
+                        '<span class="spinner-border text-primary" aria-hidden="true"></span>' +
+                        '<span class="visually-hidden">Carregando...</span>' +
+                    '</div>'
+                );
+
+                modal_historico_versoes.show();
+
+                $.ajax({
+                    url: base_url + 'documento/historico_versoes/' +
+                        documento_codigo + '/' + arquivo_codigo,
+                    method: 'GET',
+                    dataType: 'json'
+                }).done(function (response) {
+                    if (!response.sucesso) {
+                        $('#conteudo-historico-versoes').empty();
+                        mostrar_erros(
+                            response.dados?.erros || response.mensagem?.conteudo,
+                            'alerta-historico-versoes'
+                        );
+                        return;
+                    }
+
+                    $('#conteudo-historico-versoes').html(response.dados?.html || '');
+                }).fail(function (xhr) {
+                    $('#conteudo-historico-versoes').empty();
+                    mostrar_erro_ajax(xhr, 'alerta-historico-versoes');
+                });
+            });
+
             $('.arquivo-principal').on('click', function () {
                 const botao = $(this);
                 const arquivo_codigo = botao.data('codigo');
@@ -332,7 +511,7 @@
                 const botao = $(this);
                 const arquivo_codigo = botao.data('codigo');
 
-                if (!window.confirm('Deseja excluir este arquivo?')) {
+                if (!window.confirm('Deseja excluir este arquivo e todo o histórico de versões?')) {
                     return;
                 }
 

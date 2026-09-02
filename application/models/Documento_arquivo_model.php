@@ -7,11 +7,36 @@ class Documento_arquivo_model extends CI_Model
 
     public function listar_por_documento($documento_codigo)
     {
-        $this->db->where('documento_codigo', $documento_codigo);
-        $this->db->where('exclusao IS NULL', NULL, FALSE);
-        $this->db->order_by('principal', 'DESC');
-        $this->db->order_by('cadastro', 'DESC');
-        return $this->db->get($this->tabela)->result_array();
+        return $this->db->query(
+            'SELECT arquivo.*
+                FROM documento_arquivos arquivo
+                WHERE arquivo.documento_codigo = ?
+                    AND arquivo.exclusao IS NULL
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM documento_arquivos versao_posterior
+                        WHERE versao_posterior.documento_codigo =
+                            arquivo.documento_codigo
+                            AND versao_posterior.exclusao IS NULL
+                            AND COALESCE(
+                                versao_posterior.arquivo_raiz_codigo,
+                                versao_posterior.codigo
+                            ) = COALESCE(
+                                arquivo.arquivo_raiz_codigo,
+                                arquivo.codigo
+                            )
+                            AND (
+                                versao_posterior.versao > arquivo.versao
+                                OR (
+                                    versao_posterior.versao = arquivo.versao
+                                    AND versao_posterior.codigo > arquivo.codigo
+                                )
+                            )
+                    )
+                ORDER BY arquivo.principal DESC,
+                    arquivo.cadastro DESC',
+            [(int) $documento_codigo]
+        )->result_array();
     }
 
     public function buscar_por_codigo($codigo)
@@ -150,6 +175,30 @@ class Documento_arquivo_model extends CI_Model
 
         return $this->db->affected_rows() > 0;
     }
+
+    public function excluir_linhagem(
+        $documento_codigo,
+        $arquivo_raiz_codigo
+    ) {
+        $this->aplicar_filtro_linhagem(
+            $documento_codigo,
+            $arquivo_raiz_codigo
+        );
+        $this->db->where('exclusao IS NULL', NULL, FALSE);
+
+        if (!$this->db->update(
+            $this->tabela,
+            [
+                'principal' => 0,
+                'exclusao' => date('Y-m-d H:i:s')
+            ]
+        )) {
+            return FALSE;
+        }
+
+        return $this->db->affected_rows() > 0;
+    }
+
     public function definir_novo_principal($documento_codigo)
     {
         $this->db->select('codigo');
@@ -205,4 +254,3 @@ class Documento_arquivo_model extends CI_Model
     }
 
 }
-

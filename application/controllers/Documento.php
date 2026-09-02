@@ -709,6 +709,51 @@ class Documento extends CI_Controller
         );
     }
 
+    public function historico_versoes(
+        $codigo = NULL,
+        $arquivo_codigo = NULL
+    ) {
+        $this->controle_acesso->valida_permissao(
+            'arquivos.visualizar'
+        );
+
+        if ($this->input->method() !== 'get') {
+            show_404();
+        }
+
+        $documento = $this->buscar_documento($codigo, TRUE);
+        $arquivo = $this->buscar_arquivo(
+            $documento['codigo'],
+            $arquivo_codigo
+        );
+
+        $arquivo_raiz_codigo = !empty(
+            $arquivo['arquivo_raiz_codigo']
+        )
+            ? (int) $arquivo['arquivo_raiz_codigo']
+            : (int) $arquivo['codigo'];
+
+        $versoes = $this->documento_arquivo_model->listar_versoes(
+            $documento['codigo'],
+            $arquivo_raiz_codigo
+        );
+
+        $html = $this->load->view(
+            'documento/documento_arquivo_historico',
+            [
+                'documento' => $documento,
+                'versoes' => $versoes
+            ],
+            TRUE
+        );
+
+        resposta_json(
+            TRUE,
+            'Histórico carregado com sucesso.',
+            ['html' => $html]
+        );
+    }
+
     public function definir_arquivo_principal($codigo = NULL, $arquivo_codigo = NULL)
     {
         $this->controle_acesso->valida_permissao(
@@ -765,17 +810,30 @@ class Documento extends CI_Controller
             $arquivo_codigo
         );
 
+        $arquivo_raiz_codigo = !empty(
+            $arquivo['arquivo_raiz_codigo']
+        )
+            ? (int) $arquivo['arquivo_raiz_codigo']
+            : (int) $arquivo['codigo'];
+
+        $ultima_versao = $this->documento_arquivo_model->buscar_ultima_versao(
+            $documento['codigo'],
+            $arquivo_raiz_codigo
+        );
+
         $this->db->trans_begin();
 
-        $arquivo_excluido = $this->documento_arquivo_model->excluir(
-            $arquivo['codigo']
+        $arquivo_excluido = $this->documento_arquivo_model->excluir_linhagem(
+            $documento['codigo'],
+            $arquivo_raiz_codigo
         );
 
         $principal_definido = TRUE;
 
         if (
             $arquivo_excluido &&
-            (int) $arquivo['principal'] === 1
+            $ultima_versao &&
+            (int) $ultima_versao['principal'] === 1
         ) {
             $principal_definido = $this->documento_arquivo_model->definir_novo_principal(
                 $documento['codigo']
