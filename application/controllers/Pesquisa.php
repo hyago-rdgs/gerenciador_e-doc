@@ -46,10 +46,6 @@ class Pesquisa extends CI_Controller
             ? $this->input->get('data_fim', TRUE)
             : '';
 
-        $filtro_status = $this->input->get('status', TRUE) !== NULL
-            ? $this->input->get('status', TRUE)
-            : '';
-
         $filtros_metadados = $this->input->get('metadados', TRUE);
         $filtros_metadados = is_array($filtros_metadados) ? $filtros_metadados : [];
 
@@ -95,7 +91,6 @@ class Pesquisa extends CI_Controller
                 $filtro_numero_identificacao,
                 $filtro_data_inicio,
                 $filtro_data_fim,
-                $filtro_status,
                 $metadados_validos
             );
 
@@ -106,7 +101,6 @@ class Pesquisa extends CI_Controller
                 $filtro_numero_identificacao,
                 $filtro_data_inicio,
                 $filtro_data_fim,
-                $filtro_status,
                 $metadados_validos,
                 $limite,
                 $offset
@@ -124,7 +118,6 @@ class Pesquisa extends CI_Controller
             'filtro_numero_identificacao' => $filtro_numero_identificacao,
             'filtro_data_inicio' => $filtro_data_inicio,
             'filtro_data_fim' => $filtro_data_fim,
-            'filtro_status' => $filtro_status,
             'filtros_metadados' => $filtros_metadados,
             'total_documentos' => $total_documentos,
             'limite' => $limite,
