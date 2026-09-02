@@ -44,7 +44,6 @@ class Documento extends CI_Controller
 
         $filtro_tipo_documento = $filtro_tipo_documento ?? '';
         $filtro_localizacao = $filtro_localizacao ?? '';
-        $filtro_status = $this->input->get('status', TRUE) !== NULL ? $this->input->get('status', TRUE) : '';
 
         $pagina_atual = (int) $this->input->get('pagina', TRUE);
         if ($pagina_atual < 1) {
@@ -54,15 +53,14 @@ class Documento extends CI_Controller
         $limite = 20;
         $offset = ($pagina_atual - 1) * $limite;
 
-        $total_documentos = $this->documento_model->contar_tudo($filtro_termo, $filtro_tipo_documento, $filtro_localizacao, $filtro_status);
+        $total_documentos = $this->documento_model->contar_tudo($filtro_termo, $filtro_tipo_documento, $filtro_localizacao);
 
         $dados = [
             'filtro_termo' => $filtro_termo,
             'filtro_tipo_documento' => $filtro_tipo_documento,
             'filtro_localizacao' => $filtro_localizacao,
-            'filtro_status' => $filtro_status,
 
-            'documentos' => $this->documento_model->listar_tudo($filtro_termo, $filtro_tipo_documento, $filtro_localizacao, $filtro_status, $limite, $offset),
+            'documentos' => $this->documento_model->listar_tudo($filtro_termo, $filtro_tipo_documento, $filtro_localizacao, $limite, $offset),
             'total_documentos' => $total_documentos,
 
             'tipos_documento' => $this->tipo_documento_model->listar_opcoes(),
@@ -1405,7 +1403,6 @@ class Documento extends CI_Controller
             'descricao' => trim($reg['descricao'] ?? ''),
             'numero_identificacao' => trim($reg['numero_identificacao'] ?? ''),
             'data_documento' => trim($reg['data_documento'] ?? ''),
-            'ativo' => trim($reg['ativo'] ?? ''),
             'metadados' => is_array($reg['metadados'] ?? NULL)
                 ? $reg['metadados']
                 : []
@@ -1469,10 +1466,6 @@ class Documento extends CI_Controller
             }
         }
 
-        if (!in_array($reg['ativo'], ['1', '0'], TRUE)) {
-            $erros[] = 'O status informado é inválido.';
-        }
-
         if (
             $reg['data_documento'] !== '' &&
             !$this->validar_data(
@@ -1512,7 +1505,6 @@ class Documento extends CI_Controller
 
         $reg['tipo_documento_codigo'] = (int) $reg['tipo_documento_codigo'];
         $reg['localizacao_codigo'] = (int) $reg['localizacao_codigo'];
-        $reg['ativo'] = (int) $reg['ativo'];
         $reg['descricao'] = $reg['descricao'] !== ''
             ? $reg['descricao']
             : NULL;
