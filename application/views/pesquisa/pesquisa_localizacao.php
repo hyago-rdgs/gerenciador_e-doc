@@ -152,7 +152,6 @@
                                     <th class="px-3 py-3">Documento</th>
                                     <th>Tipo</th>
                                     <th>Data</th>
-                                    <th class="text-center">Status</th>
                                     <th class="px-3 text-end">Ação</th>
                                 </tr>
                             </thead>
@@ -169,11 +168,6 @@
                                         </td>
                                         <td><?= htmlspecialchars($documento['tipo_documento'], ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td><?= $documento['data_documento'] ? date('d/m/Y', strtotime($documento['data_documento'])) : 'Não informada'; ?></td>
-                                        <td class="text-center">
-                                            <span class="badge <?= $documento['ativo'] ? 'text-bg-success' : 'text-bg-secondary'; ?>">
-                                                <?= $documento['ativo'] ? 'Ativo' : 'Inativo'; ?>
-                                            </span>
-                                        </td>
                                         <td class="pe-3 text-end">
                                             <?php if ($this->controle_acesso->tem_permissao('documentos.visualizar')): ?>
                                                 <a class="btn btn-sm btn-primary"
