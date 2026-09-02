@@ -44,13 +44,13 @@
                     <div id="alerta-formulario" class="alert alert-danger d-none" role="alert"></div>
 
                     <div class="row g-3">
-                        <div class="col-12 col-lg-8">
+                        <div class="col-12 col-lg-6">
                             <label class="form-label" for="titulo">Título</label>
                             <input class="form-control" id="titulo" maxlength="255" name="titulo" required type="text"
                                 value="<?= htmlspecialchars($documento['titulo'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                         </div>
 
-                        <div class="col-12 col-md-6 col-lg-4">
+                        <div class="col-12 col-md-6 col-lg-3">
                             <label class="form-label" for="numero_identificacao">Número de identificação</label>
                             <input class="form-control" id="numero_identificacao" maxlength="100"
                                 name="numero_identificacao" type="text"
@@ -58,7 +58,7 @@
                         </div>
 
                         <?php if (!$modo_edicao && !empty($localizacao_selecionada)): ?>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-6 col-lg-3">
                                 <label class="form-label">Tipo de documento</label>
                                 <div class="form-control bg-body-tertiary">
                                     <?= htmlspecialchars($tipo_documento_selecionado['tipo_documento'], ENT_QUOTES, 'UTF-8'); ?>
@@ -67,7 +67,7 @@
                                     value="<?= $tipo_documento_selecionado['tipo_documento_codigo']; ?>">
                             </div>
 
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label">Localização</label>
                                 <div class="form-control bg-body-tertiary">
                                     <?= htmlspecialchars(
@@ -87,7 +87,7 @@
                                     value="<?= $localizacao_selecionada['codigo']; ?>">
                             </div>
                         <?php else: ?>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label" for="tipo_documento_codigo">Tipo de documento</label>
                                 <select class="form-select" id="tipo_documento_codigo" name="tipo_documento_codigo"
                                     required>
@@ -101,7 +101,7 @@
                                 </select>
                             </div>
 
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label" for="localizacao_codigo">Localização</label>
                                 <select class="form-select" id="localizacao_codigo" name="localizacao_codigo" required>
                                     <option value="">Selecione</option>
