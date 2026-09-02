@@ -36,11 +36,6 @@
         </div>
     <?php endif; ?>
 
-    <div class="col-12 col-md-6">
-        <span class="small text-body-secondary d-block">Status</span>
-        <span><?= (int) $documento['ativo'] === 1 ? 'Ativo' : 'Inativo'; ?></span>
-    </div>
-
     <?php if (!empty($documento['descricao'])): ?>
         <div class="col-12">
             <span class="small text-body-secondary d-block">Descrição</span>
