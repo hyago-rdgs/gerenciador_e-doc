@@ -164,14 +164,6 @@
                                 value="<?= htmlspecialchars($documento['data_documento'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                         </div>
 
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <label class="form-label" for="ativo">Status</label>
-                            <select class="form-select" id="ativo" name="ativo" required>
-                                <option value="1" <?= !isset($documento['ativo']) || $documento['ativo'] == 1 ? 'selected' : ''; ?>>Ativo</option>
-                                <option value="0" <?= isset($documento['ativo']) && $documento['ativo'] == 0 ? 'selected' : ''; ?>>Inativo</option>
-                            </select>
-                        </div>
-
                         <div class="col-12">
                             <label class="form-label" for="descricao">Descrição</label>
                             <textarea class="form-control" id="descricao" name="descricao"
