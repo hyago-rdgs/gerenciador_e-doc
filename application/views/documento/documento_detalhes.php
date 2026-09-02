@@ -255,7 +255,7 @@
     <?php if ($this->controle_acesso->tem_permissao('arquivos.gerenciar')): ?>
         <div class="modal fade" id="modal-nova-versao" tabindex="-1"
             aria-labelledby="titulo-modal-nova-versao" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <form id="formulario-nova-versao" method="post" enctype="multipart/form-data">
                         <div class="modal-header">
@@ -296,7 +296,7 @@
     <?php if ($this->controle_acesso->tem_permissao('arquivos.visualizar')): ?>
         <div class="modal fade" id="modal-historico-versoes" tabindex="-1"
             aria-labelledby="titulo-modal-historico-versoes" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h2 class="modal-title fs-5" id="titulo-modal-historico-versoes">
@@ -309,6 +309,8 @@
                         <div class="alert alert-danger d-none m-3"
                             id="alerta-historico-versoes"></div>
                         <div id="conteudo-historico-versoes"></div>
+                    </div>
+                    <div class="modal-footer">
                     </div>
                 </div>
             </div>
