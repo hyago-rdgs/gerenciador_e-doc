@@ -48,7 +48,6 @@ class Pesquisa_model extends CI_Model
         $numero_identificacao = '',
         $data_inicio = '',
         $data_fim = '',
-        $status = '',
         $metadados = [],
         $limite = NULL,
         $offset = NULL
@@ -62,7 +61,6 @@ class Pesquisa_model extends CI_Model
             $numero_identificacao,
             $data_inicio,
             $data_fim,
-            $status,
             $metadados
         );
 
@@ -82,7 +80,6 @@ class Pesquisa_model extends CI_Model
         $numero_identificacao = '',
         $data_inicio = '',
         $data_fim = '',
-        $status = '',
         $metadados = []
     ) {
         $this->db->select('d.codigo');
@@ -95,7 +92,6 @@ class Pesquisa_model extends CI_Model
             $numero_identificacao,
             $data_inicio,
             $data_fim,
-            $status,
             $metadados
         );
 
@@ -121,7 +117,6 @@ class Pesquisa_model extends CI_Model
             'd.descricao',
             'd.numero_identificacao',
             'd.data_documento',
-            'd.ativo',
             'td.nome AS tipo_documento',
             'l.codigo AS localizacao_codigo',
             'l.nome AS localizacao',
@@ -151,7 +146,6 @@ class Pesquisa_model extends CI_Model
         $numero_identificacao,
         $data_inicio,
         $data_fim,
-        $status,
         $metadados
     ) {
         $this->db->where(
@@ -183,13 +177,6 @@ class Pesquisa_model extends CI_Model
 
         if (!empty($data_fim)) {
             $this->db->where('d.data_documento <=', $data_fim);
-        }
-
-        if (!empty($status)) {
-            $this->db->where(
-                'd.ativo',
-                $status == 'ativo' ? 1 : 0
-            );
         }
 
         $this->db->where('d.exclusao IS NULL', NULL, FALSE);
