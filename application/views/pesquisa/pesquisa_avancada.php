@@ -93,16 +93,6 @@
                             <input class="form-control" id="data_fim" name="data_fim" type="date"
                                 value="<?= htmlspecialchars($filtro_data_fim, ENT_QUOTES, 'UTF-8'); ?>">
                         </div>
-
-                        <div class="col-12 col-md-4">
-                            <label class="form-label" for="status">Status</label>
-                            <select class="form-select" id="status" name="status">
-                                <option value="">Todos</option>
-                                <option value="ativo" <?= $filtro_status === 'ativo' ? 'selected' : ''; ?>>Ativo</option>
-                                <option value="inativo" <?= $filtro_status === 'inativo' ? 'selected' : ''; ?>>Inativo
-                                </option>
-                            </select>
-                        </div>
                     </div>
 
                     <hr class="my-4">
