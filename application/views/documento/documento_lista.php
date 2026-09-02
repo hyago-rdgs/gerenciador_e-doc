@@ -172,18 +172,65 @@
                             <?= min($offset + $limite - 1, $total_documentos); ?> de
                             <?= $total_documentos; ?> documentos
                         </p>
-                        <?php parse_str($_SERVER['QUERY_STRING'] ?? '', $params);
-                        unset($params['pagina']); ?>
-                        <nav aria-label="Paginação de documentos">
-                            <ul class="pagination pagination-sm mb-0">
-                                <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
-                                    <?php $params['pagina'] = $i; ?>
-                                    <li class="page-item <?= $i == $pagina_atual ? 'active' : ''; ?>">
-                                        <a class="page-link" href="?<?= http_build_query($params); ?>"><?= $i; ?></a>
+
+                        <?php
+                        parse_str($_SERVER['QUERY_STRING'] ?? '', $params);
+                        unset($params['pagina']);
+                        $gerar_url = function ($pagina) use ($params) {
+                            $params['pagina'] = $pagina;
+                            return '?' . http_build_query($params);
+                        };
+                        ?>
+
+                        <?php if ($total_paginas > 1): ?>
+                            <nav aria-label="Paginação de documentos">
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item">
+                                        <?php if ($pagina_atual > 1): ?>
+                                            <a aria-label="Anterior" class="page-link"
+                                                href="<?= $gerar_url($pagina_atual - 1); ?>">Anterior</a>
+                                        <?php else: ?>
+                                            <a aria-label="Anterior" class="page-link disabled">Anterior</a>
+                                        <?php endif; ?>
                                     </li>
-                                <?php endfor; ?>
-                            </ul>
-                        </nav>
+
+                                    <?php $adjacentes = 2; ?>
+                                    <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
+                                        <?php if ($i == 1 || $i == $total_paginas || ($i >= $pagina_atual - $adjacentes && $i <= $pagina_atual + $adjacentes)): ?>
+                                            <?php if ($i == $pagina_atual): ?>
+                                                <li aria-current="page" class="page-item active">
+                                                    <span class="page-link bg-primary"><?= $i; ?></span>
+                                                </li>
+                                            <?php else: ?>
+                                                <li class="page-item">
+                                                    <a class="page-link text-primary" href="<?= $gerar_url($i); ?>"><?= $i; ?></a>
+                                                </li>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+
+                                        <?php $mostrar_reticencias_esquerda = $i == 2 && $pagina_atual > $adjacentes + 2; ?>
+                                        <?php $mostrar_reticencias_direita = $i == $total_paginas - 1 && $pagina_atual < $total_paginas - $adjacentes - 1; ?>
+
+                                        <?php if ($mostrar_reticencias_esquerda || $mostrar_reticencias_direita): ?>
+                                            <li class="page-item disabled">
+                                                <span class="page-link border-0 bg-transparent text-muted">
+                                                    &hellip;
+                                                </span>
+                                            </li>
+                                        <?php endif; ?>
+                                    <?php endfor; ?>
+
+                                    <li class="page-item">
+                                        <?php if ($pagina_atual < $total_paginas): ?>
+                                            <a aria-label="Próximo" class="page-link"
+                                                href="<?= $gerar_url($pagina_atual + 1); ?>">Próximo</a>
+                                        <?php else: ?>
+                                            <a aria-label="Próximo" class="page-link disabled">Próximo</a>
+                                        <?php endif; ?>
+                                    </li>
+                                </ul>
+                            </nav>
+                        <?php endif; ?>
                     </div>
                 </div>
             </section>
