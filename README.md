@@ -21,7 +21,7 @@ Atualmente estão disponíveis:
 - navegação entre localizações e sublocalizações;
 - pesquisa avançada por dados básicos e metadados;
 - navegação de documentos pela estrutura de localizações;
-- controle de registros ativos e inativos;
+- controle de ativação de usuários, metadados, tipos de documento e localizações;
 - controle de acesso por perfis e permissões;
 - geração de etiquetas;
 - versionamento e auditoria de arquivos documentais.
@@ -57,6 +57,10 @@ Entre as funcionalidades estão:
 - armazenamento de arquivos digitais;
 - pesquisa e filtragem;
 - exclusão lógica.
+
+Documentos não possuem status ativo/inativo. Enquanto `exclusao IS NULL`, o
+registro pertence ao acervo; situações físicas ou de custódia são
+representadas pelo módulo de movimentações.
 
 ### Tipos de documento
 
@@ -127,7 +131,6 @@ Atualmente são contempladas:
 - filtros por tipo de documento;
 - pesquisa por título e número de identificação;
 - filtros por período;
-- filtros por situação;
 - pesquisa utilizando metadados configuráveis;
 - navegação por localizações.
 
@@ -167,9 +170,9 @@ Atualmente são apresentados:
 - retiradas em aberto e em atraso;
 - movimentações recentes.
 
-Os gráficos são renderizados com Apache ECharts. O dashboard não utiliza o
-campo `documentos.ativo` como indicador de negócio; documentos pertencentes ao
-acervo são considerados pelos registros não excluídos.
+Os gráficos são renderizados com Apache ECharts. Documentos pertencem ao
+acervo enquanto `exclusao IS NULL`; situações físicas ou de custódia são
+representadas pelas movimentações.
 
 Mais detalhes estão disponíveis em [`DASHBOARD.md`](DASHBOARD.md).
 
