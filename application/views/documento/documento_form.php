@@ -86,6 +86,36 @@
                                 <input id="localizacao_codigo" name="localizacao_codigo" type="hidden"
                                     value="<?= $localizacao_selecionada['codigo']; ?>">
                             </div>
+                        <?php elseif ($modo_edicao): ?>
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <label class="form-label" for="tipo_documento_codigo">Tipo de documento</label>
+                                <select class="form-select" id="tipo_documento_codigo" name="tipo_documento_codigo"
+                                    required>
+                                    <option value="">Selecione</option>
+                                    <?php foreach ($tipos_documento as $tipo_documento): ?>
+                                        <option value="<?= $tipo_documento['codigo']; ?>"
+                                            <?= ($documento['tipo_documento_codigo'] ?? '') == $tipo_documento['codigo'] ? 'selected' : ''; ?>>
+                                            <?= htmlspecialchars($tipo_documento['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <label class="form-label">Localização atual</label>
+                                <div class="form-control bg-body-tertiary">
+                                    <?= htmlspecialchars(
+                                        $documento['localizacao_classificacao'] . ' - ' . $documento['localizacao'],
+                                        ENT_QUOTES,
+                                        'UTF-8'
+                                    ); ?>
+                                </div>
+                                <input id="localizacao_codigo" name="localizacao_codigo" type="hidden"
+                                    value="<?= $documento['localizacao_codigo']; ?>">
+                                <div class="form-text">
+                                    Para alterar a localização, utilize a ação Transferir nos detalhes do documento.
+                                </div>
+                            </div>
                         <?php else: ?>
                             <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label" for="tipo_documento_codigo">Tipo de documento</label>

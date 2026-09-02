@@ -139,6 +139,7 @@ class Localizacao_model extends CI_Model
             'l.classificacao',
             'l.localizacao_codigo_pai',
             'tl.nome AS tipo_localizacao',
+            'ltd.tipo_documento_codigo',
             'td.nome AS tipo_documento'
         ]);
         $this->db->from('localizacoes l');

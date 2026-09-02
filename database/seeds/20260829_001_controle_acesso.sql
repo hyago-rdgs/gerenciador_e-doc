@@ -16,6 +16,7 @@ INSERT INTO `modulos` (`nome`, `chave`, `descricao`, `ordem`)
 VALUES
     ('Documentos', 'documentos', 'Cadastro e gerenciamento de documentos.', 10),
     ('Arquivos', 'arquivos', 'Arquivos digitais vinculados aos documentos.', 20),
+    ('Movimentações', 'movimentacoes', 'Transferência, retirada, devolução e rastreabilidade documental.', 25),
     ('Pesquisa', 'pesquisa', 'Pesquisa documental e por localização.', 30),
     ('Localizações', 'localizacoes', 'Estrutura hierárquica de armazenamento.', 40),
     ('Tipos de documento', 'tipos_documento', 'Configuração dos tipos documentais.', 50),
@@ -49,6 +50,8 @@ FROM (
     UNION ALL SELECT 'documentos', 'Excluir', 'documentos.excluir', 'Excluir documentos logicamente.', 30
     UNION ALL SELECT 'arquivos', 'Visualizar', 'arquivos.visualizar', 'Abrir e baixar arquivos.', 10
     UNION ALL SELECT 'arquivos', 'Gerenciar', 'arquivos.gerenciar', 'Enviar, definir principal e excluir arquivos.', 20
+    UNION ALL SELECT 'movimentacoes', 'Visualizar', 'movimentacoes.visualizar', 'Consultar o histórico e a situação das movimentações.', 10
+    UNION ALL SELECT 'movimentacoes', 'Gerenciar', 'movimentacoes.gerenciar', 'Transferir, retirar e devolver documentos.', 20
     UNION ALL SELECT 'pesquisa', 'Acessar', 'pesquisa.acessar', 'Realizar pesquisas documentais.', 10
     UNION ALL SELECT 'localizacoes', 'Visualizar', 'localizacoes.visualizar', 'Listar e consultar localizações.', 10
     UNION ALL SELECT 'localizacoes', 'Gerenciar', 'localizacoes.gerenciar', 'Cadastrar, editar e excluir localizações.', 20
@@ -102,6 +105,8 @@ WHERE p.`chave` = 'operador'
         'documentos.gerenciar',
         'arquivos.visualizar',
         'arquivos.gerenciar',
+        'movimentacoes.visualizar',
+        'movimentacoes.gerenciar',
         'pesquisa.acessar',
         'localizacoes.visualizar',
         'etiquetas.gerar'
@@ -118,6 +123,7 @@ WHERE p.`chave` = 'consulta'
     AND pe.`chave` IN (
         'documentos.visualizar',
         'arquivos.visualizar',
+        'movimentacoes.visualizar',
         'pesquisa.acessar',
         'localizacoes.visualizar',
         'etiquetas.gerar'

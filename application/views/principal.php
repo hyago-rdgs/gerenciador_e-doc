@@ -46,6 +46,28 @@
                 </div>
                 <?php endif; ?>
 
+                <?php if ($this->controle_acesso->tem_permissao('movimentacoes.visualizar')): ?>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <a class="card h-100 border shadow-sm text-decoration-none text-body"
+                        href="<?= base_url('movimentacao'); ?>">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <span
+                                    class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded p-3"
+                                    aria-hidden="true">
+                                    <i class="fa-solid fa-right-left fa-lg"></i>
+                                </span>
+                                <i class="fa-solid fa-arrow-right text-body-tertiary" aria-hidden="true"></i>
+                            </div>
+                            <h3 class="h6 fw-semibold">Movimentações</h3>
+                            <p class="small text-body-secondary mb-0">
+                                Transfira, retire, devolva e acompanhe a custódia dos documentos.
+                            </p>
+                        </div>
+                    </a>
+                </div>
+                <?php endif; ?>
+
                 <?php if ($this->controle_acesso->tem_permissao('pesquisa.acessar')): ?>
                 <div class="col-12 col-md-6 col-xl-4">
                     <a class="card h-100 border shadow-sm text-decoration-none text-body"

@@ -28,6 +28,8 @@ mariadb -u USUARIO -p NOME_DO_BANCO \
     < database/migrations/20260901_001_adiciona_versionamento_arquivos.sql
 mariadb -u USUARIO -p NOME_DO_BANCO \
     < database/migrations/20260902_001_adiciona_auditoria.sql
+mariadb -u USUARIO -p NOME_DO_BANCO \
+    < database/migrations/20260902_002_adiciona_movimentacoes_documentais.sql
 
 ```
 

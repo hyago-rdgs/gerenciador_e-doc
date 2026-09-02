@@ -226,7 +226,10 @@ class Documento_model extends CI_Model
             'd.atualizacao',
             'td.nome AS tipo_documento',
             'l.nome AS localizacao',
-            'l.classificacao AS localizacao_classificacao'
+            'l.classificacao AS localizacao_classificacao',
+            'mr.codigo AS movimentacao_aberta_codigo',
+            'mr.responsavel_nome AS custodia_responsavel',
+            'mr.data_prevista_devolucao AS custodia_previsao_devolucao'
         ]);
         $this->db->from($this->tabela . ' d');
         $this->db->join(
@@ -239,6 +242,20 @@ class Documento_model extends CI_Model
             'localizacoes l',
             'l.codigo = d.localizacao_codigo AND l.exclusao IS NULL',
             'inner',
+            FALSE
+        );
+        $this->db->join(
+            'documento_movimentacoes mr',
+            'mr.codigo = (
+                SELECT dm.codigo
+                FROM documento_movimentacoes dm
+                WHERE dm.documento_codigo = d.codigo
+                    AND dm.tipo_movimentacao = \'RETIRADA\'
+                    AND dm.data_devolucao IS NULL
+                ORDER BY dm.codigo DESC
+                LIMIT 1
+            )',
+            'left',
             FALSE
         );
     }

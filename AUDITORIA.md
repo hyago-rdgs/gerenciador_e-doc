@@ -29,6 +29,19 @@ A consulta de arquivos e do histórico continua protegida pelas permissões
 `arquivos.visualizar`. Alterações e novos uploads exigem
 `arquivos.gerenciar`.
 
+## Operações de movimentação
+
+O módulo de movimentações registra as ações:
+
+- `DOCUMENTO_CADASTRADO`;
+- `DOCUMENTO_TRANSFERIDO`;
+- `DOCUMENTO_RETIRADO`;
+- `DOCUMENTO_DEVOLVIDO`.
+
+Esses registros preservam a origem, o destino, o responsável e a relação
+entre retirada e devolução. As operações exigem
+`movimentacoes.gerenciar`.
+
 ## Atualização de uma instalação
 
 Depois de atualizar o código, aplique a migration:

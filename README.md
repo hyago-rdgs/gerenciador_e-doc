@@ -25,6 +25,7 @@ Atualmente estão disponíveis:
 - controle de acesso por perfis e permissões;
 - geração de etiquetas;
 - versionamento e auditoria de arquivos documentais.
+- movimentação, retirada, devolução e rastreabilidade de documentos.
 
 ## Tela inicial
 
@@ -129,6 +130,24 @@ Atualmente são contempladas:
 - pesquisa utilizando metadados configuráveis;
 - navegação por localizações.
 
+### Movimentações
+
+O módulo de movimentações preserva o histórico de localização e custódia dos
+documentos físicos.
+
+Estão disponíveis:
+
+- transferência entre localizações compatíveis;
+- retirada temporária com identificação do responsável;
+- previsão e confirmação de devolução;
+- identificação de retiradas em aberto ou em atraso;
+- protocolo próprio para cada movimentação;
+- identificação do usuário responsável pelo registro;
+- consulta global do histórico de movimentações.
+
+As regras funcionais e a implantação estão detalhadas em
+[`MOVIMENTACOES.md`](MOVIMENTACOES.md).
+
 ## Modelo conceitual
 
 O domínio principal do sistema utiliza as seguintes entidades:
@@ -141,6 +160,7 @@ O domínio principal do sistema utiliza as seguintes entidades:
 - **Documento–metadado:** armazena os valores preenchidos para cada documento;
 - **Localizações:** representam a árvore de armazenamento físico ou administrativo;
 - **Tipos de localização:** classificam as localizações;
+- **Movimentações:** preservam as mudanças de localização e custódia;
 - **Arquivos:** representam os arquivos digitais vinculados aos documentos.
 
 De forma simplificada:
@@ -189,6 +209,7 @@ application/
 │   ├── Etiqueta.php
 │   ├── Localizacao.php
 │   ├── Metadado.php
+│   ├── Movimentacao.php
 │   ├── Perfil.php
 │   ├── Pesquisa.php
 │   ├── Principal.php
@@ -201,6 +222,7 @@ application/
     ├── documento/
     ├── localizacao/
     ├── metadado/
+    ├── movimentacao/
     ├── perfil/
     ├── pesquisa/
     ├── tipo_documento/
@@ -351,11 +373,11 @@ style: ajusta formatação ou interface
 - [x] Pesquisa avançada de documentos
 - [x] Pesquisa por metadados
 - [x] Navegação de documentos por localização
+- [x] Movimentação e rastreabilidade de documentos
 
 ### Próximas etapas
 
 - [ ] Dashboard e indicadores gerenciais
-- [ ] Histórico detalhado de movimentações
 - [ ] Auditoria das operações dos usuários
 - [ ] Melhorias na pesquisa global
 - [ ] Recursos adicionais de gestão documental

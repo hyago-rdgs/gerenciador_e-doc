@@ -190,16 +190,32 @@ class Documento extends CI_Controller
             $movimentacao_salva = $codigo
                 ? $this->documento_movimentacao_model->cadastrar([
                     'documento_codigo' => $codigo,
+                    'usuario_codigo' => $this->controle_acesso->get('codigo'),
                     'localizacao_origem_codigo' => NULL,
                     'localizacao_destino_codigo' => $resultado['dados']['localizacao_codigo'],
                     'tipo_movimentacao' => 'CADASTRO'
                 ])
                 : FALSE;
 
+            $auditoria_movimentacao_salva = $movimentacao_salva
+                ? $this->auditoria->registrar(
+                    'movimentacoes',
+                    'DOCUMENTO_CADASTRADO',
+                    'documento_movimentacoes',
+                    $movimentacao_salva,
+                    NULL,
+                    [
+                        'documento_codigo' => $codigo,
+                        'localizacao_codigo' => $resultado['dados']['localizacao_codigo']
+                    ]
+                )
+                : FALSE;
+
             if (
                 !$codigo ||
                 !$metadados_salvos ||
                 !$movimentacao_salva ||
+                !$auditoria_movimentacao_salva ||
                 $this->db->trans_status() === FALSE
             ) {
                 $this->db->trans_rollback();
@@ -253,6 +269,22 @@ class Documento extends CI_Controller
                 );
             }
 
+            if (
+                (int) $documento['localizacao_codigo'] !==
+                (int) $resultado['dados']['localizacao_codigo']
+            ) {
+                resposta_json(
+                    FALSE,
+                    'A localização deve ser alterada pelo módulo de movimentações.',
+                    [
+                        'erros' => [
+                            'Utilize a ação Transferir para preservar a rastreabilidade do documento.'
+                        ]
+                    ],
+                    422
+                );
+            }
+
             $this->db->trans_begin();
 
             $documento_atualizado = $this->documento_model->atualizar(
@@ -265,24 +297,9 @@ class Documento extends CI_Controller
                 $resultado['metadados']
             );
 
-            $movimentacao_salva = TRUE;
-
-            if (
-                (int) $documento['localizacao_codigo'] !==
-                (int) $resultado['dados']['localizacao_codigo']
-            ) {
-                $movimentacao_salva = $this->documento_movimentacao_model->cadastrar([
-                    'documento_codigo' => $codigo,
-                    'localizacao_origem_codigo' => $documento['localizacao_codigo'],
-                    'localizacao_destino_codigo' => $resultado['dados']['localizacao_codigo'],
-                    'tipo_movimentacao' => 'TRANSFERENCIA'
-                ]);
-            }
-
             if (
                 !$documento_atualizado ||
                 !$metadados_salvos ||
-                !$movimentacao_salva ||
                 $this->db->trans_status() === FALSE
             ) {
                 $this->db->trans_rollback();
@@ -329,6 +346,30 @@ class Documento extends CI_Controller
         $codigo = (int) $documento['codigo'];
 
         $this->db->trans_begin();
+
+        if (!$this->documento_model->bloquear($codigo)) {
+            $this->db->trans_rollback();
+            resposta_json(
+                FALSE,
+                'O documento não está mais disponível para exclusão.',
+                [],
+                409
+            );
+        }
+
+        if ($this->documento_movimentacao_model->buscar_retirada_aberta($codigo, TRUE)) {
+            $this->db->trans_rollback();
+            resposta_json(
+                FALSE,
+                'O documento possui uma retirada em aberto.',
+                [
+                    'erros' => [
+                        'Registre a devolução antes de excluir o documento.'
+                    ]
+                ],
+                422
+            );
+        }
 
         $metadados_excluidos = $this->documento_metadado_model->excluir_por_documento(
             $codigo
@@ -388,7 +429,11 @@ class Documento extends CI_Controller
             ),
             'movimentacoes' => $this->documento_movimentacao_model->listar_por_documento(
                 $documento['codigo']
-            )
+            ),
+            'movimentacao_aberta' => $this->documento_movimentacao_model->buscar_retirada_aberta(
+                $documento['codigo']
+            ),
+            'localizacoes_movimentacao' => $this->localizacao_model->listar_opcoes()
         ];
 
         $this->load->view('documento/documento_detalhes', $dados);

@@ -20,8 +20,25 @@
                     <?= htmlspecialchars($documento['tipo_documento'], ENT_QUOTES, 'UTF-8'); ?>
                 </p>
             </section>
-            <div>
-                <a class="btn btn-light border" id="voltar">Voltar</a>  
+            <div class="d-flex flex-wrap gap-2">
+                <?php if ($this->controle_acesso->tem_permissao('movimentacoes.gerenciar') && $documento['ativo']): ?>
+                    <?php if ($movimentacao_aberta): ?>
+                        <button class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#modal-devolucao" type="button">
+                            <i class="fa-solid fa-rotate-left me-2"></i>Registrar devolução
+                        </button>
+                    <?php else: ?>
+                        <button class="btn btn-light border" data-bs-toggle="modal"
+                            data-bs-target="#modal-retirada" type="button">
+                            <i class="fa-solid fa-arrow-up-from-bracket me-2"></i>Retirar
+                        </button>
+                        <button class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#modal-transferencia" type="button">
+                            <i class="fa-solid fa-right-left me-2"></i>Transferir
+                        </button>
+                    <?php endif; ?>
+                <?php endif; ?>
+                <a class="btn btn-light border" id="voltar">Voltar</a>
             </div>
         </header>
 
@@ -82,6 +99,23 @@
                                 <?= htmlspecialchars($localizacao['nome'], ENT_QUOTES, 'UTF-8'); ?>
                             <?php endforeach; ?>
                         </p>
+                        <p class="small text-body-secondary mb-1">Custódia</p>
+                        <?php if ($movimentacao_aberta): ?>
+                            <p class="mb-3">
+                                <span class="badge text-bg-warning mb-1">Retirado</span>
+                                <span class="d-block fw-semibold">
+                                    <?= htmlspecialchars($movimentacao_aberta['responsavel_nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                </span>
+                                <?php if (!empty($movimentacao_aberta['data_prevista_devolucao'])): ?>
+                                    <small class="text-secondary">
+                                        Devolução prevista para
+                                        <?= date('d/m/Y', strtotime($movimentacao_aberta['data_prevista_devolucao'])); ?>
+                                    </small>
+                                <?php endif; ?>
+                            </p>
+                        <?php else: ?>
+                            <p><span class="badge text-bg-success">No acervo</span></p>
+                        <?php endif; ?>
                         <p class="small text-body-secondary mb-1">Cadastro</p>
                         <p class="mb-0"><?= date('d/m/Y H:i', strtotime($documento['cadastro'])); ?></p>
                     </div>
@@ -213,32 +247,109 @@
                 </section>
             </div>
 
+            <?php if ($this->controle_acesso->tem_permissao('movimentacoes.visualizar')): ?>
             <div class="col-12">
                 <section class="card border shadow-sm">
-                    <div class="card-header bg-white py-3">
-                        <h2 class="h6 fw-semibold mb-1">Movimentações</h2>
-                        <p class="small text-secondary mb-0">Histórico de alterações da localização.</p>
+                    <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between gap-3 py-3">
+                        <div>
+                            <h2 class="h6 fw-semibold mb-1">Movimentações</h2>
+                            <p class="small text-secondary mb-0">
+                                Histórico de localização, retirada, custódia e devolução.
+                            </p>
+                        </div>
+                        <a class="btn btn-sm btn-light border align-self-md-center"
+                            href="<?= base_url('movimentacao?termo=' . rawurlencode($documento['protocolo'])); ?>">
+                            Ver rastreabilidade
+                        </a>
                     </div>
                     <?php if ($movimentacoes): ?>
                         <div class="table-responsive">
                             <table class="table align-middle mb-0">
                                 <thead class="table-light text-uppercase">
                                     <tr class="small text-secondary">
-                                        <th class="px-3 py-3">Data</th>
+                                        <th class="px-3 py-3">Movimentação</th>
                                         <th>Tipo</th>
                                         <th>Origem</th>
                                         <th>Destino</th>
+                                        <th>Responsável</th>
+                                        <th>Situação</th>
+                                        <th class="pe-3">Registrado por</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($movimentacoes as $movimentacao): ?>
+                                        <?php
+                                        $tipos_movimentacao = [
+                                            'CADASTRO' => 'Cadastro',
+                                            'TRANSFERENCIA' => 'Transferência',
+                                            'RETIRADA' => 'Retirada',
+                                            'DEVOLUCAO' => 'Devolução'
+                                        ];
+                                        $retirada_aberta = $movimentacao['tipo_movimentacao'] === 'RETIRADA'
+                                            && empty($movimentacao['data_devolucao']);
+                                        $retirada_atrasada = $retirada_aberta
+                                            && !empty($movimentacao['data_prevista_devolucao'])
+                                            && $movimentacao['data_prevista_devolucao'] < date('Y-m-d');
+                                        ?>
                                         <tr>
                                             <td class="ps-3">
-                                                <?= date('d/m/Y H:i', strtotime($movimentacao['data_movimentacao'])); ?>
+                                                <span class="font-monospace fw-semibold d-block">
+                                                    <?= htmlspecialchars($movimentacao['protocolo'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
+                                                </span>
+                                                <small class="text-secondary">
+                                                    <?= date('d/m/Y H:i', strtotime($movimentacao['data_movimentacao'])); ?>
+                                                </small>
                                             </td>
-                                            <td><?= ucfirst(strtolower($movimentacao['tipo_movimentacao'])); ?></td>
-                                            <td><?= htmlspecialchars($movimentacao['localizacao_origem'] ?? 'Não se aplica', ENT_QUOTES, 'UTF-8'); ?></td>
-                                            <td><?= htmlspecialchars($movimentacao['localizacao_destino'] ?? 'Não informada', ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td>
+                                                <?= htmlspecialchars(
+                                                    $tipos_movimentacao[$movimentacao['tipo_movimentacao']] ?? $movimentacao['tipo_movimentacao'],
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+                                                <?php if (!empty($movimentacao['observacao'])): ?>
+                                                    <small class="text-secondary d-block">
+                                                        <?= htmlspecialchars($movimentacao['observacao'], ENT_QUOTES, 'UTF-8'); ?>
+                                                    </small>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?= htmlspecialchars(
+                                                    !empty($movimentacao['localizacao_origem'])
+                                                        ? $movimentacao['localizacao_origem_classificacao'] . ' - ' . $movimentacao['localizacao_origem']
+                                                        : 'Não se aplica',
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+                                            </td>
+                                            <td>
+                                                <?= htmlspecialchars(
+                                                    !empty($movimentacao['localizacao_destino'])
+                                                        ? $movimentacao['localizacao_destino_classificacao'] . ' - ' . $movimentacao['localizacao_destino']
+                                                        : 'Sob responsabilidade',
+                                                    ENT_QUOTES,
+                                                    'UTF-8'
+                                                ); ?>
+                                            </td>
+                                            <td>
+                                                <?= htmlspecialchars($movimentacao['responsavel_nome'] ?? 'Não se aplica', ENT_QUOTES, 'UTF-8'); ?>
+                                                <?php if (!empty($movimentacao['responsavel_contato'])): ?>
+                                                    <small class="text-secondary d-block">
+                                                        <?= htmlspecialchars($movimentacao['responsavel_contato'], ENT_QUOTES, 'UTF-8'); ?>
+                                                    </small>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($retirada_atrasada): ?>
+                                                    <span class="badge text-bg-danger">Em atraso</span>
+                                                <?php elseif ($retirada_aberta): ?>
+                                                    <span class="badge text-bg-warning">Em aberto</span>
+                                                <?php else: ?>
+                                                    <span class="badge text-bg-success">Concluída</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="pe-3">
+                                                <?= htmlspecialchars($movimentacao['usuario_nome'] ?? 'Sistema', ENT_QUOTES, 'UTF-8'); ?>
+                                            </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -249,8 +360,175 @@
                     <?php endif; ?>
                 </section>
             </div>
+            <?php endif; ?>
         </div>
     </main>
+
+    <?php if ($this->controle_acesso->tem_permissao('movimentacoes.gerenciar') && $documento['ativo']): ?>
+        <?php if (!$movimentacao_aberta): ?>
+            <div class="modal fade" id="modal-transferencia" tabindex="-1"
+                aria-labelledby="titulo-modal-transferencia" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <form action="<?= base_url('movimentacao/transferir/' . $documento['codigo']); ?>"
+                            class="formulario-movimentacao" id="formulario-transferencia" method="post">
+                            <div class="modal-header">
+                                <div>
+                                    <h2 class="modal-title fs-5" id="titulo-modal-transferencia">
+                                        Transferir documento
+                                    </h2>
+                                    <p class="small text-secondary mb-0">Altere a localização física com rastreabilidade.</p>
+                                </div>
+                                <button class="btn-close" data-bs-dismiss="modal" type="button"
+                                    aria-label="Fechar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-danger d-none alerta-movimentacao"
+                                    id="alerta-transferencia" role="alert"></div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="transferencia-destino">Localização de destino</label>
+                                    <select class="form-select" id="transferencia-destino"
+                                        name="localizacao_destino_codigo" required>
+                                        <option value="">Selecione</option>
+                                        <?php foreach ($localizacoes_movimentacao as $localizacao): ?>
+                                            <?php if (
+                                                (int) ($localizacao['tipo_documento_codigo'] ?? 0) ===
+                                                (int) $documento['tipo_documento_codigo'] &&
+                                                (int) $localizacao['codigo'] !== (int) $documento['localizacao_codigo']
+                                            ): ?>
+                                                <option value="<?= $localizacao['codigo']; ?>">
+                                                    <?= htmlspecialchars(
+                                                        $localizacao['classificacao'] . ' - ' . $localizacao['nome'],
+                                                        ENT_QUOTES,
+                                                        'UTF-8'
+                                                    ); ?>
+                                                </option>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label" for="transferencia-observacao">Observação</label>
+                                    <textarea class="form-control" id="transferencia-observacao"
+                                        maxlength="2000" name="observacao" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-light border" data-bs-dismiss="modal" type="button">Cancelar</button>
+                                <button class="btn btn-primary salvar-movimentacao" type="submit">Transferir</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="modal-retirada" tabindex="-1"
+                aria-labelledby="titulo-modal-retirada" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <form action="<?= base_url('movimentacao/retirar/' . $documento['codigo']); ?>"
+                            class="formulario-movimentacao" id="formulario-retirada" method="post">
+                            <div class="modal-header">
+                                <div>
+                                    <h2 class="modal-title fs-5" id="titulo-modal-retirada">Registrar retirada</h2>
+                                    <p class="small text-secondary mb-0">Identifique quem ficará responsável pelo documento.</p>
+                                </div>
+                                <button class="btn-close" data-bs-dismiss="modal" type="button"
+                                    aria-label="Fechar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-danger d-none alerta-movimentacao"
+                                    id="alerta-retirada" role="alert"></div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="responsavel_nome">Responsável</label>
+                                    <input class="form-control" id="responsavel_nome" maxlength="255"
+                                        name="responsavel_nome" required type="text">
+                                </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label" for="responsavel_contato">Contato</label>
+                                        <input class="form-control" id="responsavel_contato" maxlength="255"
+                                            name="responsavel_contato" type="text">
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label" for="data_prevista_devolucao">Previsão de devolução</label>
+                                        <input class="form-control" id="data_prevista_devolucao"
+                                            min="<?= date('Y-m-d'); ?>" name="data_prevista_devolucao" type="date">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="form-label" for="retirada-observacao">Observação</label>
+                                    <textarea class="form-control" id="retirada-observacao"
+                                        maxlength="2000" name="observacao" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-light border" data-bs-dismiss="modal" type="button">Cancelar</button>
+                                <button class="btn btn-primary salvar-movimentacao" type="submit">Registrar retirada</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="modal fade" id="modal-devolucao" tabindex="-1"
+                aria-labelledby="titulo-modal-devolucao" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <form action="<?= base_url('movimentacao/devolver/' . $documento['codigo']); ?>"
+                            class="formulario-movimentacao" id="formulario-devolucao" method="post">
+                            <div class="modal-header">
+                                <div>
+                                    <h2 class="modal-title fs-5" id="titulo-modal-devolucao">Registrar devolução</h2>
+                                    <p class="small text-secondary mb-0">
+                                        Responsável:
+                                        <?= htmlspecialchars($movimentacao_aberta['responsavel_nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </p>
+                                </div>
+                                <button class="btn-close" data-bs-dismiss="modal" type="button"
+                                    aria-label="Fechar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-danger d-none alerta-movimentacao"
+                                    id="alerta-devolucao" role="alert"></div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="devolucao-destino">Localização de devolução</label>
+                                    <select class="form-select" id="devolucao-destino"
+                                        name="localizacao_destino_codigo" required>
+                                        <option value="">Selecione</option>
+                                        <?php foreach ($localizacoes_movimentacao as $localizacao): ?>
+                                            <?php if (
+                                                (int) ($localizacao['tipo_documento_codigo'] ?? 0) ===
+                                                (int) $documento['tipo_documento_codigo']
+                                            ): ?>
+                                                <option value="<?= $localizacao['codigo']; ?>"
+                                                    <?= (int) $localizacao['codigo'] === (int) $documento['localizacao_codigo'] ? 'selected' : ''; ?>>
+                                                    <?= htmlspecialchars(
+                                                        $localizacao['classificacao'] . ' - ' . $localizacao['nome'],
+                                                        ENT_QUOTES,
+                                                        'UTF-8'
+                                                    ); ?>
+                                                </option>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label" for="devolucao-observacao">Observação</label>
+                                    <textarea class="form-control" id="devolucao-observacao"
+                                        maxlength="2000" name="observacao" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-light border" data-bs-dismiss="modal" type="button">Cancelar</button>
+                                <button class="btn btn-primary salvar-movimentacao" type="submit">Confirmar devolução</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
 
     <?php if ($this->controle_acesso->tem_permissao('arquivos.gerenciar')): ?>
         <div class="modal fade" id="modal-nova-versao" tabindex="-1"
@@ -348,6 +626,42 @@
                 sessionStorage.removeItem('feedback');
                 mostrar_feedback(feedback, 'success');
             }
+
+            $('.formulario-movimentacao').on('submit', function (e) {
+                e.preventDefault();
+
+                const formulario = $(this);
+                const botao = formulario.find('.salvar-movimentacao');
+                const texto_botao = botao.html();
+                const alerta = formulario.find('.alerta-movimentacao');
+
+                botao
+                    .prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>');
+                alerta.empty().addClass('d-none');
+
+                $.ajax({
+                    url: formulario.attr('action'),
+                    method: 'POST',
+                    data: formulario.serialize(),
+                    dataType: 'json'
+                }).done(function (response) {
+                    if (!response.sucesso) {
+                        mostrar_erros(
+                            response.dados?.erros || response.mensagem?.conteudo,
+                            alerta.attr('id')
+                        );
+                        return;
+                    }
+
+                    sessionStorage.setItem('feedback', response.mensagem?.conteudo);
+                    window.location.reload();
+                }).fail(function (xhr) {
+                    mostrar_erro_ajax(xhr, alerta.attr('id'));
+                }).always(function () {
+                    botao.prop('disabled', false).html(texto_botao);
+                });
+            });
 
             $('#formulario-arquivo').on('submit', function (e) {
                 e.preventDefault();

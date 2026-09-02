@@ -110,6 +110,7 @@
                                 <th class="px-3 py-3">Documento</th>
                                 <th>Tipo</th>
                                 <th>Localização</th>
+                                <th>Custódia</th>
                                 <th class="text-center">Status</th>
                                 <th class="px-3 text-end">Ações</th>
                             </tr>
@@ -131,6 +132,22 @@
                                     </td>
                                     <td><?= htmlspecialchars($documento['tipo_documento'], ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td><?= htmlspecialchars($documento['localizacao'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td>
+                                        <?php if (!empty($documento['movimentacao_aberta_codigo'])): ?>
+                                            <span class="badge text-bg-warning d-inline-block mb-1">Retirado</span>
+                                            <small class="d-block fw-semibold">
+                                                <?= htmlspecialchars($documento['custodia_responsavel'], ENT_QUOTES, 'UTF-8'); ?>
+                                            </small>
+                                            <?php if (!empty($documento['custodia_previsao_devolucao'])): ?>
+                                                <small class="text-secondary d-block">
+                                                    Previsão:
+                                                    <?= date('d/m/Y', strtotime($documento['custodia_previsao_devolucao'])); ?>
+                                                </small>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <span class="badge text-bg-success">No acervo</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="text-center">
                                         <span
                                             class="badge <?= $documento['ativo'] ? 'text-bg-success' : 'text-bg-secondary'; ?>">

@@ -25,6 +25,16 @@
             </li>
           <?php endif; ?>
 
+          <?php if ($this->controle_acesso->tem_permissao('movimentacoes.visualizar')): ?>
+            <li class="nav-item">
+              <a class="nav-link <?= $modulo_atual == 'movimentacao' ? 'active fw-semibold' : ''; ?>"
+                <?= $modulo_atual == 'movimentacao' ? 'aria-current="page"' : ''; ?>
+                href="<?= base_url('movimentacao'); ?>">
+                Movimentações
+              </a>
+            </li>
+          <?php endif; ?>
+
           <?php if ($this->controle_acesso->tem_permissao('pesquisa.acessar')): ?>
             <li class="nav-item">
               <a class="nav-link <?= $modulo_atual == 'pesquisa' ? 'active fw-semibold' : ''; ?>"

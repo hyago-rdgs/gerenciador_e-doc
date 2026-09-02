@@ -244,27 +244,46 @@ CREATE TABLE `documento_metadados` (
 
 CREATE TABLE `documento_movimentacoes` (
     `codigo` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `protocolo` varchar(40) DEFAULT NULL,
     `documento_codigo` bigint(20) UNSIGNED NOT NULL,
+    `movimentacao_origem_codigo` bigint(20) UNSIGNED DEFAULT NULL,
+    `usuario_codigo` bigint(20) UNSIGNED DEFAULT NULL,
     `localizacao_origem_codigo` bigint(20) UNSIGNED DEFAULT NULL,
     `localizacao_destino_codigo` bigint(20) UNSIGNED DEFAULT NULL,
     `tipo_movimentacao` varchar(30) NOT NULL,
+    `responsavel_nome` varchar(255) DEFAULT NULL,
+    `responsavel_contato` varchar(255) DEFAULT NULL,
     `observacao` text DEFAULT NULL,
     `data_movimentacao` datetime NOT NULL DEFAULT current_timestamp(),
+    `data_prevista_devolucao` date DEFAULT NULL,
     `data_devolucao` datetime DEFAULT NULL,
     PRIMARY KEY (`codigo`),
+    UNIQUE KEY `uk_documento_movimentacoes_protocolo` (`protocolo`),
     KEY `idx_documento_movimentacoes_documento` (`documento_codigo`),
+    KEY `idx_documento_movimentacoes_origem_movimentacao` (`movimentacao_origem_codigo`),
+    KEY `idx_documento_movimentacoes_usuario` (`usuario_codigo`),
     KEY `idx_documento_movimentacoes_origem` (`localizacao_origem_codigo`),
     KEY `idx_documento_movimentacoes_destino` (`localizacao_destino_codigo`),
     KEY `idx_documento_movimentacoes_data` (`data_movimentacao`),
+    KEY `idx_documento_movimentacoes_aberta`
+        (`documento_codigo`, `tipo_movimentacao`, `data_devolucao`, `codigo`),
+    KEY `idx_documento_movimentacoes_situacao`
+        (`tipo_movimentacao`, `data_devolucao`, `data_prevista_devolucao`),
     CONSTRAINT `fk_documento_movimentacoes_destino`
         FOREIGN KEY (`localizacao_destino_codigo`)
         REFERENCES `localizacoes` (`codigo`) ON UPDATE CASCADE,
     CONSTRAINT `fk_documento_movimentacoes_documento`
         FOREIGN KEY (`documento_codigo`)
         REFERENCES `documentos` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `fk_documento_movimentacoes_movimentacao_origem`
+        FOREIGN KEY (`movimentacao_origem_codigo`)
+        REFERENCES `documento_movimentacoes` (`codigo`) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT `fk_documento_movimentacoes_origem`
         FOREIGN KEY (`localizacao_origem_codigo`)
-        REFERENCES `localizacoes` (`codigo`) ON UPDATE CASCADE
+        REFERENCES `localizacoes` (`codigo`) ON UPDATE CASCADE,
+    CONSTRAINT `fk_documento_movimentacoes_usuario`
+        FOREIGN KEY (`usuario_codigo`)
+        REFERENCES `usuarios` (`codigo`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `localizacao_tipo_documentos` (
