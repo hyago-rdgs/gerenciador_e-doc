@@ -357,7 +357,7 @@
         </div>
     </main>
 
-    <?php if ($this->controle_acesso->tem_permissao('movimentacoes.gerenciar') && $documento['ativo']): ?>
+    <?php if ($this->controle_acesso->tem_permissao('movimentacoes.gerenciar')): ?>
         <?php if (!$movimentacao_aberta): ?>
             <div class="modal fade" id="modal-transferencia" tabindex="-1"
                 aria-labelledby="titulo-modal-transferencia" aria-hidden="true">

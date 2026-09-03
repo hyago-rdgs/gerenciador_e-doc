@@ -476,7 +476,6 @@
                             <tr class="small text-secondary">
                                 <th class="px-3 py-3" scope="col">Documento</th>
                                 <th class="py-3" scope="col">Tipo</th>
-                                <th class="py-3 text-center" scope="col">Status</th>
                                 <th class="px-3 py-3 text-end" scope="col">Ações</th>
                             </tr>
                         </thead>
@@ -504,13 +503,6 @@
                                         <?php endif; ?>
                                     </td>
                                     <td><?= htmlspecialchars($documento['tipo_documento'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                    <td class="text-center">
-                                        <?php if ($documento['ativo'] == 1): ?>
-                                            <span class="badge text-bg-success">Ativo</span>
-                                        <?php else: ?>
-                                            <span class="badge text-bg-secondary">Inativo</span>
-                                        <?php endif; ?>
-                                    </td>
                                     <td class="text-end pe-3 pe-lg-4">
                                         <?php if ($this->controle_acesso->tem_permissao('documentos.visualizar')): ?>
                                             <a class="btn btn-sm btn-primary"
