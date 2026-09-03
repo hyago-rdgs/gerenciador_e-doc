@@ -180,8 +180,8 @@ Mais detalhes estão disponíveis em [`DASHBOARD.md`](DASHBOARD.md).
 ### Relatórios
 
 O módulo de relatórios oferece consultas detalhadas e exportações em PDF e
-Excel. Atualmente contempla o acervo documental e o histórico de
-movimentações, com filtros, indicadores e paginação.
+Excel. Contempla acervo documental, histórico de movimentações, custódia e
+digitalização, com filtros, indicadores e paginação.
 
 Mais detalhes estão disponíveis em [`RELATORIOS.md`](RELATORIOS.md).
 
@@ -417,12 +417,11 @@ style: ajusta formatação ou interface
 - [x] Navegação de documentos por localização
 - [x] Movimentação e rastreabilidade de documentos
 - [x] Dashboard e indicadores gerenciais
-- [x] Relatórios de acervo e movimentações
+- [x] Relatórios de acervo, movimentações, custódia e digitalização
 
 ### Próximas etapas
 
 - [ ] Auditoria das operações dos usuários
-- [ ] Relatórios de custódia e digitalização
 - [ ] Melhorias na pesquisa global
 - [ ] Recursos adicionais de gestão documental
 

@@ -61,6 +61,61 @@ A rastreabilidade é preservada mesmo quando o documento foi excluído
 logicamente. Nessa situação, o relatório mantém os dados históricos, mas não
 oferece acesso à tela do documento.
 
+## Bloco 3 — Custódia e retiradas
+
+O relatório de custódia apresenta exclusivamente movimentações do tipo
+`RETIRADA` e permite filtrar por:
+
+- protocolo da retirada, documento, responsável ou contato;
+- situação da custódia;
+- tipo documental;
+- localização de origem;
+- usuário responsável pelo registro;
+- período da retirada.
+
+Por padrão, são exibidas as retiradas em aberto, sem limitar o período. O
+usuário pode consultar também itens atrasados, com vencimento no dia, sem
+previsão ou já devolvidos.
+
+Os indicadores apresentam:
+
+- retiradas em aberto;
+- retiradas atrasadas;
+- retiradas que vencem no dia;
+- retiradas sem previsão de devolução.
+
+O relatório calcula os dias em custódia e, quando aplicável, os dias de atraso.
+O histórico permanece disponível após a exclusão lógica do documento, sem
+oferecer acesso ao cadastro excluído.
+
+## Bloco 4 — Digitalização
+
+O relatório de digitalização permite filtrar documentos por:
+
+- termo;
+- situação digital;
+- tipo documental;
+- localização;
+- período de cadastro.
+
+Por padrão, todo o acervo ativo é considerado, sem limitar o período. As
+situações disponíveis são documentos com arquivo, sem arquivo e com múltiplas
+versões.
+
+Os indicadores apresentam:
+
+- total de documentos;
+- documentos com e sem arquivo;
+- percentual de cobertura digital;
+- total de arquivos atuais;
+- total de versões armazenadas;
+- documentos com múltiplas versões;
+- espaço total ocupado.
+
+Uma linhagem de arquivo conta como um arquivo atual. Todas as versões físicas
+ativas dessa linhagem contam no total de versões e no espaço armazenado.
+Documentos e arquivos excluídos logicamente não entram nos cálculos.
+
 ## Exportações
 
 ### PDF
@@ -90,7 +145,7 @@ interpretação indevida como fórmulas.
 
 A exportação Excel permanece limitada a 20.000 registros.
 
-Os mesmos limites são aplicados aos relatórios de acervo e movimentações.
+Os mesmos limites são aplicados aos quatro relatórios.
 
 ## Dependências
 

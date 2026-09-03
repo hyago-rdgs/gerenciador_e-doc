@@ -590,6 +590,410 @@ class Relatorio extends CI_Controller
         exit;
     }
 
+    public function custodia()
+    {
+        $filtros = $this->obter_filtros_custodias();
+        $pagina_atual = max(
+            1,
+            (int) $this->input->get('pagina', TRUE)
+        );
+        $limite = 20;
+        $offset = ($pagina_atual - 1) * $limite;
+        $total_custodias =
+            $this->relatorio_model->contar_custodias($filtros);
+        $dados = $this->preparar_dados_custodias(
+            $filtros,
+            $limite,
+            $offset
+        );
+
+        $dados['total_custodias'] = $total_custodias;
+        $dados['limite'] = $limite;
+        $dados['offset'] = $offset + 1;
+        $dados['pagina_atual'] = $pagina_atual;
+        $dados['total_paginas'] = (int) ceil(
+            $total_custodias / $limite
+        );
+        $dados['pode_exportar'] =
+            $this->controle_acesso->tem_permissao(
+                'relatorios.exportar'
+            );
+
+        $this->load->view(
+            'relatorio/relatorio_custodia',
+            $dados
+        );
+    }
+
+    public function custodia_pdf()
+    {
+        $this->controle_acesso->valida_permissao(
+            'relatorios.exportar'
+        );
+
+        $filtros = $this->obter_filtros_custodias();
+        $total_custodias =
+            $this->relatorio_model->contar_custodias($filtros);
+
+        if ($total_custodias > 2000) {
+            show_error(
+                'O PDF suporta até 2.000 registros. Aplique filtros para reduzir o resultado.',
+                422,
+                'Relatório muito grande'
+            );
+        }
+
+        $dados = $this->preparar_dados_custodias($filtros);
+        $dados['total_custodias'] = $total_custodias;
+        $dados['emitido_em'] = date('d/m/Y H:i:s');
+
+        $this->carregar_dependencias_relatorios();
+        $mpdf = $this->criar_pdf(
+            'Relatório de Custódia e Retiradas | e-Doc'
+        );
+        $mpdf->WriteHTML(
+            $this->load->view(
+                'relatorio/pdf/relatorio_custodia',
+                $dados,
+                TRUE
+            )
+        );
+
+        foreach (
+            array_chunk($dados['custodias'], 50)
+            as $custodias
+        ) {
+            $mpdf->WriteHTML(
+                $this->load->view(
+                    'relatorio/pdf/relatorio_custodia_tabela',
+                    ['custodias' => $custodias],
+                    TRUE
+                )
+            );
+        }
+
+        $this->limpar_buffer_saida();
+        $mpdf->Output(
+            'relatorio-custodia-'
+                . date('Ymd-His')
+                . '.pdf',
+            \Mpdf\Output\Destination::INLINE
+        );
+        exit;
+    }
+
+    public function digitalizacao()
+    {
+        $filtros = $this->obter_filtros_digitalizacao();
+        $pagina_atual = max(
+            1,
+            (int) $this->input->get('pagina', TRUE)
+        );
+        $limite = 20;
+        $offset = ($pagina_atual - 1) * $limite;
+        $total_documentos =
+            $this->relatorio_model->contar_digitalizacao(
+                $filtros
+            );
+        $dados = $this->preparar_dados_digitalizacao(
+            $filtros,
+            $limite,
+            $offset
+        );
+
+        $dados['total_documentos'] = $total_documentos;
+        $dados['limite'] = $limite;
+        $dados['offset'] = $offset + 1;
+        $dados['pagina_atual'] = $pagina_atual;
+        $dados['total_paginas'] = (int) ceil(
+            $total_documentos / $limite
+        );
+        $dados['pode_exportar'] =
+            $this->controle_acesso->tem_permissao(
+                'relatorios.exportar'
+            );
+
+        $this->load->view(
+            'relatorio/relatorio_digitalizacao',
+            $dados
+        );
+    }
+
+    public function digitalizacao_pdf()
+    {
+        $this->controle_acesso->valida_permissao(
+            'relatorios.exportar'
+        );
+
+        $filtros = $this->obter_filtros_digitalizacao();
+        $total_documentos =
+            $this->relatorio_model->contar_digitalizacao(
+                $filtros
+            );
+
+        if ($total_documentos > 2000) {
+            show_error(
+                'O PDF suporta até 2.000 registros. Aplique filtros para reduzir o resultado.',
+                422,
+                'Relatório muito grande'
+            );
+        }
+
+        $dados = $this->preparar_dados_digitalizacao(
+            $filtros
+        );
+        $dados['total_documentos'] = $total_documentos;
+        $dados['emitido_em'] = date('d/m/Y H:i:s');
+
+        $this->carregar_dependencias_relatorios();
+        $mpdf = $this->criar_pdf(
+            'Relatório de Digitalização | e-Doc'
+        );
+        $mpdf->WriteHTML(
+            $this->load->view(
+                'relatorio/pdf/relatorio_digitalizacao',
+                $dados,
+                TRUE
+            )
+        );
+
+        foreach (
+            array_chunk($dados['documentos'], 50)
+            as $documentos
+        ) {
+            $mpdf->WriteHTML(
+                $this->load->view(
+                    'relatorio/pdf/relatorio_digitalizacao_tabela',
+                    ['documentos' => $documentos],
+                    TRUE
+                )
+            );
+        }
+
+        $this->limpar_buffer_saida();
+        $mpdf->Output(
+            'relatorio-digitalizacao-'
+                . date('Ymd-His')
+                . '.pdf',
+            \Mpdf\Output\Destination::INLINE
+        );
+        exit;
+    }
+
+    public function custodia_excel()
+    {
+        $this->controle_acesso->valida_permissao(
+            'relatorios.exportar'
+        );
+
+        $filtros = $this->obter_filtros_custodias();
+        $total_custodias =
+            $this->relatorio_model->contar_custodias($filtros);
+
+        if ($total_custodias > 20000) {
+            show_error(
+                'A exportação Excel suporta até 20.000 registros. Aplique filtros para reduzir o resultado.',
+                422,
+                'Relatório muito grande'
+            );
+        }
+
+        $dados = $this->preparar_dados_custodias($filtros);
+        $this->carregar_dependencias_relatorios();
+
+        $planilha = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $aba = $planilha->getActiveSheet();
+        $aba->setTitle('Custódia');
+        $aba->mergeCells('A1:M1');
+        $aba->setCellValue(
+            'A1',
+            'Relatório de Custódia e Retiradas — e-Doc'
+        );
+        $aba->getStyle('A1')->getFont()
+            ->setBold(TRUE)
+            ->setSize(14);
+        $aba->setCellValue('A2', 'Emitido em');
+        $aba->setCellValue('B2', date('d/m/Y H:i:s'));
+        $aba->setCellValue('A3', 'Filtros');
+        $aba->setCellValue(
+            'B3',
+            implode(' | ', $dados['filtros_descricao'])
+        );
+
+        $cabecalhos = [
+            'Retirada',
+            'Documento',
+            'Título',
+            'Tipo documental',
+            'Localização de origem',
+            'Responsável',
+            'Contato',
+            'Data da retirada',
+            'Previsão',
+            'Devolução',
+            'Dias em custódia',
+            'Dias em atraso',
+            'Registrado por'
+        ];
+        $this->preparar_cabecalho_planilha(
+            $aba,
+            $cabecalhos,
+            'M'
+        );
+
+        $linha = 6;
+
+        foreach ($dados['custodias'] as $custodia) {
+            $valores = [
+                $custodia['protocolo'] ?? '',
+                $custodia['documento_protocolo'],
+                $custodia['documento_titulo'],
+                $custodia['tipo_documento'],
+                $custodia['origem_label'],
+                $custodia['responsavel_nome'] ?? '',
+                $custodia['responsavel_contato'] ?? '',
+                date(
+                    'd/m/Y H:i',
+                    strtotime($custodia['data_movimentacao'])
+                ),
+                !empty($custodia['data_prevista_devolucao'])
+                    ? date(
+                        'd/m/Y',
+                        strtotime(
+                            $custodia['data_prevista_devolucao']
+                        )
+                    )
+                    : '',
+                !empty($custodia['data_devolucao'])
+                    ? date(
+                        'd/m/Y H:i',
+                        strtotime($custodia['data_devolucao'])
+                    )
+                    : '',
+                (int) $custodia['dias_custodia'],
+                (int) $custodia['dias_atraso'],
+                $custodia['usuario_nome']
+            ];
+
+            $this->escrever_linha_planilha(
+                $aba,
+                $linha,
+                $valores,
+                [10, 11]
+            );
+            $linha++;
+        }
+
+        $this->enviar_planilha(
+            $planilha,
+            'relatorio-custodia-'
+                . date('Ymd-His')
+                . '.xlsx',
+            'M'
+        );
+    }
+
+    public function digitalizacao_excel()
+    {
+        $this->controle_acesso->valida_permissao(
+            'relatorios.exportar'
+        );
+
+        $filtros = $this->obter_filtros_digitalizacao();
+        $total_documentos =
+            $this->relatorio_model->contar_digitalizacao(
+                $filtros
+            );
+
+        if ($total_documentos > 20000) {
+            show_error(
+                'A exportação Excel suporta até 20.000 registros. Aplique filtros para reduzir o resultado.',
+                422,
+                'Relatório muito grande'
+            );
+        }
+
+        $dados = $this->preparar_dados_digitalizacao(
+            $filtros
+        );
+        $this->carregar_dependencias_relatorios();
+
+        $planilha = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $aba = $planilha->getActiveSheet();
+        $aba->setTitle('Digitalização');
+        $aba->mergeCells('A1:J1');
+        $aba->setCellValue(
+            'A1',
+            'Relatório de Digitalização — e-Doc'
+        );
+        $aba->getStyle('A1')->getFont()
+            ->setBold(TRUE)
+            ->setSize(14);
+        $aba->setCellValue('A2', 'Emitido em');
+        $aba->setCellValue('B2', date('d/m/Y H:i:s'));
+        $aba->setCellValue('A3', 'Filtros');
+        $aba->setCellValue(
+            'B3',
+            implode(' | ', $dados['filtros_descricao'])
+        );
+
+        $cabecalhos = [
+            'Documento',
+            'Título',
+            'Nº identificação',
+            'Tipo',
+            'Localização',
+            'Situação digital',
+            'Arquivos',
+            'Versões armazenadas',
+            'Armazenamento',
+            'Último arquivo'
+        ];
+        $this->preparar_cabecalho_planilha(
+            $aba,
+            $cabecalhos,
+            'J'
+        );
+
+        $linha = 6;
+
+        foreach ($dados['documentos'] as $documento) {
+            $valores = [
+                $documento['protocolo'],
+                $documento['titulo'],
+                $documento['numero_identificacao'] ?? '',
+                $documento['tipo_documento'],
+                $documento['localizacao_label'],
+                $documento['situacao_digital'],
+                (int) $documento['total_arquivos'],
+                (int) $documento['total_versoes'],
+                $documento['tamanho_label'],
+                !empty($documento['ultimo_arquivo_em'])
+                    ? date(
+                        'd/m/Y H:i',
+                        strtotime($documento['ultimo_arquivo_em'])
+                    )
+                    : ''
+            ];
+
+            $this->escrever_linha_planilha(
+                $aba,
+                $linha,
+                $valores,
+                [6, 7]
+            );
+            $linha++;
+        }
+
+        $this->enviar_planilha(
+            $planilha,
+            'relatorio-digitalizacao-'
+                . date('Ymd-His')
+                . '.xlsx',
+            'J'
+        );
+    }
+
     private function preparar_dados_acervo(
         $filtros,
         $limite = NULL,
@@ -681,6 +1085,351 @@ class Relatorio extends CI_Controller
                     ->obter_resumo_movimentacoes($filtros),
             'movimentacoes' => $movimentacoes
         ];
+    }
+
+    private function preparar_dados_custodias(
+        $filtros,
+        $limite = NULL,
+        $offset = NULL
+    ) {
+        $tipos_documento =
+            $this->relatorio_model
+                ->listar_tipos_documento_opcoes();
+        $localizacoes =
+            $this->relatorio_model
+                ->listar_localizacoes_opcoes();
+        $usuarios =
+            $this->relatorio_model
+                ->listar_usuarios_opcoes();
+        $custodias = $this->relatorio_model->listar_custodias(
+            $filtros,
+            $limite,
+            $offset
+        );
+
+        foreach ($custodias as &$custodia) {
+            $custodia['situacao_label'] =
+                $this->obter_situacao_movimentacao($custodia);
+            $custodia['origem_label'] =
+                $this->formatar_localizacao_movimentacao(
+                    $custodia,
+                    'origem'
+                );
+        }
+        unset($custodia);
+
+        return [
+            'filtros' => $filtros,
+            'tipos_documento' => $tipos_documento,
+            'localizacoes' => $localizacoes,
+            'usuarios' => $usuarios,
+            'filtros_descricao' =>
+                $this->descrever_filtros_custodias(
+                    $filtros,
+                    $tipos_documento,
+                    $localizacoes,
+                    $usuarios
+                ),
+            'resumo' =>
+                $this->relatorio_model
+                    ->obter_resumo_custodias($filtros),
+            'custodias' => $custodias
+        ];
+    }
+
+    private function preparar_dados_digitalizacao(
+        $filtros,
+        $limite = NULL,
+        $offset = NULL
+    ) {
+        $tipos_documento =
+            $this->relatorio_model
+                ->listar_tipos_documento_opcoes();
+        $localizacoes =
+            $this->relatorio_model
+                ->listar_localizacoes_opcoes();
+        $documentos =
+            $this->relatorio_model->listar_digitalizacao(
+                $filtros,
+                $limite,
+                $offset
+            );
+
+        foreach ($documentos as &$documento) {
+            $documento['localizacao_label'] =
+                $documento['localizacao_classificacao'] === '-'
+                    ? $documento['localizacao']
+                    : $documento['localizacao_classificacao']
+                        . ' — '
+                        . $documento['localizacao'];
+            $documento['situacao_digital'] =
+                (int) $documento['total_arquivos'] > 0
+                    ? 'Com arquivo'
+                    : 'Sem arquivo';
+            $documento['tamanho_label'] =
+                $this->formatar_tamanho_arquivo(
+                    (int) $documento['tamanho_total']
+                );
+        }
+        unset($documento);
+
+        $resumo = $this->relatorio_model
+            ->obter_resumo_digitalizacao($filtros);
+        $resumo['tamanho_label'] =
+            $this->formatar_tamanho_arquivo(
+                $resumo['tamanho_total']
+            );
+
+        return [
+            'filtros' => $filtros,
+            'tipos_documento' => $tipos_documento,
+            'localizacoes' => $localizacoes,
+            'filtros_descricao' =>
+                $this->descrever_filtros_digitalizacao(
+                    $filtros,
+                    $tipos_documento,
+                    $localizacoes
+                ),
+            'resumo' => $resumo,
+            'documentos' => $documentos
+        ];
+    }
+
+    private function obter_filtros_custodias()
+    {
+        $situacao_recebida = $this->input->get(
+            'situacao',
+            TRUE
+        );
+
+        $filtros = [
+            'termo' => trim(
+                (string) (
+                    $this->input->get('termo', TRUE) ?? ''
+                )
+            ),
+            'situacao' => $situacao_recebida === NULL
+                ? 'aberta'
+                : trim((string) $situacao_recebida),
+            'tipo_documento_codigo' => trim(
+                (string) (
+                    $this->input->get(
+                        'tipo_documento_codigo',
+                        TRUE
+                    ) ?? ''
+                )
+            ),
+            'localizacao_codigo' => trim(
+                (string) (
+                    $this->input->get(
+                        'localizacao_codigo',
+                        TRUE
+                    ) ?? ''
+                )
+            ),
+            'usuario_codigo' => trim(
+                (string) (
+                    $this->input->get(
+                        'usuario_codigo',
+                        TRUE
+                    ) ?? ''
+                )
+            ),
+            'data_inicio' => $this->validar_data(
+                $this->input->get('data_inicio', TRUE)
+            ),
+            'data_fim' => $this->validar_data(
+                $this->input->get('data_fim', TRUE)
+            )
+        ];
+
+        if (
+            !in_array(
+                $filtros['situacao'],
+                [
+                    '',
+                    'aberta',
+                    'atrasada',
+                    'vence_hoje',
+                    'sem_previsao',
+                    'devolvida'
+                ],
+                TRUE
+            )
+        ) {
+            $filtros['situacao'] = 'aberta';
+        }
+
+        $this->validar_codigos_filtros(
+            $filtros,
+            [
+                'tipo_documento_codigo',
+                'localizacao_codigo',
+                'usuario_codigo'
+            ]
+        );
+
+        return $filtros;
+    }
+
+    private function obter_filtros_digitalizacao()
+    {
+        $filtros = [
+            'termo' => trim(
+                (string) (
+                    $this->input->get('termo', TRUE) ?? ''
+                )
+            ),
+            'situacao' => trim(
+                (string) (
+                    $this->input->get('situacao', TRUE) ?? ''
+                )
+            ),
+            'tipo_documento_codigo' => trim(
+                (string) (
+                    $this->input->get(
+                        'tipo_documento_codigo',
+                        TRUE
+                    ) ?? ''
+                )
+            ),
+            'localizacao_codigo' => trim(
+                (string) (
+                    $this->input->get(
+                        'localizacao_codigo',
+                        TRUE
+                    ) ?? ''
+                )
+            ),
+            'data_inicio' => $this->validar_data(
+                $this->input->get('data_inicio', TRUE)
+            ),
+            'data_fim' => $this->validar_data(
+                $this->input->get('data_fim', TRUE)
+            )
+        ];
+
+        if (
+            !in_array(
+                $filtros['situacao'],
+                [
+                    '',
+                    'com_arquivo',
+                    'sem_arquivo',
+                    'multiplas_versoes'
+                ],
+                TRUE
+            )
+        ) {
+            $filtros['situacao'] = '';
+        }
+
+        $this->validar_codigos_filtros(
+            $filtros,
+            ['tipo_documento_codigo', 'localizacao_codigo']
+        );
+
+        return $filtros;
+    }
+
+    private function descrever_filtros_custodias(
+        $filtros,
+        $tipos_documento,
+        $localizacoes,
+        $usuarios
+    ) {
+        $descricao = [];
+
+        if ($filtros['termo'] !== '') {
+            $descricao[] = 'Busca: ' . $filtros['termo'];
+        }
+
+        $situacoes = [
+            'aberta' => 'Em aberto',
+            'atrasada' => 'Em atraso',
+            'vence_hoje' => 'Vence hoje',
+            'sem_previsao' => 'Sem previsão',
+            'devolvida' => 'Devolvida'
+        ];
+
+        if ($filtros['situacao'] !== '') {
+            $descricao[] = 'Situação: '
+                . $situacoes[$filtros['situacao']];
+        }
+
+        $this->descrever_opcao_filtro(
+            $descricao,
+            'Tipo',
+            $tipos_documento,
+            $filtros['tipo_documento_codigo'],
+            FALSE
+        );
+        $this->descrever_opcao_filtro(
+            $descricao,
+            'Origem',
+            $localizacoes,
+            $filtros['localizacao_codigo'],
+            TRUE
+        );
+        $this->descrever_opcao_filtro(
+            $descricao,
+            'Usuário',
+            $usuarios,
+            $filtros['usuario_codigo'],
+            FALSE
+        );
+        $this->descrever_periodo_filtro(
+            $descricao,
+            $filtros,
+            'Retirada'
+        );
+
+        return $descricao ?: ['Nenhum filtro aplicado'];
+    }
+
+    private function descrever_filtros_digitalizacao(
+        $filtros,
+        $tipos_documento,
+        $localizacoes
+    ) {
+        $descricao = [];
+
+        if ($filtros['termo'] !== '') {
+            $descricao[] = 'Busca: ' . $filtros['termo'];
+        }
+
+        $situacoes = [
+            'com_arquivo' => 'Com arquivo',
+            'sem_arquivo' => 'Sem arquivo',
+            'multiplas_versoes' => 'Com múltiplas versões'
+        ];
+
+        if ($filtros['situacao'] !== '') {
+            $descricao[] = 'Situação: '
+                . $situacoes[$filtros['situacao']];
+        }
+
+        $this->descrever_opcao_filtro(
+            $descricao,
+            'Tipo',
+            $tipos_documento,
+            $filtros['tipo_documento_codigo'],
+            FALSE
+        );
+        $this->descrever_opcao_filtro(
+            $descricao,
+            'Localização',
+            $localizacoes,
+            $filtros['localizacao_codigo'],
+            TRUE
+        );
+        $this->descrever_periodo_filtro(
+            $descricao,
+            $filtros,
+            'Cadastro'
+        );
+
+        return $descricao ?: ['Nenhum filtro aplicado'];
     }
 
     private function obter_filtros_movimentacoes()
@@ -1107,6 +1856,209 @@ class Relatorio extends CI_Controller
         )
             ? $data
             : '';
+    }
+
+    private function validar_codigos_filtros(
+        &$filtros,
+        $campos
+    ) {
+        foreach ($campos as $campo) {
+            if (
+                $filtros[$campo] !== '' &&
+                (
+                    !ctype_digit($filtros[$campo]) ||
+                    (int) $filtros[$campo] <= 0
+                )
+            ) {
+                $filtros[$campo] = '';
+            }
+        }
+    }
+
+    private function descrever_opcao_filtro(
+        &$descricao,
+        $rotulo,
+        $opcoes,
+        $codigo,
+        $localizacao
+    ) {
+        if ($codigo === '') {
+            return;
+        }
+
+        $nome = $this->buscar_rotulo_opcao(
+            $opcoes,
+            $codigo,
+            $localizacao
+        );
+        $descricao[] = $rotulo . ': ' . (
+            $nome ?: '#' . $codigo
+        );
+    }
+
+    private function descrever_periodo_filtro(
+        &$descricao,
+        $filtros,
+        $rotulo
+    ) {
+        if ($filtros['data_inicio'] !== '') {
+            $descricao[] = $rotulo . ' a partir de: '
+                . date(
+                    'd/m/Y',
+                    strtotime($filtros['data_inicio'])
+                );
+        }
+
+        if ($filtros['data_fim'] !== '') {
+            $descricao[] = $rotulo . ' até: '
+                . date(
+                    'd/m/Y',
+                    strtotime($filtros['data_fim'])
+                );
+        }
+    }
+
+    private function formatar_tamanho_arquivo($bytes)
+    {
+        $bytes = max(0, (int) $bytes);
+        $unidades = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $indice = 0;
+        $tamanho = (float) $bytes;
+
+        while (
+            $tamanho >= 1024 &&
+            $indice < count($unidades) - 1
+        ) {
+            $tamanho /= 1024;
+            $indice++;
+        }
+
+        $casas = $indice === 0 ? 0 : 2;
+
+        return number_format(
+            $tamanho,
+            $casas,
+            ',',
+            '.'
+        ) . ' ' . $unidades[$indice];
+    }
+
+    private function criar_pdf($titulo)
+    {
+        $temp_dir = sys_get_temp_dir()
+            . DIRECTORY_SEPARATOR
+            . 'edoc-mpdf';
+
+        if (
+            !is_dir($temp_dir) &&
+            !mkdir($temp_dir, 0775, TRUE) &&
+            !is_dir($temp_dir)
+        ) {
+            show_error(
+                'Não foi possível preparar o diretório temporário do relatório.',
+                500
+            );
+        }
+
+        $mpdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4-L',
+            'margin_left' => 10,
+            'margin_right' => 10,
+            'margin_top' => 12,
+            'margin_bottom' => 14,
+            'tempDir' => $temp_dir
+        ]);
+        $mpdf->SetTitle($titulo);
+        $mpdf->SetAuthor('e-Doc');
+        $mpdf->SetHTMLFooter(
+            '<div style="text-align:center;font-size:8pt;color:#666;">'
+                . 'Página {PAGENO} de {nbpg}'
+                . '</div>'
+        );
+
+        return $mpdf;
+    }
+
+    private function preparar_cabecalho_planilha(
+        $aba,
+        $cabecalhos,
+        $ultima_coluna
+    ) {
+        foreach ($cabecalhos as $indice => $cabecalho) {
+            $coluna =
+                \PhpOffice\PhpSpreadsheet\Cell\Coordinate
+                    ::stringFromColumnIndex($indice + 1);
+            $aba->setCellValue($coluna . '5', $cabecalho);
+        }
+
+        $aba->getStyle('A5:' . $ultima_coluna . '5')
+            ->getFont()
+            ->setBold(TRUE);
+        $aba->freezePane('A6');
+        $aba->setAutoFilter(
+            'A5:' . $ultima_coluna . '5'
+        );
+    }
+
+    private function escrever_linha_planilha(
+        $aba,
+        $linha,
+        $valores,
+        $indices_numericos = []
+    ) {
+        foreach ($valores as $indice => $valor) {
+            $coluna =
+                \PhpOffice\PhpSpreadsheet\Cell\Coordinate
+                    ::stringFromColumnIndex($indice + 1);
+
+            if (in_array($indice, $indices_numericos, TRUE)) {
+                $aba->setCellValue(
+                    $coluna . $linha,
+                    (int) $valor
+                );
+                continue;
+            }
+
+            $aba->setCellValueExplicit(
+                $coluna . $linha,
+                (string) $valor,
+                \PhpOffice\PhpSpreadsheet\Cell\DataType
+                    ::TYPE_STRING
+            );
+        }
+    }
+
+    private function enviar_planilha(
+        $planilha,
+        $arquivo,
+        $ultima_coluna
+    ) {
+        $aba = $planilha->getActiveSheet();
+
+        foreach (range('A', $ultima_coluna) as $coluna) {
+            $aba->getColumnDimension($coluna)->setAutoSize(TRUE);
+        }
+
+        $this->limpar_buffer_saida();
+
+        header(
+            'Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        );
+        header(
+            'Content-Disposition: attachment; filename="'
+                . $arquivo
+                . '"'
+        );
+        header('Cache-Control: max-age=0');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx(
+            $planilha
+        );
+        $writer->save('php://output');
+        $planilha->disconnectWorksheets();
+        unset($planilha);
+        exit;
     }
 
     private function carregar_dependencias_relatorios()

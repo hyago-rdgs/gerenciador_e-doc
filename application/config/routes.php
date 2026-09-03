@@ -59,6 +59,12 @@ $route['relatorio/acervo/excel'] = 'relatorio/acervo_excel';
 $route['relatorio/movimentacoes'] = 'relatorio/movimentacoes';
 $route['relatorio/movimentacoes/pdf'] = 'relatorio/movimentacoes_pdf';
 $route['relatorio/movimentacoes/excel'] = 'relatorio/movimentacoes_excel';
+$route['relatorio/custodia'] = 'relatorio/custodia';
+$route['relatorio/custodia/pdf'] = 'relatorio/custodia_pdf';
+$route['relatorio/custodia/excel'] = 'relatorio/custodia_excel';
+$route['relatorio/digitalizacao'] = 'relatorio/digitalizacao';
+$route['relatorio/digitalizacao/pdf'] = 'relatorio/digitalizacao_pdf';
+$route['relatorio/digitalizacao/excel'] = 'relatorio/digitalizacao_excel';
 
 $route['default_controller'] = 'principal';
 $route['404_override'] = '';
