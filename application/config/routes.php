@@ -52,6 +52,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $route['auditoria'] = 'auditoria_geral/index';
 $route['auditoria/detalhes/(:num)'] = 'auditoria_geral/detalhes/$1';
 
+$route['relatorio'] = 'relatorio/index';
+$route['relatorio/acervo'] = 'relatorio/acervo';
+$route['relatorio/acervo/pdf'] = 'relatorio/acervo_pdf';
+$route['relatorio/acervo/excel'] = 'relatorio/acervo_excel';
+
 $route['default_controller'] = 'principal';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
