@@ -214,25 +214,23 @@ class Documento_model extends CI_Model
             'd.data_documento',
             'd.cadastro',
             'd.atualizacao',
-            'td.nome AS tipo_documento',
-            'l.nome AS localizacao',
-            'l.classificacao AS localizacao_classificacao',
+            "COALESCE(td.nome, 'Não disponível') AS tipo_documento",
+            "COALESCE(l.nome, 'Não disponível') AS localizacao",
+            "COALESCE(l.classificacao, '-') AS localizacao_classificacao",
             'mr.codigo AS movimentacao_aberta_codigo',
             'mr.responsavel_nome AS custodia_responsavel',
             'mr.data_prevista_devolucao AS custodia_previsao_devolucao'
-        ]);
+        ], FALSE);
         $this->db->from($this->tabela . ' d');
         $this->db->join(
             'tipos_documento td',
-            'td.codigo = d.tipo_documento_codigo AND td.exclusao IS NULL',
-            'inner',
-            FALSE
+            'td.codigo = d.tipo_documento_codigo',
+            'left'
         );
         $this->db->join(
             'localizacoes l',
-            'l.codigo = d.localizacao_codigo AND l.exclusao IS NULL',
-            'inner',
-            FALSE
+            'l.codigo = d.localizacao_codigo',
+            'left'
         );
         $this->db->join(
             'documento_movimentacoes mr',
