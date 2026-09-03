@@ -10,6 +10,7 @@ class Tipo_documento extends CI_Controller
         $this->controle_acesso->valida_permissao(
             'tipos_documento.gerenciar'
         );
+        $this->load->library('auditoria');
         $this->load->model('tipo_documento_model');
         $this->load->model('tipo_documento_metadado_model');
         $this->load->model('localizacao_tipo_documento_model');
@@ -73,11 +74,37 @@ class Tipo_documento extends CI_Controller
                 );
             }
 
+            $this->db->trans_begin();
+
             $codigo = $this->tipo_documento_model->cadastrar(
                 $resultado['dados']
             );
 
-            if (!$codigo) {
+            $tipo_documento_novo = $codigo
+                ? $this->tipo_documento_model->buscar_por_codigo(
+                    $codigo
+                )
+                : FALSE;
+
+            $auditoria_salva = $tipo_documento_novo
+                ? $this->auditoria->registrar(
+                    'tipos_documento',
+                    'TIPO_DOCUMENTO_CADASTRADO',
+                    'tipos_documento',
+                    $codigo,
+                    NULL,
+                    $tipo_documento_novo
+                )
+                : FALSE;
+
+            if (
+                !$codigo ||
+                !$tipo_documento_novo ||
+                !$auditoria_salva ||
+                $this->db->trans_status() === FALSE
+            ) {
+                $this->db->trans_rollback();
+
                 resposta_json(
                     FALSE,
                     'Não foi possível cadastrar o tipo de documento.',
@@ -85,6 +112,8 @@ class Tipo_documento extends CI_Controller
                     500
                 );
             }
+
+            $this->db->trans_commit();
 
             resposta_json(
                 TRUE,
@@ -138,12 +167,38 @@ class Tipo_documento extends CI_Controller
                 }
             }
 
+            $this->db->trans_begin();
+
             $atualizado = $this->tipo_documento_model->atualizar(
                 $codigo,
                 $resultado['dados']
             );
 
-            if (!$atualizado) {
+            $tipo_documento_atualizado = $atualizado
+                ? $this->tipo_documento_model->buscar_por_codigo(
+                    $codigo
+                )
+                : FALSE;
+
+            $auditoria_salva = $tipo_documento_atualizado
+                ? $this->auditoria->registrar(
+                    'tipos_documento',
+                    'TIPO_DOCUMENTO_ATUALIZADO',
+                    'tipos_documento',
+                    $codigo,
+                    $tipo_documento,
+                    $tipo_documento_atualizado
+                )
+                : FALSE;
+
+            if (
+                !$atualizado ||
+                !$tipo_documento_atualizado ||
+                !$auditoria_salva ||
+                $this->db->trans_status() === FALSE
+            ) {
+                $this->db->trans_rollback();
+
                 resposta_json(
                     FALSE,
                     'Não foi possível atualizar o tipo de documento.',
@@ -151,6 +206,8 @@ class Tipo_documento extends CI_Controller
                     500
                 );
             }
+
+            $this->db->trans_commit();
 
             resposta_json(
                 TRUE,
@@ -193,6 +250,13 @@ class Tipo_documento extends CI_Controller
 
         $this->db->trans_begin();
 
+        $dados_anteriores = [
+            'tipo_documento' => $tipo_documento,
+            'metadados' =>
+                $this->tipo_documento_metadado_model
+                    ->listar_por_tipo_documento($codigo)
+        ];
+
         $vinculos_excluidos = $this->tipo_documento_metadado_model->excluir_por_tipo_documento(
             $codigo
         );
@@ -201,9 +265,21 @@ class Tipo_documento extends CI_Controller
             $codigo
         );
 
+        $auditoria_salva = $tipo_documento_excluido
+            ? $this->auditoria->registrar(
+                'tipos_documento',
+                'TIPO_DOCUMENTO_EXCLUIDO',
+                'tipos_documento',
+                $codigo,
+                $dados_anteriores,
+                NULL
+            )
+            : FALSE;
+
         if (
             !$vinculos_excluidos ||
             !$tipo_documento_excluido ||
+            !$auditoria_salva ||
             $this->db->trans_status() === FALSE
         ) {
             $this->db->trans_rollback();
@@ -290,7 +366,38 @@ class Tipo_documento extends CI_Controller
         $dados = $resultado['dados'];
         $dados['tipo_documento_codigo'] = $codigo;
 
-        if (!$this->tipo_documento_metadado_model->vincular($dados)) {
+        $this->db->trans_begin();
+
+        $vinculado = $this->tipo_documento_metadado_model->vincular(
+            $dados
+        );
+
+        $vinculo_novo = $vinculado
+            ? $this->tipo_documento_metadado_model->buscar_vinculo(
+                $codigo,
+                $metadado_codigo
+            )
+            : FALSE;
+
+        $auditoria_salva = $vinculo_novo
+            ? $this->auditoria->registrar(
+                'tipos_documento',
+                'METADADO_VINCULADO',
+                'tipo_documento_metadados',
+                $codigo,
+                NULL,
+                $vinculo_novo
+            )
+            : FALSE;
+
+        if (
+            !$vinculado ||
+            !$vinculo_novo ||
+            !$auditoria_salva ||
+            $this->db->trans_status() === FALSE
+        ) {
+            $this->db->trans_rollback();
+
             resposta_json(
                 FALSE,
                 'Não foi possível vincular o metadado.',
@@ -298,6 +405,8 @@ class Tipo_documento extends CI_Controller
                 500
             );
         }
+
+        $this->db->trans_commit();
 
         resposta_json(
             TRUE,
@@ -366,13 +475,40 @@ class Tipo_documento extends CI_Controller
         $dados = $resultado['dados'];
         unset($dados['metadado_codigo']);
 
-        if (
-            !$this->tipo_documento_metadado_model->atualizar(
+        $this->db->trans_begin();
+
+        $atualizado = $this->tipo_documento_metadado_model->atualizar(
+            $codigo,
+            $metadado_codigo,
+            $dados
+        );
+
+        $vinculo_atualizado = $atualizado
+            ? $this->tipo_documento_metadado_model->buscar_vinculo(
                 $codigo,
-                $metadado_codigo,
-                $dados
+                $metadado_codigo
             )
+            : FALSE;
+
+        $auditoria_salva = $vinculo_atualizado
+            ? $this->auditoria->registrar(
+                'tipos_documento',
+                'VINCULO_METADADO_ATUALIZADO',
+                'tipo_documento_metadados',
+                $codigo,
+                $vinculo,
+                $vinculo_atualizado
+            )
+            : FALSE;
+
+        if (
+            !$atualizado ||
+            !$vinculo_atualizado ||
+            !$auditoria_salva ||
+            $this->db->trans_status() === FALSE
         ) {
+            $this->db->trans_rollback();
+
             resposta_json(
                 FALSE,
                 'Não foi possível atualizar o vínculo.',
@@ -380,6 +516,8 @@ class Tipo_documento extends CI_Controller
                 500
             );
         }
+
+        $this->db->trans_commit();
 
         resposta_json(
             TRUE,
@@ -430,12 +568,32 @@ class Tipo_documento extends CI_Controller
             );
         }
 
-        if (
-            !$this->tipo_documento_metadado_model->desvincular(
+        $this->db->trans_begin();
+
+        $desvinculado =
+            $this->tipo_documento_metadado_model->desvincular(
                 $codigo,
                 $metadado_codigo
+            );
+
+        $auditoria_salva = $desvinculado
+            ? $this->auditoria->registrar(
+                'tipos_documento',
+                'METADADO_DESVINCULADO',
+                'tipo_documento_metadados',
+                $codigo,
+                $vinculo,
+                NULL
             )
+            : FALSE;
+
+        if (
+            !$desvinculado ||
+            !$auditoria_salva ||
+            $this->db->trans_status() === FALSE
         ) {
+            $this->db->trans_rollback();
+
             resposta_json(
                 FALSE,
                 'Não foi possível desvincular o metadado.',
@@ -443,6 +601,8 @@ class Tipo_documento extends CI_Controller
                 500
             );
         }
+
+        $this->db->trans_commit();
 
         resposta_json(
             TRUE,

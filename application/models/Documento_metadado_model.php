@@ -85,6 +85,35 @@ class Documento_metadado_model extends CI_Model
         return $this->db->get()->result_array();
     }
 
+    public function listar_para_auditoria($documento_codigo)
+    {
+        $this->db->select([
+            'dm.metadado_codigo',
+            'm.nome',
+            'dm.valor'
+        ]);
+        $this->db->from($this->tabela . ' dm');
+        $this->db->join(
+            'metadados m',
+            'm.codigo = dm.metadado_codigo'
+                . ' AND m.exclusao IS NULL',
+            'inner',
+            FALSE
+        );
+        $this->db->where(
+            'dm.documento_codigo',
+            (int) $documento_codigo
+        );
+        $this->db->where(
+            'dm.exclusao IS NULL',
+            NULL,
+            FALSE
+        );
+        $this->db->order_by('m.nome', 'ASC');
+
+        return $this->db->get()->result_array();
+    }
+
     public function buscar_valor($documento_codigo, $metadado_codigo)
     {
         $this->db->where('documento_codigo', $documento_codigo);

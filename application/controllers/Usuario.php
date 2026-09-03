@@ -8,6 +8,7 @@ class Usuario extends CI_Controller
     {
         parent::__construct();
         $this->controle_acesso->valida_permissao('usuarios.gerenciar');
+        $this->load->library('auditoria');
         $this->load->model('usuario_model');
         $this->load->model('perfil_model');
         $this->load->model('permissao_model');
@@ -71,11 +72,41 @@ class Usuario extends CI_Controller
                 );
             }
 
+            $this->db->trans_begin();
+
             $codigo = $this->usuario_model->cadastrar(
                 $resultado['dados']
             );
 
-            if (!$codigo) {
+            $usuario_novo = $codigo
+                ? $this->usuario_model->buscar_por_codigo(
+                    $codigo
+                )
+                : FALSE;
+
+            if ($usuario_novo) {
+                $usuario_novo['senha_definida'] = TRUE;
+            }
+
+            $auditoria_salva = $usuario_novo
+                ? $this->auditoria->registrar(
+                    'usuarios',
+                    'USUARIO_CADASTRADO',
+                    'usuarios',
+                    $codigo,
+                    NULL,
+                    $usuario_novo
+                )
+                : FALSE;
+
+            if (
+                !$codigo ||
+                !$usuario_novo ||
+                !$auditoria_salva ||
+                $this->db->trans_status() === FALSE
+            ) {
+                $this->db->trans_rollback();
+
                 resposta_json(
                     FALSE,
                     'Não foi possível cadastrar o usuário.',
@@ -83,6 +114,8 @@ class Usuario extends CI_Controller
                     500
                 );
             }
+
+            $this->db->trans_commit();
 
             resposta_json(
                 TRUE,
@@ -148,12 +181,48 @@ class Usuario extends CI_Controller
                 );
             }
 
+            $senha_alterada = array_key_exists(
+                'senha',
+                $resultado['dados']
+            );
+
+            $this->db->trans_begin();
+
             $atualizado = $this->usuario_model->atualizar(
                 $codigo,
                 $resultado['dados']
             );
 
-            if (!$atualizado) {
+            $usuario_atualizado = $atualizado
+                ? $this->usuario_model->buscar_por_codigo(
+                    $codigo
+                )
+                : FALSE;
+
+            if ($usuario_atualizado) {
+                $usuario_atualizado['senha_alterada'] =
+                    $senha_alterada;
+            }
+
+            $auditoria_salva = $usuario_atualizado
+                ? $this->auditoria->registrar(
+                    'usuarios',
+                    'USUARIO_ATUALIZADO',
+                    'usuarios',
+                    $codigo,
+                    $usuario,
+                    $usuario_atualizado
+                )
+                : FALSE;
+
+            if (
+                !$atualizado ||
+                !$usuario_atualizado ||
+                !$auditoria_salva ||
+                $this->db->trans_status() === FALSE
+            ) {
+                $this->db->trans_rollback();
+
                 resposta_json(
                     FALSE,
                     'Não foi possível atualizar o usuário.',
@@ -161,6 +230,8 @@ class Usuario extends CI_Controller
                     500
                 );
             }
+
+            $this->db->trans_commit();
 
             resposta_json(
                 TRUE,
@@ -217,7 +288,30 @@ class Usuario extends CI_Controller
             );
         }
 
-        if (!$this->usuario_model->excluir($codigo)) {
+        $this->db->trans_begin();
+
+        $excluido = $this->usuario_model->excluir(
+            $codigo
+        );
+
+        $auditoria_salva = $excluido
+            ? $this->auditoria->registrar(
+                'usuarios',
+                'USUARIO_EXCLUIDO',
+                'usuarios',
+                $codigo,
+                $usuario,
+                NULL
+            )
+            : FALSE;
+
+        if (
+            !$excluido ||
+            !$auditoria_salva ||
+            $this->db->trans_status() === FALSE
+        ) {
+            $this->db->trans_rollback();
+
             resposta_json(
                 FALSE,
                 'Não foi possível excluir o usuário.',
@@ -225,6 +319,8 @@ class Usuario extends CI_Controller
                 500
             );
         }
+
+        $this->db->trans_commit();
 
         resposta_json(
             TRUE,

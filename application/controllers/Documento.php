@@ -195,6 +195,26 @@ class Documento extends CI_Controller
                 ])
                 : FALSE;
 
+            $dados_documento_auditoria = (
+                $codigo &&
+                $metadados_salvos
+            )
+                ? $this->preparar_dados_auditoria_documento(
+                    $codigo
+                )
+                : FALSE;
+
+            $auditoria_documento_salva = $dados_documento_auditoria
+                ? $this->auditoria->registrar(
+                    'documentos',
+                    'DOCUMENTO_CADASTRADO',
+                    'documentos',
+                    $codigo,
+                    NULL,
+                    $dados_documento_auditoria
+                )
+                : FALSE;
+
             $auditoria_movimentacao_salva = $movimentacao_salva
                 ? $this->auditoria->registrar(
                     'movimentacoes',
@@ -213,6 +233,7 @@ class Documento extends CI_Controller
                 !$codigo ||
                 !$metadados_salvos ||
                 !$movimentacao_salva ||
+                !$auditoria_documento_salva ||
                 !$auditoria_movimentacao_salva ||
                 $this->db->trans_status() === FALSE
             ) {
@@ -285,6 +306,10 @@ class Documento extends CI_Controller
 
             $this->db->trans_begin();
 
+            $dados_anteriores = $this->preparar_dados_auditoria_documento(
+                $codigo
+            );
+
             $documento_atualizado = $this->documento_model->atualizar(
                 $codigo,
                 $resultado['dados']
@@ -295,9 +320,35 @@ class Documento extends CI_Controller
                 $resultado['metadados']
             );
 
+            $dados_novos = (
+                $documento_atualizado &&
+                $metadados_salvos
+            )
+                ? $this->preparar_dados_auditoria_documento(
+                    $codigo
+                )
+                : FALSE;
+
+            $auditoria_salva = (
+                $dados_anteriores &&
+                $dados_novos
+            )
+                ? $this->auditoria->registrar(
+                    'documentos',
+                    'DOCUMENTO_ATUALIZADO',
+                    'documentos',
+                    $codigo,
+                    $dados_anteriores,
+                    $dados_novos
+                )
+                : FALSE;
+
             if (
+                !$dados_anteriores ||
                 !$documento_atualizado ||
                 !$metadados_salvos ||
+                !$dados_novos ||
+                !$auditoria_salva ||
                 $this->db->trans_status() === FALSE
             ) {
                 $this->db->trans_rollback();
@@ -355,6 +406,10 @@ class Documento extends CI_Controller
             );
         }
 
+        $dados_anteriores = $this->preparar_dados_auditoria_documento(
+            $codigo
+        );
+
         if ($this->documento_movimentacao_model->buscar_retirada_aberta($codigo, TRUE)) {
             $this->db->trans_rollback();
             resposta_json(
@@ -381,10 +436,26 @@ class Documento extends CI_Controller
             $codigo
         );
 
+        $auditoria_salva = (
+            $dados_anteriores &&
+            $documento_excluido
+        )
+            ? $this->auditoria->registrar(
+                'documentos',
+                'DOCUMENTO_EXCLUIDO',
+                'documentos',
+                $codigo,
+                $dados_anteriores,
+                NULL
+            )
+            : FALSE;
+
         if (
+            !$dados_anteriores ||
             !$metadados_excluidos ||
             !$arquivos_excluidos ||
             !$documento_excluido ||
+            !$auditoria_salva ||
             $this->db->trans_status() === FALSE
         ) {
             $this->db->trans_rollback();
@@ -1224,6 +1295,36 @@ class Documento extends CI_Controller
         );
 
         return FALSE;
+    }
+
+    private function preparar_dados_auditoria_documento($codigo)
+    {
+        $documento = $this->documento_model->buscar_por_codigo(
+            (int) $codigo
+        );
+
+        if (!$documento) {
+            return FALSE;
+        }
+
+        return [
+            'documento' => [
+                'codigo' => (int) $documento['codigo'],
+                'protocolo' => $documento['protocolo'],
+                'tipo_documento_codigo' =>
+                    (int) $documento['tipo_documento_codigo'],
+                'localizacao_codigo' =>
+                    (int) $documento['localizacao_codigo'],
+                'titulo' => $documento['titulo'],
+                'descricao' => $documento['descricao'],
+                'numero_identificacao' =>
+                    $documento['numero_identificacao'],
+                'data_documento' => $documento['data_documento']
+            ],
+            'metadados' =>
+                $this->documento_metadado_model
+                    ->listar_para_auditoria($codigo)
+        ];
     }
 
     private function buscar_documento($codigo, $resposta_json = FALSE)

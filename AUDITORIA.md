@@ -37,6 +37,72 @@ A tela de detalhes apresenta:
 Por padrão, a permissão `auditoria.visualizar` é concedida somente ao perfil
 `administrador`.
 
+## Operações de documentos
+
+O módulo de documentos registra:
+
+- `DOCUMENTO_CADASTRADO`;
+- `DOCUMENTO_ATUALIZADO`;
+- `DOCUMENTO_EXCLUIDO`.
+
+Os estados armazenam os dados principais do documento e seus valores de
+metadados. Valores configurados como não visíveis na interface também são
+incluídos no histórico de auditoria.
+
+## Operações de localizações
+
+O módulo de localizações registra:
+
+- `LOCALIZACAO_CADASTRADA`;
+- `LOCALIZACAO_ATUALIZADA`;
+- `LOCALIZACAO_EXCLUIDA`.
+
+O registro inclui hierarquia, classificação e tipo documental vinculado.
+
+## Operações de metadados
+
+O módulo de metadados registra:
+
+- `METADADO_CADASTRADO`;
+- `METADADO_ATUALIZADO`;
+- `METADADO_EXCLUIDO`.
+
+## Operações de tipos de documento
+
+O módulo de tipos de documento registra:
+
+- `TIPO_DOCUMENTO_CADASTRADO`;
+- `TIPO_DOCUMENTO_ATUALIZADO`;
+- `TIPO_DOCUMENTO_EXCLUIDO`;
+- `METADADO_VINCULADO`;
+- `VINCULO_METADADO_ATUALIZADO`;
+- `METADADO_DESVINCULADO`.
+
+Na exclusão de um tipo documental, os vínculos de metadados existentes são
+preservados no estado anterior da auditoria.
+
+## Operações de usuários
+
+O módulo de usuários registra:
+
+- `USUARIO_CADASTRADO`;
+- `USUARIO_ATUALIZADO`;
+- `USUARIO_EXCLUIDO`.
+
+Senhas e hashes nunca são armazenados. A auditoria registra somente se uma
+senha foi definida no cadastro ou alterada em uma atualização.
+
+## Operações de perfis
+
+O módulo de perfis registra:
+
+- `PERFIL_CADASTRADO`;
+- `PERFIL_ATUALIZADO`;
+- `PERFIL_EXCLUIDO`.
+
+Os estados anterior e posterior incluem as chaves das permissões associadas
+ao perfil.
+
 ## Operações de arquivos
 
 O módulo de documentos registra inicialmente as ações:

@@ -8,6 +8,7 @@ class Localizacao extends CI_Controller
     {
         parent::__construct();
         $this->controle_acesso->valida_acesso();
+        $this->load->library('auditoria');
         $this->load->model('localizacao_model');
         $this->load->model('tipo_localizacao_model');
         $this->load->model('tipo_documento_model');
@@ -142,9 +143,31 @@ class Localizacao extends CI_Controller
                 )
                 : FALSE;
 
+            $dados_auditoria = (
+                $codigo &&
+                $vinculo_salvo
+            )
+                ? $this->preparar_dados_auditoria_localizacao(
+                    $codigo
+                )
+                : FALSE;
+
+            $auditoria_salva = $dados_auditoria
+                ? $this->auditoria->registrar(
+                    'localizacoes',
+                    'LOCALIZACAO_CADASTRADA',
+                    'localizacoes',
+                    $codigo,
+                    NULL,
+                    $dados_auditoria
+                )
+                : FALSE;
+
             if (
                 !$codigo ||
                 !$vinculo_salvo ||
+                !$dados_auditoria ||
+                !$auditoria_salva ||
                 $this->db->trans_status() === FALSE
             ) {
                 $this->db->trans_rollback();
@@ -269,6 +292,11 @@ class Localizacao extends CI_Controller
                 $dados['classificacao'] = $localizacao['classificacao'];
             }
 
+            $dados_anteriores =
+                $this->preparar_dados_auditoria_localizacao(
+                    $codigo
+                );
+
             $this->db->trans_begin();
 
             $localizacao_atualizada = $this->localizacao_model->atualizar(
@@ -284,9 +312,35 @@ class Localizacao extends CI_Controller
                 )
                 : FALSE;
 
+            $dados_novos = (
+                $localizacao_atualizada &&
+                $vinculo_atualizado
+            )
+                ? $this->preparar_dados_auditoria_localizacao(
+                    $codigo
+                )
+                : FALSE;
+
+            $auditoria_salva = (
+                $dados_anteriores &&
+                $dados_novos
+            )
+                ? $this->auditoria->registrar(
+                    'localizacoes',
+                    'LOCALIZACAO_ATUALIZADA',
+                    'localizacoes',
+                    $codigo,
+                    $dados_anteriores,
+                    $dados_novos
+                )
+                : FALSE;
+
             if (
+                !$dados_anteriores ||
                 !$localizacao_atualizada ||
                 !$vinculo_atualizado ||
+                !$dados_novos ||
+                !$auditoria_salva ||
                 $this->db->trans_status() === FALSE
             ) {
                 $this->db->trans_rollback();
@@ -387,6 +441,11 @@ class Localizacao extends CI_Controller
 
         $this->db->trans_begin();
 
+        $dados_anteriores =
+            $this->preparar_dados_auditoria_localizacao(
+                $codigo
+            );
+
         $vinculos_excluidos = $this->localizacao_tipo_documento_model->desvincular_por_localizacao(
             $codigo
         );
@@ -395,9 +454,25 @@ class Localizacao extends CI_Controller
             ? $this->localizacao_model->excluir($codigo)
             : FALSE;
 
+        $auditoria_salva = (
+            $dados_anteriores &&
+            $localizacao_excluida
+        )
+            ? $this->auditoria->registrar(
+                'localizacoes',
+                'LOCALIZACAO_EXCLUIDA',
+                'localizacoes',
+                $codigo,
+                $dados_anteriores,
+                NULL
+            )
+            : FALSE;
+
         if (
+            !$dados_anteriores ||
             !$vinculos_excluidos ||
             !$localizacao_excluida ||
+            !$auditoria_salva ||
             $this->db->trans_status() === FALSE
         ) {
             $this->db->trans_rollback();
@@ -502,6 +577,37 @@ class Localizacao extends CI_Controller
         ];
 
         $this->load->view('localizacao/localizacao_detalhes', $dados);
+    }
+
+    private function preparar_dados_auditoria_localizacao($codigo)
+    {
+        $localizacao = $this->localizacao_model->buscar_por_codigo(
+            (int) $codigo
+        );
+
+        if (!$localizacao) {
+            return FALSE;
+        }
+
+        return [
+            'codigo' => (int) $localizacao['codigo'],
+            'protocolo' => $localizacao['protocolo'],
+            'tipo_localizacao_codigo' =>
+                (int) $localizacao['tipo_localizacao_codigo'],
+            'localizacao_codigo_pai' =>
+                $localizacao['localizacao_codigo_pai'] !== NULL
+                    ? (int) $localizacao['localizacao_codigo_pai']
+                    : NULL,
+            'classificacao' => $localizacao['classificacao'],
+            'sequencial' => (int) $localizacao['sequencial'],
+            'nome' => $localizacao['nome'],
+            'descricao' => $localizacao['descricao'],
+            'ativo' => (int) $localizacao['ativo'],
+            'tipo_documento_codigo' =>
+                $localizacao['tipo_documento_codigo'] !== NULL
+                    ? (int) $localizacao['tipo_documento_codigo']
+                    : NULL
+        ];
     }
 
     private function validar($dados, $codigo = NULL)

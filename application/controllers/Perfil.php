@@ -9,6 +9,7 @@ class Perfil extends CI_Controller
 
         $this->controle_acesso->valida_permissao('perfis.gerenciar');
 
+        $this->load->library('auditoria');
         $this->load->database();
         $this->load->model('perfil_model');
         $this->load->model('permissao_model');
@@ -55,7 +56,33 @@ class Perfil extends CI_Controller
                 )
                 : FALSE;
 
-            if (!$codigo || !$sincronizado) {
+            $dados_auditoria = (
+                $codigo &&
+                $sincronizado
+            )
+                ? $this->preparar_dados_auditoria_perfil(
+                    $codigo
+                )
+                : FALSE;
+
+            $auditoria_salva = $dados_auditoria
+                ? $this->auditoria->registrar(
+                    'perfis',
+                    'PERFIL_CADASTRADO',
+                    'perfis',
+                    $codigo,
+                    NULL,
+                    $dados_auditoria
+                )
+                : FALSE;
+
+            if (
+                !$codigo ||
+                !$sincronizado ||
+                !$dados_auditoria ||
+                !$auditoria_salva ||
+                $this->db->trans_status() === FALSE
+            ) {
                 $this->db->trans_rollback();
 
                 resposta_json(
@@ -109,6 +136,11 @@ class Perfil extends CI_Controller
                 );
             }
 
+            $dados_anteriores =
+                $this->preparar_dados_auditoria_perfil(
+                    $codigo
+                );
+
             $this->db->trans_begin();
 
             $atualizado = $this->perfil_model->atualizar(
@@ -123,7 +155,37 @@ class Perfil extends CI_Controller
                 )
                 : FALSE;
 
-            if (!$atualizado || !$sincronizado) {
+            $dados_novos = (
+                $atualizado &&
+                $sincronizado
+            )
+                ? $this->preparar_dados_auditoria_perfil(
+                    $codigo
+                )
+                : FALSE;
+
+            $auditoria_salva = (
+                $dados_anteriores &&
+                $dados_novos
+            )
+                ? $this->auditoria->registrar(
+                    'perfis',
+                    'PERFIL_ATUALIZADO',
+                    'perfis',
+                    $codigo,
+                    $dados_anteriores,
+                    $dados_novos
+                )
+                : FALSE;
+
+            if (
+                !$dados_anteriores ||
+                !$atualizado ||
+                !$sincronizado ||
+                !$dados_novos ||
+                !$auditoria_salva ||
+                $this->db->trans_status() === FALSE
+            ) {
                 $this->db->trans_rollback();
 
                 resposta_json(
@@ -201,7 +263,39 @@ class Perfil extends CI_Controller
             );
         }
 
-        if (!$this->perfil_model->excluir($codigo)) {
+        $this->db->trans_begin();
+
+        $dados_anteriores =
+            $this->preparar_dados_auditoria_perfil(
+                $codigo
+            );
+
+        $excluido = $this->perfil_model->excluir(
+            $codigo
+        );
+
+        $auditoria_salva = (
+            $dados_anteriores &&
+            $excluido
+        )
+            ? $this->auditoria->registrar(
+                'perfis',
+                'PERFIL_EXCLUIDO',
+                'perfis',
+                $codigo,
+                $dados_anteriores,
+                NULL
+            )
+            : FALSE;
+
+        if (
+            !$dados_anteriores ||
+            !$excluido ||
+            !$auditoria_salva ||
+            $this->db->trans_status() === FALSE
+        ) {
+            $this->db->trans_rollback();
+
             resposta_json(
                 FALSE,
                 'Não foi possível excluir o perfil.',
@@ -210,11 +304,39 @@ class Perfil extends CI_Controller
             );
         }
 
+        $this->db->trans_commit();
+
         resposta_json(
             TRUE,
             'Perfil excluído com sucesso.',
             ['codigo' => $codigo]
         );
+    }
+
+    private function preparar_dados_auditoria_perfil($codigo)
+    {
+        $perfil = $this->perfil_model->buscar_por_codigo(
+            (int) $codigo
+        );
+
+        if (!$perfil) {
+            return FALSE;
+        }
+
+        $permissoes =
+            $this->permissao_model
+                ->listar_chaves_por_perfil($codigo);
+
+        sort($permissoes);
+
+        return [
+            'perfil' => [
+                'codigo' => (int) $perfil['codigo'],
+                'nome' => $perfil['nome'],
+                'chave' => $perfil['chave']
+            ],
+            'permissoes' => $permissoes
+        ];
     }
 
     private function preparar_formulario($perfil = NULL)

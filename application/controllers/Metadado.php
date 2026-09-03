@@ -10,6 +10,7 @@ class Metadado extends CI_Controller
         $this->controle_acesso->valida_permissao(
             'metadados.gerenciar'
         );
+        $this->load->library('auditoria');
         $this->load->model('metadado_model');
     }
 
@@ -76,11 +77,37 @@ class Metadado extends CI_Controller
                 );
             }
 
+            $this->db->trans_begin();
+
             $codigo = $this->metadado_model->cadastrar(
                 $resultado['dados']
             );
 
-            if (!$codigo) {
+            $metadado_novo = $codigo
+                ? $this->metadado_model->buscar_por_codigo(
+                    $codigo
+                )
+                : FALSE;
+
+            $auditoria_salva = $metadado_novo
+                ? $this->auditoria->registrar(
+                    'metadados',
+                    'METADADO_CADASTRADO',
+                    'metadados',
+                    $codigo,
+                    NULL,
+                    $metadado_novo
+                )
+                : FALSE;
+
+            if (
+                !$codigo ||
+                !$metadado_novo ||
+                !$auditoria_salva ||
+                $this->db->trans_status() === FALSE
+            ) {
+                $this->db->trans_rollback();
+
                 resposta_json(
                     FALSE,
                     'Não foi possível cadastrar o metadado.',
@@ -88,6 +115,8 @@ class Metadado extends CI_Controller
                     500
                 );
             }
+
+            $this->db->trans_commit();
 
             resposta_json(
                 TRUE,
@@ -129,12 +158,38 @@ class Metadado extends CI_Controller
                 );
             }
 
+            $this->db->trans_begin();
+
             $atualizado = $this->metadado_model->atualizar(
                 $codigo,
                 $resultado['dados']
             );
 
-            if (!$atualizado) {
+            $metadado_atualizado = $atualizado
+                ? $this->metadado_model->buscar_por_codigo(
+                    $codigo
+                )
+                : FALSE;
+
+            $auditoria_salva = $metadado_atualizado
+                ? $this->auditoria->registrar(
+                    'metadados',
+                    'METADADO_ATUALIZADO',
+                    'metadados',
+                    $codigo,
+                    $metadado,
+                    $metadado_atualizado
+                )
+                : FALSE;
+
+            if (
+                !$atualizado ||
+                !$metadado_atualizado ||
+                !$auditoria_salva ||
+                $this->db->trans_status() === FALSE
+            ) {
+                $this->db->trans_rollback();
+
                 resposta_json(
                     FALSE,
                     'Não foi possível atualizar o metadado.',
@@ -142,6 +197,8 @@ class Metadado extends CI_Controller
                     500
                 );
             }
+
+            $this->db->trans_commit();
 
             resposta_json(
                 TRUE,
@@ -199,7 +256,30 @@ class Metadado extends CI_Controller
             );
         }
 
-        if (!$this->metadado_model->excluir($codigo)) {
+        $this->db->trans_begin();
+
+        $excluido = $this->metadado_model->excluir(
+            $codigo
+        );
+
+        $auditoria_salva = $excluido
+            ? $this->auditoria->registrar(
+                'metadados',
+                'METADADO_EXCLUIDO',
+                'metadados',
+                $codigo,
+                $metadado,
+                NULL
+            )
+            : FALSE;
+
+        if (
+            !$excluido ||
+            !$auditoria_salva ||
+            $this->db->trans_status() === FALSE
+        ) {
+            $this->db->trans_rollback();
+
             resposta_json(
                 FALSE,
                 'Não foi possível excluir o metadado.',
@@ -207,6 +287,8 @@ class Metadado extends CI_Controller
                 500
             );
         }
+
+        $this->db->trans_commit();
 
         resposta_json(
             TRUE,
