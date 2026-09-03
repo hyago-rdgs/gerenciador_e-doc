@@ -99,6 +99,85 @@ class Relatorio_model extends CI_Model
         ];
     }
 
+    public function listar_movimentacoes(
+        $filtros,
+        $limite = NULL,
+        $offset = NULL
+    ) {
+        $this->db->select([
+            'dm.codigo',
+            'dm.protocolo',
+            'dm.documento_codigo',
+            'dm.tipo_movimentacao',
+            'dm.responsavel_nome',
+            'dm.responsavel_contato',
+            'dm.observacao',
+            'dm.data_movimentacao',
+            'dm.data_prevista_devolucao',
+            'dm.data_devolucao',
+            'd.protocolo AS documento_protocolo',
+            'd.titulo AS documento_titulo',
+            'd.exclusao AS documento_exclusao',
+            "COALESCE(lo.nome, 'Externo') AS localizacao_origem",
+            "COALESCE(lo.classificacao, '-') AS localizacao_origem_classificacao",
+            "COALESCE(ld.nome, 'Sob responsabilidade') AS localizacao_destino",
+            "COALESCE(ld.classificacao, '-') AS localizacao_destino_classificacao",
+            "COALESCE(u.nome, 'Sistema') AS usuario_nome"
+        ], FALSE);
+
+        $this->preparar_base_movimentacoes();
+        $this->aplicar_filtros_movimentacoes($filtros);
+
+        $this->db->order_by('dm.data_movimentacao', 'DESC');
+        $this->db->order_by('dm.codigo', 'DESC');
+
+        if ($limite !== NULL) {
+            $this->db->limit($limite, $offset);
+        }
+
+        return $this->db->get()->result_array();
+    }
+
+    public function contar_movimentacoes($filtros)
+    {
+        $this->db->select('COUNT(dm.codigo) AS total', FALSE);
+
+        $this->preparar_base_movimentacoes();
+        $this->aplicar_filtros_movimentacoes($filtros);
+
+        $resultado = $this->db->get()->row_array();
+
+        return (int) ($resultado['total'] ?? 0);
+    }
+
+    public function obter_resumo_movimentacoes($filtros)
+    {
+        $this->db->select([
+            'COUNT(dm.codigo) AS total',
+            'COUNT(DISTINCT dm.documento_codigo) AS documentos',
+            "SUM(CASE WHEN dm.tipo_movimentacao = 'TRANSFERENCIA' THEN 1 ELSE 0 END) AS transferencias",
+            "SUM(CASE WHEN dm.tipo_movimentacao = 'RETIRADA' THEN 1 ELSE 0 END) AS retiradas"
+        ], FALSE);
+
+        $this->preparar_base_movimentacoes();
+        $this->aplicar_filtros_movimentacoes($filtros);
+
+        $resultado = $this->db->get()->row_array();
+
+        return [
+            'total' => (int) ($resultado['total'] ?? 0),
+            'documentos' => (int) (
+                $resultado['documentos'] ?? 0
+            ),
+            'transferencias' => (int) (
+                $resultado['transferencias'] ?? 0
+            ),
+            'retiradas' => (int) (
+                $resultado['retiradas'] ?? 0
+            )
+        ];
+    }
+
     public function listar_tipos_documento_opcoes()
     {
         $this->db->select(['codigo', 'nome']);
@@ -130,6 +209,21 @@ class Relatorio_model extends CI_Model
 
         return $this->db
             ->get('localizacoes')
+            ->result_array();
+    }
+
+    public function listar_usuarios_opcoes()
+    {
+        $this->db->select(['codigo', 'nome']);
+        $this->db->where(
+            'exclusao IS NULL',
+            NULL,
+            FALSE
+        );
+        $this->db->order_by('nome', 'ASC');
+
+        return $this->db
+            ->get('usuarios')
             ->result_array();
     }
 
@@ -255,6 +349,132 @@ class Relatorio_model extends CI_Model
                 'COALESCE(arq.total_arquivos, 0) =',
                 0,
                 FALSE
+            );
+        }
+    }
+
+    private function preparar_base_movimentacoes()
+    {
+        $this->db->from('documento_movimentacoes dm');
+        $this->db->join(
+            'documentos d',
+            'd.codigo = dm.documento_codigo',
+            'inner'
+        );
+        $this->db->join(
+            'localizacoes lo',
+            'lo.codigo = dm.localizacao_origem_codigo',
+            'left'
+        );
+        $this->db->join(
+            'localizacoes ld',
+            'ld.codigo = dm.localizacao_destino_codigo',
+            'left'
+        );
+        $this->db->join(
+            'usuarios u',
+            'u.codigo = dm.usuario_codigo',
+            'left'
+        );
+    }
+
+    private function aplicar_filtros_movimentacoes($filtros)
+    {
+        if ($filtros['termo'] !== '') {
+            $this->db->group_start();
+            $this->db->like('dm.protocolo', $filtros['termo']);
+            $this->db->or_like(
+                'd.protocolo',
+                $filtros['termo']
+            );
+            $this->db->or_like('d.titulo', $filtros['termo']);
+            $this->db->or_like(
+                'dm.responsavel_nome',
+                $filtros['termo']
+            );
+            $this->db->group_end();
+        }
+
+        if ($filtros['tipo_movimentacao'] !== '') {
+            $this->db->where(
+                'dm.tipo_movimentacao',
+                $filtros['tipo_movimentacao']
+            );
+        }
+
+        if ($filtros['situacao'] === 'aberta') {
+            $this->db->where(
+                'dm.tipo_movimentacao',
+                'RETIRADA'
+            );
+            $this->db->where(
+                'dm.data_devolucao IS NULL',
+                NULL,
+                FALSE
+            );
+        } elseif ($filtros['situacao'] === 'atrasada') {
+            $this->db->where(
+                'dm.tipo_movimentacao',
+                'RETIRADA'
+            );
+            $this->db->where(
+                'dm.data_devolucao IS NULL',
+                NULL,
+                FALSE
+            );
+            $this->db->where(
+                'dm.data_prevista_devolucao <',
+                date('Y-m-d')
+            );
+        } elseif ($filtros['situacao'] === 'concluida') {
+            $this->db->group_start();
+            $this->db->where(
+                'dm.tipo_movimentacao !=',
+                'RETIRADA'
+            );
+            $this->db->or_where(
+                'dm.data_devolucao IS NOT NULL',
+                NULL,
+                FALSE
+            );
+            $this->db->group_end();
+        }
+
+        if ($filtros['localizacao_codigo'] !== '') {
+            $localizacao_codigo = (int) $filtros[
+                'localizacao_codigo'
+            ];
+
+            $this->db->group_start();
+            $this->db->where(
+                'dm.localizacao_origem_codigo',
+                $localizacao_codigo
+            );
+            $this->db->or_where(
+                'dm.localizacao_destino_codigo',
+                $localizacao_codigo
+            );
+            $this->db->group_end();
+        }
+
+        if ($filtros['usuario_codigo'] !== '') {
+            $this->db->where(
+                'dm.usuario_codigo',
+                (int) $filtros['usuario_codigo']
+            );
+        }
+
+        if ($filtros['data_inicio'] !== '') {
+            $this->db->where(
+                'dm.data_movimentacao >=',
+                $filtros['data_inicio'] . ' 00:00:00'
+            );
+        }
+
+        if ($filtros['data_fim'] !== '') {
+            $this->db->where(
+                'dm.data_movimentacao <=',
+                $filtros['data_fim'] . ' 23:59:59'
             );
         }
     }

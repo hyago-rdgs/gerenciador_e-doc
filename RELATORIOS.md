@@ -36,6 +36,31 @@ Os indicadores apresentam:
 
 A listagem considera somente documentos com `exclusao IS NULL`.
 
+## Bloco 2 — Movimentações
+
+O relatório de movimentações permite filtrar o histórico por:
+
+- protocolo da movimentação, protocolo ou título do documento e responsável;
+- tipo de movimentação;
+- situação;
+- localização de origem ou destino;
+- usuário responsável pelo registro;
+- período da movimentação.
+
+Por padrão, o período corresponde ao mês atual. Datas explicitamente vazias
+permitem consultar todo o histórico.
+
+Os indicadores apresentam:
+
+- total de movimentações encontradas;
+- quantidade de documentos distintos movimentados;
+- transferências;
+- retiradas.
+
+A rastreabilidade é preservada mesmo quando o documento foi excluído
+logicamente. Nessa situação, o relatório mantém os dados históricos, mas não
+oferece acesso à tela do documento.
+
 ## Exportações
 
 ### PDF
@@ -64,6 +89,8 @@ Textos derivados do banco são gravados explicitamente como texto, evitando
 interpretação indevida como fórmulas.
 
 A exportação Excel permanece limitada a 20.000 registros.
+
+Os mesmos limites são aplicados aos relatórios de acervo e movimentações.
 
 ## Dependências
 

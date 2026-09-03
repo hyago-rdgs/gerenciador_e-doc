@@ -37,20 +37,18 @@
             </div>
 
             <div class="col-12 col-md-6 col-xl-3">
-                <div class="card h-100 border shadow-sm">
+                <a class="card h-100 border shadow-sm text-decoration-none text-reset"
+                    href="<?= base_url('relatorio/movimentacoes'); ?>">
                     <div class="card-body p-4">
-                        <span class="d-inline-flex align-items-center justify-content-center bg-body-secondary text-body-secondary rounded p-3 mb-3">
+                        <span class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded p-3 mb-3">
                             <i class="fa-solid fa-arrow-right-arrow-left fa-lg"></i>
                         </span>
-                        <div class="d-flex align-items-center justify-content-between gap-2">
-                            <h2 class="h5 mb-0">Movimentações</h2>
-                            <span class="badge text-bg-light border">Em breve</span>
-                        </div>
-                        <p class="text-body-secondary mt-3 mb-0">
+                        <h2 class="h5">Movimentações</h2>
+                        <p class="text-body-secondary mb-0">
                             Histórico de transferências, retiradas e devoluções.
                         </p>
                     </div>
-                </div>
+                </a>
             </div>
 
             <div class="col-12 col-md-6 col-xl-3">

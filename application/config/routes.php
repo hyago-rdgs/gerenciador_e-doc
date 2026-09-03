@@ -56,6 +56,9 @@ $route['relatorio'] = 'relatorio/index';
 $route['relatorio/acervo'] = 'relatorio/acervo';
 $route['relatorio/acervo/pdf'] = 'relatorio/acervo_pdf';
 $route['relatorio/acervo/excel'] = 'relatorio/acervo_excel';
+$route['relatorio/movimentacoes'] = 'relatorio/movimentacoes';
+$route['relatorio/movimentacoes/pdf'] = 'relatorio/movimentacoes_pdf';
+$route['relatorio/movimentacoes/excel'] = 'relatorio/movimentacoes_excel';
 
 $route['default_controller'] = 'principal';
 $route['404_override'] = '';

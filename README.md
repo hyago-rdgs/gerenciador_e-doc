@@ -27,6 +27,7 @@ Atualmente estão disponíveis:
 - versionamento e auditoria de arquivos documentais.
 - movimentação, retirada, devolução e rastreabilidade de documentos.
 - dashboard e indicadores gerenciais do acervo.
+- central de relatórios com consultas de acervo e movimentações.
 
 ## Tela inicial
 
@@ -176,6 +177,14 @@ representadas pelas movimentações.
 
 Mais detalhes estão disponíveis em [`DASHBOARD.md`](DASHBOARD.md).
 
+### Relatórios
+
+O módulo de relatórios oferece consultas detalhadas e exportações em PDF e
+Excel. Atualmente contempla o acervo documental e o histórico de
+movimentações, com filtros, indicadores e paginação.
+
+Mais detalhes estão disponíveis em [`RELATORIOS.md`](RELATORIOS.md).
+
 ## Modelo conceitual
 
 O domínio principal do sistema utiliza as seguintes entidades:
@@ -243,6 +252,7 @@ application/
 │   ├── Perfil.php
 │   ├── Pesquisa.php
 │   ├── Principal.php
+│   ├── Relatorio.php
 │   ├── Tipo_documento.php
 │   └── Usuario.php
 ├── libraries/
@@ -256,6 +266,7 @@ application/
     ├── movimentacao/
     ├── perfil/
     ├── pesquisa/
+    ├── relatorio/
     ├── tipo_documento/
     ├── usuario/
     ├── principal.php
@@ -406,10 +417,12 @@ style: ajusta formatação ou interface
 - [x] Navegação de documentos por localização
 - [x] Movimentação e rastreabilidade de documentos
 - [x] Dashboard e indicadores gerenciais
+- [x] Relatórios de acervo e movimentações
 
 ### Próximas etapas
 
 - [ ] Auditoria das operações dos usuários
+- [ ] Relatórios de custódia e digitalização
 - [ ] Melhorias na pesquisa global
 - [ ] Recursos adicionais de gestão documental
 
