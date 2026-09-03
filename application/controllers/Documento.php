@@ -65,7 +65,7 @@ class Documento extends CI_Controller
 
             'tipos_documento' => $this->tipo_documento_model->listar_opcoes(),
             'localizacoes' => $this->localizacao_model->listar_opcoes(),
-            
+
             'limite' => $limite,
             'offset' => $offset + 1,
             'pagina_atual' => $pagina_atual,
@@ -505,6 +505,23 @@ class Documento extends CI_Controller
             'localizacoes_movimentacao' => $this->localizacao_model->listar_opcoes()
         ];
 
+        if (
+            !$this->auditoria->registrar(
+                'documentos',
+                'DOCUMENTO_ACESSADO',
+                'documentos',
+                $documento['codigo'],
+                NULL,
+                ['protocolo' => $documento['protocolo']]
+            )
+        ) {
+            show_error(
+                'Não foi possível registrar o acesso ao documento.',
+                500
+            );
+        }
+
+
         $this->load->view('documento/documento_detalhes', $dados);
     }
 
@@ -643,6 +660,31 @@ class Documento extends CI_Controller
 
         if ($tamanho === FALSE) {
             show_404();
+        }
+
+        $acao_auditoria = $disposicao === 'inline'
+            ? 'ARQUIVO_VISUALIZADO'
+            : 'ARQUIVO_BAIXADO';
+
+        if (
+            !$this->auditoria->registrar(
+                'arquivos',
+                $acao_auditoria,
+                'documento_arquivo',
+                $arquivo['codigo'],
+                NULL,
+                [
+                    'documento_codigo' => (int) $documento['codigo'],
+                    'nome_original' => $arquivo['nome_original'],
+                    'mime_type' => $mime_type,
+                    'disposicao' => $disposicao
+                ]
+            )
+        ) {
+            show_error(
+                'Não foi possível registrar o acesso ao arquivo.',
+                500
+            );
         }
 
         $this->output

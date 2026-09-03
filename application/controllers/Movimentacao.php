@@ -144,6 +144,7 @@ class Movimentacao extends CI_Controller
             ? $this->documento_movimentacao_model->cadastrar([
                 'documento_codigo' => $documento['codigo'],
                 'usuario_codigo' => $this->controle_acesso->get('codigo'),
+                'responsavel_nome' => $this->controle_acesso->get('nome'),
                 'localizacao_origem_codigo' => $origem_codigo,
                 'localizacao_destino_codigo' => $destino_codigo,
                 'tipo_movimentacao' => 'TRANSFERENCIA',

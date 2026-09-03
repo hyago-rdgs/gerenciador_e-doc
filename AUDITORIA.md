@@ -129,6 +129,29 @@ Esses registros preservam a origem, o destino, o responsável e a relação
 entre retirada e devolução. As operações exigem
 `movimentacoes.gerenciar`.
 
+## Operações de autenticação
+
+O módulo de autenticação registra:
+
+- `LOGIN_REALIZADO`;
+- `LOGIN_FALHOU`;
+- `LOGOUT_REALIZADO`.
+
+Tentativas inválidas armazenam somente o usuário informado, o resultado, o
+endereço IP e o user agent. A senha nunca é registrada.
+
+## Acessos e exportações
+
+A consulta de documentos e arquivos registra:
+
+- `DOCUMENTO_ACESSADO`;
+- `ARQUIVO_VISUALIZADO`;
+- `ARQUIVO_BAIXADO`.
+
+As exportações registram `RELATORIO_PDF_EXPORTADO` ou
+`RELATORIO_EXCEL_EXPORTADO`, incluindo o relatório, os filtros e a quantidade
+de registros exportados.
+
 ## Atualização de uma instalação
 
 Depois de atualizar o código, aplique a migration:

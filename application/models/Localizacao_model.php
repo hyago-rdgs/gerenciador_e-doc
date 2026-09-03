@@ -175,7 +175,7 @@ class Localizacao_model extends CI_Model
             $this->db->not_like('l.classificacao', $classificacao . '.', 'after');
         }
 
-        $this->db->order_by('l.classificacao', 'ASC');
+        $this->db->order_by("LENGTH(l.classificacao) ASC, l.classificacao ASC", '', FALSE);
 
         $query = $this->db->get();
         return $query->result_array();

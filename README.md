@@ -411,7 +411,7 @@ style: ajusta formatação ou interface
 - [x] Cadastro e gerenciamento de documentos
 - [x] Upload de arquivos de documentos
 - [x] Versionamento de arquivos documentais
-- [x] Auditoria das operações de arquivos
+- [x] Auditoria de operações, autenticação e acessos documentais
 - [x] Pesquisa avançada de documentos
 - [x] Pesquisa por metadados
 - [x] Navegação de documentos por localização
@@ -421,8 +421,6 @@ style: ajusta formatação ou interface
 
 ### Próximas etapas
 
-- [ ] Auditoria das operações dos usuários
-- [ ] Melhorias na pesquisa global
 - [ ] Recursos adicionais de gestão documental
 
 ## Status

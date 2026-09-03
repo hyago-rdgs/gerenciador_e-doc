@@ -6,6 +6,7 @@ class Autenticacao extends CI_Controller
     public function __construct()
     {
         parent::__construct();
+        $this->load->library('auditoria');
         $this->load->model('usuario_model');
     }
 
@@ -31,6 +32,27 @@ class Autenticacao extends CI_Controller
             $resultado = $this->autenticar($credenciais);
 
             if (!$resultado['sucesso']) {
+                $auditoria_salva = $this->auditoria->registrar(
+                    'autenticacao',
+                    'LOGIN_FALHOU',
+                    'autenticacao',
+                    NULL,
+                    NULL,
+                    [
+                        'usuario_informado' => trim(
+                            (string) ($credenciais['usuario'] ?? '')
+                        ),
+                        'resultado' => 'autenticacao_negada'
+                    ]
+                );
+
+                if (!$auditoria_salva) {
+                    log_message(
+                        'error',
+                        'Não foi possível registrar a tentativa de login do usuário.'
+                    );
+                }
+
                 resposta_json(
                     FALSE,
                     'Não foi possível realizar o login.',
@@ -40,6 +62,29 @@ class Autenticacao extends CI_Controller
             }
 
             $this->controle_acesso->criar($resultado['dados']);
+
+            $auditoria_salva = $this->auditoria->registrar(
+                'autenticacao',
+                'LOGIN_REALIZADO',
+                'usuarios',
+                $resultado['dados']['codigo'],
+                NULL,
+                [
+                    'usuario' => $resultado['dados']['usuario'],
+                    'perfil' => $resultado['dados']['perfil']
+                ]
+            );
+
+            if (!$auditoria_salva) {
+                $this->controle_acesso->destruir();
+
+                resposta_json(
+                    FALSE,
+                    'Não foi possível concluir o login.',
+                    [],
+                    500
+                );
+            }
 
             resposta_json(
                 TRUE,
@@ -110,6 +155,27 @@ class Autenticacao extends CI_Controller
 
     public function logout()
     {
+        if ($this->controle_acesso->logado()) {
+            $usuario_codigo = $this->controle_acesso->get('codigo');
+            $usuario = $this->controle_acesso->get('usuario');
+
+            $auditoria_salva = $this->auditoria->registrar(
+                'autenticacao',
+                'LOGOUT_REALIZADO',
+                'usuarios',
+                $usuario_codigo,
+                ['usuario' => $usuario],
+                NULL
+            );
+
+            if (!$auditoria_salva) {
+                log_message(
+                    'error',
+                    'Não foi possível registrar o logout do usuário.'
+                );
+            }
+        }
+
         $this->controle_acesso->destruir();
 
         redirect(base_url('autenticacao/login'));

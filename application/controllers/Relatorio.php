@@ -12,6 +12,7 @@ class Relatorio extends CI_Controller
             'relatorios.visualizar'
         );
 
+        $this->load->library('auditoria');
         $this->load->model('relatorio_model');
     }
 
@@ -112,8 +113,8 @@ class Relatorio extends CI_Controller
         $mpdf->SetAuthor('e-Doc');
         $mpdf->SetHTMLFooter(
             '<div style="text-align:center;font-size:8pt;color:#666;">'
-                . 'Página {PAGENO} de {nbpg}'
-                . '</div>'
+            . 'Página {PAGENO} de {nbpg}'
+            . '</div>'
         );
 
         $html_cabecalho = $this->load->view(
@@ -140,6 +141,13 @@ class Relatorio extends CI_Controller
 
             $mpdf->WriteHTML($html_tabela);
         }
+
+        $this->registrar_exportacao(
+            'acervo',
+            'PDF',
+            $total_documentos,
+            $filtros
+        );
 
         $this->limpar_buffer_saida();
 
@@ -219,21 +227,21 @@ class Relatorio extends CI_Controller
                 $documento['numero_identificacao'] ?? '',
                 $documento['tipo_documento'],
                 $documento['localizacao_classificacao']
-                    . ' — '
-                    . $documento['localizacao'],
+                . ' — '
+                . $documento['localizacao'],
                 !empty($documento['data_documento'])
-                    ? date(
-                        'd/m/Y',
-                        strtotime($documento['data_documento'])
-                    )
-                    : '',
+                ? date(
+                    'd/m/Y',
+                    strtotime($documento['data_documento'])
+                )
+                : '',
                 date(
                     'd/m/Y H:i',
                     strtotime($documento['cadastro'])
                 ),
                 (int) $documento['total_arquivos'] > 0
-                    ? 'Com arquivo'
-                    : 'Sem arquivo',
+                ? 'Com arquivo'
+                : 'Sem arquivo',
                 (int) $documento['total_arquivos']
             ];
 
@@ -262,6 +270,13 @@ class Relatorio extends CI_Controller
             $aba->getColumnDimension($coluna)->setAutoSize(TRUE);
         }
 
+        $this->registrar_exportacao(
+            'acervo',
+            'EXCEL',
+            $total_documentos,
+            $filtros
+        );
+
         $arquivo = 'relatorio-acervo-'
             . date('Ymd-His')
             . '.xlsx';
@@ -273,8 +288,8 @@ class Relatorio extends CI_Controller
         );
         header(
             'Content-Disposition: attachment; filename="'
-                . $arquivo
-                . '"'
+            . $arquivo
+            . '"'
         );
         header('Cache-Control: max-age=0');
 
@@ -388,8 +403,8 @@ class Relatorio extends CI_Controller
         $mpdf->SetAuthor('e-Doc');
         $mpdf->SetHTMLFooter(
             '<div style="text-align:center;font-size:8pt;color:#666;">'
-                . 'Página {PAGENO} de {nbpg}'
-                . '</div>'
+            . 'Página {PAGENO} de {nbpg}'
+            . '</div>'
         );
 
         $html_cabecalho = $this->load->view(
@@ -413,12 +428,19 @@ class Relatorio extends CI_Controller
             $mpdf->WriteHTML($html_tabela);
         }
 
+        $this->registrar_exportacao(
+            'movimentacoes',
+            'PDF',
+            $total_movimentacoes,
+            $filtros
+        );
+
         $this->limpar_buffer_saida();
 
         $mpdf->Output(
             'relatorio-movimentacoes-'
-                . date('Ymd-His')
-                . '.pdf',
+            . date('Ymd-His')
+            . '.pdf',
             \Mpdf\Output\Destination::INLINE
         );
         exit;
@@ -521,25 +543,25 @@ class Relatorio extends CI_Controller
                 $movimentacao['responsavel_nome'] ?? '',
                 $movimentacao['responsavel_contato'] ?? '',
                 !empty(
-                    $movimentacao['data_prevista_devolucao']
+                $movimentacao['data_prevista_devolucao']
+            )
+                ? date(
+                    'd/m/Y',
+                    strtotime(
+                        $movimentacao[
+                            'data_prevista_devolucao'
+                        ]
+                    )
                 )
-                    ? date(
-                        'd/m/Y',
-                        strtotime(
-                            $movimentacao[
-                                'data_prevista_devolucao'
-                            ]
-                        )
-                    )
-                    : '',
+                : '',
                 !empty($movimentacao['data_devolucao'])
-                    ? date(
-                        'd/m/Y H:i',
-                        strtotime(
-                            $movimentacao['data_devolucao']
-                        )
+                ? date(
+                    'd/m/Y H:i',
+                    strtotime(
+                        $movimentacao['data_devolucao']
                     )
-                    : '',
+                )
+                : '',
                 $movimentacao['usuario_nome'],
                 $movimentacao['situacao_label']
             ];
@@ -564,6 +586,13 @@ class Relatorio extends CI_Controller
             $aba->getColumnDimension($coluna)->setAutoSize(TRUE);
         }
 
+        $this->registrar_exportacao(
+            'movimentacoes',
+            'EXCEL',
+            $total_movimentacoes,
+            $filtros
+        );
+
         $arquivo = 'relatorio-movimentacoes-'
             . date('Ymd-His')
             . '.xlsx';
@@ -575,8 +604,8 @@ class Relatorio extends CI_Controller
         );
         header(
             'Content-Disposition: attachment; filename="'
-                . $arquivo
-                . '"'
+            . $arquivo
+            . '"'
         );
         header('Cache-Control: max-age=0');
 
@@ -672,11 +701,18 @@ class Relatorio extends CI_Controller
             );
         }
 
+        $this->registrar_exportacao(
+            'custodia',
+            'PDF',
+            $total_custodias,
+            $filtros
+        );
+
         $this->limpar_buffer_saida();
         $mpdf->Output(
             'relatorio-custodia-'
-                . date('Ymd-His')
-                . '.pdf',
+            . date('Ymd-His')
+            . '.pdf',
             \Mpdf\Output\Destination::INLINE
         );
         exit;
@@ -770,11 +806,18 @@ class Relatorio extends CI_Controller
             );
         }
 
+        $this->registrar_exportacao(
+            'digitalizacao',
+            'PDF',
+            $total_documentos,
+            $filtros
+        );
+
         $this->limpar_buffer_saida();
         $mpdf->Output(
             'relatorio-digitalizacao-'
-                . date('Ymd-His')
-                . '.pdf',
+            . date('Ymd-His')
+            . '.pdf',
             \Mpdf\Output\Destination::INLINE
         );
         exit;
@@ -857,19 +900,19 @@ class Relatorio extends CI_Controller
                     strtotime($custodia['data_movimentacao'])
                 ),
                 !empty($custodia['data_prevista_devolucao'])
-                    ? date(
-                        'd/m/Y',
-                        strtotime(
-                            $custodia['data_prevista_devolucao']
-                        )
+                ? date(
+                    'd/m/Y',
+                    strtotime(
+                        $custodia['data_prevista_devolucao']
                     )
-                    : '',
+                )
+                : '',
                 !empty($custodia['data_devolucao'])
-                    ? date(
-                        'd/m/Y H:i',
-                        strtotime($custodia['data_devolucao'])
-                    )
-                    : '',
+                ? date(
+                    'd/m/Y H:i',
+                    strtotime($custodia['data_devolucao'])
+                )
+                : '',
                 (int) $custodia['dias_custodia'],
                 (int) $custodia['dias_atraso'],
                 $custodia['usuario_nome']
@@ -884,11 +927,18 @@ class Relatorio extends CI_Controller
             $linha++;
         }
 
+        $this->registrar_exportacao(
+            'custodia',
+            'EXCEL',
+            $total_custodias,
+            $filtros
+        );
+
         $this->enviar_planilha(
             $planilha,
             'relatorio-custodia-'
-                . date('Ymd-His')
-                . '.xlsx',
+            . date('Ymd-His')
+            . '.xlsx',
             'M'
         );
     }
@@ -969,11 +1019,11 @@ class Relatorio extends CI_Controller
                 (int) $documento['total_versoes'],
                 $documento['tamanho_label'],
                 !empty($documento['ultimo_arquivo_em'])
-                    ? date(
-                        'd/m/Y H:i',
-                        strtotime($documento['ultimo_arquivo_em'])
-                    )
-                    : ''
+                ? date(
+                    'd/m/Y H:i',
+                    strtotime($documento['ultimo_arquivo_em'])
+                )
+                : ''
             ];
 
             $this->escrever_linha_planilha(
@@ -985,11 +1035,18 @@ class Relatorio extends CI_Controller
             $linha++;
         }
 
+        $this->registrar_exportacao(
+            'digitalizacao',
+            'EXCEL',
+            $total_documentos,
+            $filtros
+        );
+
         $this->enviar_planilha(
             $planilha,
             'relatorio-digitalizacao-'
-                . date('Ymd-His')
-                . '.xlsx',
+            . date('Ymd-His')
+            . '.xlsx',
             'J'
         );
     }
@@ -1158,14 +1215,14 @@ class Relatorio extends CI_Controller
         foreach ($documentos as &$documento) {
             $documento['localizacao_label'] =
                 $documento['localizacao_classificacao'] === '-'
-                    ? $documento['localizacao']
-                    : $documento['localizacao_classificacao']
-                        . ' — '
-                        . $documento['localizacao'];
+                ? $documento['localizacao']
+                : $documento['localizacao_classificacao']
+                . ' — '
+                . $documento['localizacao'];
             $documento['situacao_digital'] =
                 (int) $documento['total_arquivos'] > 0
-                    ? 'Com arquivo'
-                    : 'Sem arquivo';
+                ? 'Com arquivo'
+                : 'Sem arquivo';
             $documento['tamanho_label'] =
                 $this->formatar_tamanho_arquivo(
                     (int) $documento['tamanho_total']
@@ -1572,7 +1629,7 @@ class Relatorio extends CI_Controller
 
             $descricao[] = 'Localização: ' . (
                 $nome ?: '#'
-                    . $filtros['localizacao_codigo']
+                . $filtros['localizacao_codigo']
             );
         }
 
@@ -1769,7 +1826,7 @@ class Relatorio extends CI_Controller
 
             $descricao[] = 'Tipo: ' . (
                 $nome ?: '#'
-                    . $filtros['tipo_documento_codigo']
+                . $filtros['tipo_documento_codigo']
             );
         }
 
@@ -1782,7 +1839,7 @@ class Relatorio extends CI_Controller
 
             $descricao[] = 'Localização: ' . (
                 $nome ?: '#'
-                    . $filtros['localizacao_codigo']
+                . $filtros['localizacao_codigo']
             );
         }
 
@@ -1973,8 +2030,8 @@ class Relatorio extends CI_Controller
         $mpdf->SetAuthor('e-Doc');
         $mpdf->SetHTMLFooter(
             '<div style="text-align:center;font-size:8pt;color:#666;">'
-                . 'Página {PAGENO} de {nbpg}'
-                . '</div>'
+            . 'Página {PAGENO} de {nbpg}'
+            . '</div>'
         );
 
         return $mpdf;
@@ -2047,8 +2104,8 @@ class Relatorio extends CI_Controller
         );
         header(
             'Content-Disposition: attachment; filename="'
-                . $arquivo
-                . '"'
+            . $arquivo
+            . '"'
         );
         header('Cache-Control: max-age=0');
 
@@ -2059,6 +2116,34 @@ class Relatorio extends CI_Controller
         $planilha->disconnectWorksheets();
         unset($planilha);
         exit;
+    }
+
+    private function registrar_exportacao(
+        $relatorio,
+        $formato,
+        $total_registros,
+        $filtros
+    ) {
+        $auditoria_salva = $this->auditoria->registrar(
+            'relatorios',
+            'RELATORIO_' . $formato . '_EXPORTADO',
+            'relatorio_' . $relatorio,
+            NULL,
+            NULL,
+            [
+                'relatorio' => $relatorio,
+                'formato' => $formato,
+                'total_registros' => (int) $total_registros,
+                'filtros' => $filtros
+            ]
+        );
+
+        if (!$auditoria_salva) {
+            show_error(
+                'Não foi possível registrar a exportação do relatório.',
+                500
+            );
+        }
     }
 
     private function carregar_dependencias_relatorios()
