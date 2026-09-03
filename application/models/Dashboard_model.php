@@ -75,17 +75,16 @@ class Dashboard_model extends CI_Model
     {
         $this->db->select([
             'td.codigo',
-            'td.nome',
+            "COALESCE(td.nome, 'Não disponível') AS nome",
             'COUNT(d.codigo) AS total'
         ], FALSE);
-        $this->db->from('tipos_documento td');
+        $this->db->from('documentos d');
         $this->db->join(
-            'documentos d',
-            'd.tipo_documento_codigo = td.codigo AND d.exclusao IS NULL',
-            'inner',
-            FALSE
+            'tipos_documento td',
+            'td.codigo = d.tipo_documento_codigo',
+            'left'
         );
-        $this->db->where('td.exclusao IS NULL', NULL, FALSE);
+        $this->db->where('d.exclusao IS NULL', NULL, FALSE);
         $this->db->group_by(['td.codigo', 'td.nome']);
         $this->db->order_by('total', 'DESC');
         $this->db->order_by('td.nome', 'ASC');
@@ -98,18 +97,17 @@ class Dashboard_model extends CI_Model
     {
         $this->db->select([
             'l.codigo',
-            'l.nome',
-            'l.classificacao',
+            "COALESCE(l.nome, 'Não disponível') AS nome",
+            "COALESCE(l.classificacao, '-') AS classificacao",
             'COUNT(d.codigo) AS total'
         ], FALSE);
-        $this->db->from('localizacoes l');
+        $this->db->from('documentos d');
         $this->db->join(
-            'documentos d',
-            'd.localizacao_codigo = l.codigo AND d.exclusao IS NULL',
-            'inner',
-            FALSE
+            'localizacoes l',
+            'l.codigo = d.localizacao_codigo',
+            'left'
         );
-        $this->db->where('l.exclusao IS NULL', NULL, FALSE);
+        $this->db->where('d.exclusao IS NULL', NULL, FALSE);
         $this->db->group_by(['l.codigo', 'l.nome', 'l.classificacao']);
         $this->db->order_by('total', 'DESC');
         $this->db->order_by('l.classificacao', 'ASC');
