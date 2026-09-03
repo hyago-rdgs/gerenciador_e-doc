@@ -23,6 +23,10 @@ O primeiro relatório permite filtrar documentos por:
 - período de cadastro;
 - situação de digitalização.
 
+Por padrão, o período de cadastro corresponde ao mês atual. Caso o usuário
+informe explicitamente as datas em branco e aplique o filtro, o relatório
+consulta todo o histórico.
+
 Os indicadores apresentam:
 
 - total de documentos encontrados;
@@ -38,9 +42,12 @@ A listagem considera somente documentos com `exclusao IS NULL`.
 
 A geração utiliza mPDF e formato A4 paisagem.
 
-Para proteger o processo PHP, a primeira versão limita a exportação PDF a
-5.000 registros. Quando o resultado ultrapassar esse valor, o usuário deve
-aplicar filtros.
+Para proteger o processo PHP, a exportação PDF é limitada a 2.000 registros.
+Quando o resultado ultrapassar esse valor, o usuário deve aplicar filtros.
+
+O conteúdo tabular é processado em lotes de 50 registros por chamada a
+`WriteHTML()`, evitando enviar ao mPDF um bloco HTML excessivamente grande e
+reduzindo o risco de atingir o `pcre.backtrack_limit`.
 
 ### Excel
 
@@ -56,7 +63,7 @@ A exportação utiliza PhpSpreadsheet e gera XLSX com:
 Textos derivados do banco são gravados explicitamente como texto, evitando
 interpretação indevida como fórmulas.
 
-A primeira versão limita a exportação Excel a 20.000 registros.
+A exportação Excel permanece limitada a 20.000 registros.
 
 ## Dependências
 
