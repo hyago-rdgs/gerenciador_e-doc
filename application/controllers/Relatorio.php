@@ -69,9 +69,9 @@ class Relatorio extends CI_Controller
             $filtros
         );
 
-        if ($total_documentos > 5000) {
+        if ($total_documentos > 2000) {
             show_error(
-                'O PDF suporta até 5.000 registros. Aplique filtros para reduzir o resultado.',
+                'O PDF suporta até 2.000 registros. Aplique filtros para reduzir o resultado.',
                 422,
                 'Relatório muito grande'
             );
@@ -80,12 +80,6 @@ class Relatorio extends CI_Controller
         $dados = $this->preparar_dados_acervo($filtros);
         $dados['total_documentos'] = $total_documentos;
         $dados['emitido_em'] = date('d/m/Y H:i:s');
-
-        $html = $this->load->view(
-            'relatorio/pdf/relatorio_acervo',
-            $dados,
-            TRUE
-        );
 
         $this->carregar_dependencias_relatorios();
 
@@ -121,7 +115,31 @@ class Relatorio extends CI_Controller
                 . 'Página {PAGENO} de {nbpg}'
                 . '</div>'
         );
-        $mpdf->WriteHTML($html);
+
+        $html_cabecalho = $this->load->view(
+            'relatorio/pdf/relatorio_acervo',
+            $dados,
+            TRUE
+        );
+
+        $mpdf->WriteHTML($html_cabecalho);
+
+        $lotes = array_chunk(
+            $dados['documentos'],
+            50
+        );
+
+        foreach ($lotes as $documentos) {
+            $html_tabela = $this->load->view(
+                'relatorio/pdf/relatorio_acervo_tabela',
+                [
+                    'documentos' => $documentos
+                ],
+                TRUE
+            );
+
+            $mpdf->WriteHTML($html_tabela);
+        }
 
         $this->limpar_buffer_saida();
 
@@ -333,6 +351,31 @@ class Relatorio extends CI_Controller
             )
         );
 
+        $data_inicio = $this->input->get(
+            'data_inicio',
+            TRUE
+        );
+
+        $data_fim = $this->input->get(
+            'data_fim',
+            TRUE
+        );
+
+        if (
+            $data_inicio === NULL &&
+            $data_fim === NULL
+        ) {
+            $data_inicio = date('Y-m-01');
+            $data_fim = date('Y-m-t');
+        } else {
+            $data_inicio = $this->validar_data(
+                $data_inicio
+            );
+            $data_fim = $this->validar_data(
+                $data_fim
+            );
+        }
+
         if (
             $tipo_documento_codigo !== '' &&
             (
@@ -368,12 +411,8 @@ class Relatorio extends CI_Controller
             'tipo_documento_codigo' =>
                 $tipo_documento_codigo,
             'localizacao_codigo' => $localizacao_codigo,
-            'data_inicio' => $this->validar_data(
-                $this->input->get('data_inicio', TRUE)
-            ),
-            'data_fim' => $this->validar_data(
-                $this->input->get('data_fim', TRUE)
-            ),
+            'data_inicio' => $data_inicio,
+            'data_fim' => $data_fim,
             'digitalizacao' => $digitalizacao
         ];
     }
