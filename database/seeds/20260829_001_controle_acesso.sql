@@ -24,7 +24,8 @@ VALUES
     ('Metadados', 'metadados', 'Configuração dos campos de metadados.', 60),
     ('Etiquetas', 'etiquetas', 'Geração de etiquetas de localização.', 70),
     ('Usuários', 'usuarios', 'Administração dos usuários do sistema.', 80),
-    ('Perfis', 'perfis', 'Configuração visual das permissões dos perfis.', 90)
+    ('Perfis', 'perfis', 'Configuração visual das permissões dos perfis.', 90),
+    ('Auditoria', 'auditoria', 'Consulta do histórico geral de alterações do sistema.', 100)
 ON DUPLICATE KEY UPDATE
     `nome` = VALUES(`nome`),
     `descricao` = VALUES(`descricao`),
@@ -62,6 +63,7 @@ FROM (
     UNION ALL SELECT 'etiquetas', 'Gerar', 'etiquetas.gerar', 'Gerar etiquetas de localização.', 10
     UNION ALL SELECT 'usuarios', 'Gerenciar', 'usuarios.gerenciar', 'Administrar usuários.', 10
     UNION ALL SELECT 'perfis', 'Gerenciar', 'perfis.gerenciar', 'Administrar perfis e permissões.', 10
+    UNION ALL SELECT 'auditoria', 'Visualizar', 'auditoria.visualizar', 'Consultar o histórico geral de auditoria.', 10
 ) dados
 INNER JOIN `modulos` m
     ON m.`chave` = dados.`modulo`
@@ -92,7 +94,8 @@ CROSS JOIN `permissoes` pe
 WHERE p.`chave` = 'gestor_documental'
     AND pe.`chave` NOT IN (
         'usuarios.gerenciar',
-        'perfis.gerenciar'
+        'perfis.gerenciar',
+        'auditoria.visualizar'
     );
 INSERT IGNORE INTO `perfil_permissoes` (
     `perfil_codigo`,

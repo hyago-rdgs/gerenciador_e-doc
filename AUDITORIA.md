@@ -16,6 +16,27 @@ Os registros são criados pela biblioteca `Auditoria` e persistidos pelo
 `Auditoria_model`. A auditoria participa da mesma transação da alteração de
 negócio. Se o registro da auditoria falhar, a operação também é revertida.
 
+Antes da serialização, a biblioteca protege campos sensíveis como senhas,
+tokens, chaves de API e segredos. Esses valores nunca devem ser persistidos
+em claro na auditoria.
+
+## Consulta
+
+Usuários com a permissão `auditoria.visualizar` podem consultar os registros
+por período, módulo, ação, usuário e termo.
+
+A tela de detalhes apresenta:
+
+- usuário responsável;
+- data e hora;
+- módulo, ação e entidade;
+- endereço IP e user agent;
+- estado anterior;
+- estado posterior.
+
+Por padrão, a permissão `auditoria.visualizar` é concedida somente ao perfil
+`administrador`.
+
 ## Operações de arquivos
 
 O módulo de documentos registra inicialmente as ações:
@@ -49,6 +70,8 @@ Depois de atualizar o código, aplique a migration:
 ```bash
 mariadb -u USUARIO -p NOME_DO_BANCO \
     < database/migrations/20260902_001_adiciona_auditoria.sql
+mariadb -u USUARIO -p NOME_DO_BANCO \
+    < database/migrations/20260903_001_adiciona_modulo_auditoria.sql
 ```
 
 Não execute `database/schema.sql` sobre uma base existente.

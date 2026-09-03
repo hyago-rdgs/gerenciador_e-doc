@@ -104,6 +104,16 @@
               </a>
             </li>
           <?php endif; ?>
+
+          <?php if ($this->controle_acesso->tem_permissao('auditoria.visualizar')): ?>
+            <li class="nav-item">
+              <a class="nav-link <?= $modulo_atual == 'auditoria' ? 'active fw-semibold' : ''; ?>"
+                <?= $modulo_atual == 'auditoria' ? 'aria-current="page"' : ''; ?>
+                href="<?= base_url('auditoria'); ?>">
+                Auditoria
+              </a>
+            </li>
+          <?php endif; ?>
         </ul>
         <ul class="navbar-nav">
           <li class="nav-item dropdown">

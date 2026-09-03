@@ -34,6 +34,8 @@ mariadb -u USUARIO -p NOME_DO_BANCO \
     < database/migrations/20260902_003_adiciona_dashboard.sql
 mariadb -u USUARIO -p NOME_DO_BANCO \
     < database/migrations/20260902_004_remove_status_documentos.sql
+mariadb -u USUARIO -p NOME_DO_BANCO \
+    < database/migrations/20260903_001_adiciona_modulo_auditoria.sql
 
 ```
 

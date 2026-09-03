@@ -19,6 +19,13 @@ class Auditoria
         $dados_anteriores = NULL,
         $dados_novos = NULL
     ) {
+        $dados_anteriores = $this->sanitizar_dados(
+            $dados_anteriores
+        );
+        $dados_novos = $this->sanitizar_dados(
+            $dados_novos
+        );
+
         $dados_anteriores = $this->codificar_dados(
             $dados_anteriores
         );
@@ -75,5 +82,51 @@ class Auditoria
             JSON_UNESCAPED_SLASHES |
             JSON_PRESERVE_ZERO_FRACTION
         );
+    }
+
+    private function sanitizar_dados($dados)
+    {
+        if (!is_array($dados)) {
+            return $dados;
+        }
+
+        $campos_sensiveis = [
+            'senha',
+            'confirmar_senha',
+            'password',
+            'password_hash',
+            'token',
+            'access_token',
+            'refresh_token',
+            'authorization',
+            'api_key',
+            'secret',
+            'client_secret'
+        ];
+
+        foreach ($dados as $chave => $valor) {
+            $chave_normalizada = strtolower(
+                trim((string) $chave)
+            );
+
+            if (
+                in_array(
+                    $chave_normalizada,
+                    $campos_sensiveis,
+                    TRUE
+                )
+            ) {
+                $dados[$chave] = '[PROTEGIDO]';
+                continue;
+            }
+
+            if (is_array($valor)) {
+                $dados[$chave] = $this->sanitizar_dados(
+                    $valor
+                );
+            }
+        }
+
+        return $dados;
     }
 }
