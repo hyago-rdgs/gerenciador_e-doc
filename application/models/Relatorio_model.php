@@ -21,11 +21,11 @@ class Relatorio_model extends CI_Model
             'd.numero_identificacao',
             'd.data_documento',
             'd.cadastro',
-            'td.codigo AS tipo_documento_codigo',
-            'td.nome AS tipo_documento',
-            'l.codigo AS localizacao_codigo',
-            'l.nome AS localizacao',
-            'l.classificacao AS localizacao_classificacao',
+            'd.tipo_documento_codigo',
+            "COALESCE(td.nome, 'Não disponível') AS tipo_documento",
+            'd.localizacao_codigo',
+            "COALESCE(l.nome, 'Não disponível') AS localizacao",
+            "COALESCE(l.classificacao, '-') AS localizacao_classificacao",
             'COALESCE(arq.total_arquivos, 0) AS total_arquivos',
             'COALESCE(arq.tamanho_total, 0) AS tamanho_total'
         ], FALSE);
@@ -139,18 +139,14 @@ class Relatorio_model extends CI_Model
 
         $this->db->join(
             'tipos_documento td',
-            'td.codigo = d.tipo_documento_codigo'
-                . ' AND td.exclusao IS NULL',
-            'inner',
-            FALSE
+            'td.codigo = d.tipo_documento_codigo',
+            'left'
         );
 
         $this->db->join(
             'localizacoes l',
-            'l.codigo = d.localizacao_codigo'
-                . ' AND l.exclusao IS NULL',
-            'inner',
-            FALSE
+            'l.codigo = d.localizacao_codigo',
+            'left'
         );
 
         $this->db->join(
