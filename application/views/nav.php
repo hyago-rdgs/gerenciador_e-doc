@@ -55,6 +55,16 @@
             </li>
           <?php endif; ?>
 
+          <?php if ($this->controle_acesso->tem_permissao('relatorios.visualizar')): ?>
+            <li class="nav-item">
+              <a class="nav-link <?= $modulo_atual == 'relatorio' ? 'active fw-semibold' : ''; ?>"
+                <?= $modulo_atual == 'relatorio' ? 'aria-current="page"' : ''; ?>
+                href="<?= base_url('relatorio'); ?>">
+                Relatórios
+              </a>
+            </li>
+          <?php endif; ?>
+
           <?php if ($this->controle_acesso->tem_permissao('tipos_documento.gerenciar')): ?>
             <li class="nav-item">
               <a class="nav-link <?= $modulo_atual == 'tipo_documento' ? 'active fw-semibold' : ''; ?>"
